@@ -111,6 +111,7 @@ declare module '@emotion/react' {
         textShadow?: string,
         letterSpacing?: string,
         textDecoration?: string,
+        transition?: string,
         '&.active'?: {
           font?: string,
           color?: string,

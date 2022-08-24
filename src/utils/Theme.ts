@@ -1,6 +1,4 @@
-import { Theme } from "@emotion/react";
-
-const THEME: Theme = {
+const THEME = {
   colors: {
     primary: {
       main: '#1DBA53',
@@ -77,19 +75,15 @@ const THEME: Theme = {
   fonts: {
     navLink: {
       font: 'bold 1.75em league-spartan',
-      color: '#FFFFFF',
+      color: '#17191C',
       letterSpacing: '1.25px',
       textDecoration: 'none',
+      transition: 'color 0.15s',
       '&.active': {
-        color: '#454C54'
+        color: '#1DBA53'
       },
       '&:hover': {
-        color: '#AFCFE9',
-        textShadow: '0 0 5px rgba(0,0,0,0.2)'
-      },
-      '&.active:hover': {
-        color: '#454C54',
-        textShadow: 'none',
+        color: '#1DBA53',
       },
     }
   }

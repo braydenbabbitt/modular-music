@@ -1,21 +1,23 @@
-import { jsx, css, useTheme } from "@emotion/react"
-import { NavLink } from "react-router-dom"
+import { css, jsx, useTheme } from '@emotion/react';
+import { NavLink } from 'react-router-dom';
+import { LoginButton } from './LoginButton';
 
 export const Navbar = () => {
   const appTheme = useTheme();
 
   const navbarStyles = css({
-    backgroundColor: appTheme.colors?.primary.main,
+    backgroundColor: appTheme.colors?.neutrals?.shades?.[100],
     display: 'flex',
     flex: '1',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: '15px 20px',
     height: '50px',
-    boxShadow: '0px 2px 5px rgba(0,0,0,0.33)'
+    boxShadow: '0px 2px 10px rgba(0,0,0,0.15)',
+    overflow: 'hidden'
   });
   const logoLinkStyles = css({
-    height: '75%'
+    height: '95%'
   });
   const logoStyles = css({
     height: '100%',
@@ -37,15 +39,10 @@ export const Navbar = () => {
   return (
     <nav css={navbarStyles} >
       <NavLink css={logoLinkStyles} to='/'>
-        <img css={logoStyles} src="wordmark-white.svg" alt="Modular Music" />
+        <img css={logoStyles} src="wordmark-black-green.svg" alt="Modular Music" />
       </NavLink>
       <ul css={navListStyles}>
-        <li><NavLink to='/about' css={navItemStyles}>
-          About
-        </NavLink></li>
-        <li><NavLink to='/login' css={navItemStyles}>
-          Login
-        </NavLink></li>
+        <li style={{ height: '100%', display: 'flex', alignItems: 'center' }}><LoginButton /></li>
       </ul>
     </nav >
   )
