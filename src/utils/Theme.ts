@@ -85,6 +85,19 @@ const THEME = {
       '&:hover': {
         color: '#1DBA53',
       },
+    },
+    userName: {
+      font: 'bold 1.6em league-spartan',
+      color: '#17191C',
+      letterSpacing: '0.75px',
+      margin: '0',
+      textDecoration: 'none',
+    },
+    userDropdownList: {
+      font: 'bold 1.2em league-spartan',
+      color: '#17191C',
+      letterSpacing: '0.5px',
+
     }
   }
 }

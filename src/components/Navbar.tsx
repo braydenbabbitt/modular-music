@@ -14,7 +14,7 @@ export const Navbar = () => {
     padding: '15px 20px',
     height: '50px',
     boxShadow: '0px 2px 10px rgba(0,0,0,0.15)',
-    overflow: 'hidden'
+    overflow: 'visible'
   });
   const logoLinkStyles = css({
     height: '95%'
@@ -41,9 +41,7 @@ export const Navbar = () => {
       <NavLink css={logoLinkStyles} to='/'>
         <img css={logoStyles} src="wordmark-black-green.svg" alt="Modular Music" />
       </NavLink>
-      <ul css={navListStyles}>
-        <li style={{ height: '100%', display: 'flex', alignItems: 'center' }}><LoginButton /></li>
-      </ul>
+      <LoginButton />
     </nav >
   )
 }
