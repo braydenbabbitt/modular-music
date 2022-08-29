@@ -6,7 +6,7 @@ import { Navbar } from './components/Navbar';
 import { Route, Routes } from 'react-router-dom';
 import { ThemeProvider } from '@emotion/react';
 import './App.css';
-import { About } from './pages/About';
+import { Settings } from './pages/Settings';
 
 function App() {
   const theme = getTheme();
@@ -17,7 +17,7 @@ function App() {
         <Navbar />
         <Routes>
           <Route path="/" element={<Home />} />
-          {/* <Route path='/about' element={<About />} /> */}
+          <Route path='/settings' element={<Settings />} />
           <Route path='/login' element={<Login />} />
         </Routes>
       </ThemeProvider>

@@ -94,7 +94,7 @@ const THEME = {
       textDecoration: 'none',
     },
     userDropdownList: {
-      font: 'bold 1.2em league-spartan',
+      font: 'normal 1.25em league-spartan',
       color: '#17191C',
       letterSpacing: '0.5px',
 
