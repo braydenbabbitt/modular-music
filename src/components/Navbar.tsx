@@ -1,47 +1,69 @@
-import { css, jsx, useTheme } from '@emotion/react';
-import { NavLink } from 'react-router-dom';
-import { LoginButton } from './LoginButton';
+import { Burger, Button, Center, Container, createStyles, Group, Header, Menu, useMantineColorScheme, useMantineTheme } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { useEffect } from "react";
+import { NavLink } from "react-router-dom";
+import { LoginButton } from "./LoginButton";
 
-export const Navbar = () => {
-  const appTheme = useTheme();
+const HEADER_HEIGHT = 80;
 
-  const navbarStyles = css({
-    backgroundColor: appTheme.colors?.neutrals?.shades?.[100],
+const navbarStyles = createStyles((theme) => ({
+  inner: {
+    height: HEADER_HEIGHT,
     display: 'flex',
-    flex: '1',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: '15px 20px',
-    height: '50px',
-    boxShadow: '0px 2px 10px rgba(0,0,0,0.15)',
-    overflow: 'visible'
-  });
-  const logoLinkStyles = css({
-    height: '95%'
-  });
-  const logoStyles = css({
-    height: '100%',
-    width: 'auto',
+  },
+  links: {
+    [theme.fn.smallerThan('sm')]: {
+      display: 'none',
+    },
+  },
+  burger: {
+    [theme.fn.largerThan('sm')]: {
+      display: 'none',
+    },
+  },
+  link: {
+    display: 'block',
+    lineHeight: 1,
+    padding: '8px 12px',
+    borderRadius: theme.radius.sm,
+    textDecoration: 'none',
+    color: theme.colorScheme === 'dark' ? theme.colors.dark[0] : theme.colors.gray[7],
+    fontSize: theme.fontSizes.sm,
+    fontWeight: 500,
+
     '&:hover': {
-      fill: 'red'
-    }
-  });
-  const navListStyles = css({
-    display: 'flex',
-    listStyle: 'none',
-    gap: '15px',
-    height: '100%',
-    alignItems: 'center',
-    justifyContent: 'end',
-  });
-  const navItemStyles = css(appTheme.fonts?.navLink);
+      backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[6] : theme.colors.gray[0],
+    },
+  },
+  linkLabel: {
+    marginRight: 5,
+  },
+}));
+
+export const Navbar = () => {
+  const styles = navbarStyles();
+  const [opened, { toggle }] = useDisclosure(false);
+  const brightness = useMantineTheme().colorScheme;
+  const headerStyles = {
+    borderBottom: 0, boxShadow: `0 0 5px ${brightness === 'light' ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.5)'}`
+  };
+  const logoImage = brightness === 'light' ? 'wordmark-black-green.svg' : 'wordmark-white-green.svg';
+
+  console.log({ brightness });
 
   return (
-    <nav css={navbarStyles} >
-      <NavLink css={logoLinkStyles} to='/'>
-        <img css={logoStyles} src="wordmark-black-green.svg" alt="Modular Music" />
-      </NavLink>
-      <LoginButton />
-    </nav >
-  )
-}
+    <Header height={HEADER_HEIGHT} sx={headerStyles}>
+      <Container className={styles.classes.inner} fluid>
+        <Group spacing={5} sx={{ height: '65%' }}>
+          <Burger opened={opened} onClick={toggle} className={styles.classes.burger} size='sm' />
+          <NavLink to='/' style={{ height: '100%' }}>
+            <img src={logoImage} alt="Modular Music Logo" style={{ height: '100%' }} />
+          </NavLink>
+        </Group>
+        <LoginButton />
+      </Container>
+    </Header>
+  );
+};

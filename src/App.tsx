@@ -1,28 +1,29 @@
 import { AuthProvider } from './hooks/useAuthContext';
 import { getTheme } from './utils/Theme';
 import { Home } from './pages/Home';
-import { Login } from './pages/Login';
 import { Navbar } from './components/Navbar';
-import { Route, Routes } from 'react-router-dom';
-import { ThemeProvider } from '@emotion/react';
 import './App.css';
-import { Settings } from './pages/Settings';
+import { ColorSchemeProvider, MantineProvider } from '@mantine/core';
+import { useColorScheme, useLocalStorage } from '@mantine/hooks';
 
 function App() {
-  const theme = getTheme();
+  const [brightness, setBrightness] = useLocalStorage<'light' | 'dark'>({ key: 'brightness', defaultValue: useColorScheme() });
+  const appTheme = { ...getTheme(), colorScheme: brightness };
+
+  const toggleBrightness = () => {
+    setBrightness(prev => prev === 'light' ? 'dark' : 'light');
+  };
 
   return (
     <AuthProvider>
-      <ThemeProvider theme={theme}>
-        <Navbar />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path='/settings' element={<Settings />} />
-          <Route path='/login' element={<Login />} />
-        </Routes>
-      </ThemeProvider>
+      <MantineProvider withGlobalStyles withNormalizeCSS theme={appTheme}>
+        <ColorSchemeProvider colorScheme={brightness} toggleColorScheme={toggleBrightness}>
+          <Navbar />
+          <Home />
+        </ColorSchemeProvider>
+      </MantineProvider >
     </AuthProvider>
-  )
+  );
 }
 
-export default App
+export default App;
