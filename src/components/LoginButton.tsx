@@ -75,6 +75,8 @@ export const LoginButton = () => {
 
 
   return (
-    !authData.user ? <a onClick={handleLogin} style={{ display: 'flex', justifyContent: 'center', cursor: 'pointer' }}>Login</a> : <UserButton handleLogout={handleLogout} imageUrl={authData.user.images[0].url} name={authData.user.display_name} />
+    !authData.user ?
+      <a onClick={handleLogin} style={{ display: 'flex', justifyContent: 'center', cursor: 'pointer' }}>Login</a> :
+      <UserButton handleLogout={handleLogout} imageUrl={authData.user.images[0].url} name={authData.user.display_name} />
   );
 };
