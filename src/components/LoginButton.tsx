@@ -62,7 +62,6 @@ export const LoginButton = () => {
 
     if (token) {
       getUser(token).then((response) => {
-        console.log('getUser', { response });
         setAuthData(prev => ({
           ...prev,
           token,

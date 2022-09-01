@@ -51,8 +51,6 @@ export const Navbar = () => {
   };
   const logoImage = brightness === 'light' ? 'wordmark-black-green.svg' : 'wordmark-white-green.svg';
 
-  console.log({ brightness });
-
   return (
     <Header height={HEADER_HEIGHT} sx={headerStyles}>
       <Container className={styles.classes.inner} fluid>

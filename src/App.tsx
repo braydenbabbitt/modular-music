@@ -5,10 +5,16 @@ import { Navbar } from './components/Navbar';
 import './App.css';
 import { ColorSchemeProvider, MantineProvider } from '@mantine/core';
 import { useColorScheme, useLocalStorage } from '@mantine/hooks';
+import { useEffect } from 'react';
 
 function App() {
-  const [brightness, setBrightness] = useLocalStorage<'light' | 'dark'>({ key: 'brightness', defaultValue: useColorScheme() });
+  const defaultBrightness = useColorScheme();
+  const [brightness, setBrightness] = useLocalStorage<'light' | 'dark'>({ key: 'brightness', defaultValue: defaultBrightness });
   const appTheme = { ...getTheme(), colorScheme: brightness };
+
+  useEffect(() => {
+    if (defaultBrightness) setBrightness(defaultBrightness)
+  }, [defaultBrightness])
 
   const toggleBrightness = () => {
     setBrightness(prev => prev === 'light' ? 'dark' : 'light');
