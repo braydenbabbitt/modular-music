@@ -1,6 +1,7 @@
 import { Button, Group, Menu, useMantineTheme } from "@mantine/core";
-import { IconChevronDown, IconLogout, IconSettings } from "@tabler/icons";
-import { useEffect, useState } from "react";
+import { IconLogout, IconSettings } from "@tabler/icons";
+import { useEffect } from "react";
+import { Link } from "react-router-dom";
 import { getAuthLink, useAuth } from "../hooks/useAuthContext";
 import { getHashParams, removeHashFromUrl } from "../utils/HashUtils";
 import { getUser } from "../utils/SpotifyAPI";
@@ -18,7 +19,8 @@ const UserButton = ({ ...props }: UserButtonProps) => {
   const userButtonDropdownItems = [
     {
       label: 'Settings',
-      icon: <IconSettings size={MENU_ICON_SIZE} />
+      icon: <IconSettings size={MENU_ICON_SIZE} />,
+      to: '/settings'
     },
     {
       label: 'Logout',
@@ -37,7 +39,7 @@ const UserButton = ({ ...props }: UserButtonProps) => {
       </Menu.Target>
 
       <Menu.Dropdown>
-        {userButtonDropdownItems.map(item => (<Menu.Item key={item.label} icon={item.icon} onClick={item.onClick}>{item.label}</Menu.Item>))}
+        {userButtonDropdownItems.map(item => (item.to ? <Menu.Item key={item.label} icon={item.icon} component={Link} to={item.to} onClick={item.onClick}>{item.label}</Menu.Item> : <Menu.Item key={item.label} icon={item.icon} onClick={item.onClick}>{item.label}</Menu.Item>))}
       </Menu.Dropdown>
     </Menu>
   );
@@ -76,8 +78,7 @@ export const LoginButton = () => {
 
   return (
     !authData.user ?
-      // <a onClick={handleLogin} style={{ display: 'flex', justifyContent: 'center', cursor: 'pointer' }}>Login</a> :
-      <Button onClick={handleLogin} variant='filled' styles={(theme) => ({
+      <Button onClick={handleLogin} variant='filled' styles={() => ({
         root: {
           fontSize: '1em'
         }

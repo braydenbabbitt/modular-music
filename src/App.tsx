@@ -4,8 +4,9 @@ import { Home } from './pages/Home';
 import { Navbar } from './components/Navbar';
 import './App.css';
 import { ColorSchemeProvider, MantineProvider } from '@mantine/core';
-import { useColorScheme, useLocalStorage } from '@mantine/hooks';
-import { useEffect } from 'react';
+import { useLocalStorage } from '@mantine/hooks';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { Settings } from './pages/Settings';
 
 function App() {
   const [brightness, setBrightness] = useLocalStorage<'light' | 'dark'>({
@@ -23,7 +24,10 @@ function App() {
       <MantineProvider withGlobalStyles withNormalizeCSS theme={appTheme}>
         <ColorSchemeProvider colorScheme={brightness} toggleColorScheme={toggleBrightness}>
           <Navbar />
-          <Home />
+            <Routes>
+              <Route path='/' element={<Home />} />
+              <Route path='/settings' element={<Settings />} />
+            </Routes>
         </ColorSchemeProvider>
       </MantineProvider >
     </AuthProvider>
