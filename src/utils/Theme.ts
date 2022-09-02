@@ -1,5 +1,4 @@
 import { MantineThemeOverride } from "@mantine/core";
-import { useLocalStorage } from "@mantine/hooks";
 
 const THEME = {
   colors: {
@@ -114,7 +113,7 @@ const MANTINE_THEME: MantineThemeOverride = {
   },
   primaryColor: 'primary',
   primaryShade: { light: 4, dark: 3 },
-  fontFamily: 'league-spartan'
+  fontFamily: 'inter'
 }
 
 export const getTheme = () => {

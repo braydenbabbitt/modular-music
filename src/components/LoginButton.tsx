@@ -1,4 +1,4 @@
-import { Group, Menu, useMantineTheme } from "@mantine/core";
+import { Button, Group, Menu, useMantineTheme } from "@mantine/core";
 import { IconChevronDown, IconLogout, IconSettings } from "@tabler/icons";
 import { useEffect, useState } from "react";
 import { getAuthLink, useAuth } from "../hooks/useAuthContext";
@@ -76,7 +76,12 @@ export const LoginButton = () => {
 
   return (
     !authData.user ?
-      <a onClick={handleLogin} style={{ display: 'flex', justifyContent: 'center', cursor: 'pointer' }}>Login</a> :
+      // <a onClick={handleLogin} style={{ display: 'flex', justifyContent: 'center', cursor: 'pointer' }}>Login</a> :
+      <Button onClick={handleLogin} variant='filled' styles={(theme) => ({
+        root: {
+          fontSize: '1em'
+        }
+      })}>Login</Button> : 
       <UserButton handleLogout={handleLogout} imageUrl={authData.user.images[0].url} name={authData.user.display_name} />
   );
 };

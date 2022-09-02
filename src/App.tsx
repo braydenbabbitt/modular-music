@@ -8,13 +8,11 @@ import { useColorScheme, useLocalStorage } from '@mantine/hooks';
 import { useEffect } from 'react';
 
 function App() {
-  const defaultBrightness = useColorScheme();
-  const [brightness, setBrightness] = useLocalStorage<'light' | 'dark'>({ key: 'brightness', defaultValue: defaultBrightness });
+  const [brightness, setBrightness] = useLocalStorage<'light' | 'dark'>({
+    key: 'brightness',
+    defaultValue: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  });
   const appTheme = { ...getTheme(), colorScheme: brightness };
-
-  useEffect(() => {
-    if (defaultBrightness) setBrightness(defaultBrightness)
-  }, [defaultBrightness])
 
   const toggleBrightness = () => {
     setBrightness(prev => prev === 'light' ? 'dark' : 'light');
