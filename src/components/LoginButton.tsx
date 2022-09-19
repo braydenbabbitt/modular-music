@@ -1,12 +1,12 @@
 import { Button, Group, Menu, useMantineTheme } from "@mantine/core";
-import { IconLogout, IconSettings } from "@tabler/icons";
+import { IconHome, IconLogout, IconSettings } from "@tabler/icons";
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { getAuthLink, useAuth } from "../hooks/useAuthContext";
 import { getHashParams, removeHashFromUrl } from "../utils/HashUtils";
 import { getUser } from "../utils/SpotifyAPI";
 
-const MENU_ICON_SIZE = 14;
+const MENU_ICON_SIZE = 16;
 
 type UserButtonProps = {
   imageUrl: string,
@@ -17,6 +17,11 @@ type UserButtonProps = {
 
 const UserButton = ({ ...props }: UserButtonProps) => {
   const userButtonDropdownItems = [
+    {
+      label: 'Dashboard',
+      icon: <IconHome size={MENU_ICON_SIZE} />,
+      to: '/dashboard'
+    },
     {
       label: 'Settings',
       icon: <IconSettings size={MENU_ICON_SIZE} />,
@@ -34,7 +39,6 @@ const UserButton = ({ ...props }: UserButtonProps) => {
       <Menu.Target>
         <Group style={{ height: '65%', gap: 5 }}>
           <img src={props.imageUrl} alt={`An image of ${props.name}`} style={{ borderRadius: '50%', height: '100%' }} />
-          {/* <IconChevronDown /> */}
         </Group>
       </Menu.Target>
 
@@ -82,7 +86,7 @@ export const LoginButton = () => {
         root: {
           fontSize: '1em'
         }
-      })}>Login</Button> : 
+      })}>Login</Button> :
       <UserButton handleLogout={handleLogout} imageUrl={authData.user.images[0].url} name={authData.user.display_name} />
   );
 };
