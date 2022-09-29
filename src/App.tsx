@@ -4,14 +4,15 @@ import { Home } from './pages/Home';
 import { Navbar } from './components/Navbar';
 import './App.css';
 import { ColorScheme, ColorSchemeProvider, MantineProvider } from '@mantine/core';
-import { useColorScheme, useLocalStorage } from '@mantine/hooks';
+import { useLocalStorage } from '@mantine/hooks';
 import { Route, Routes } from 'react-router-dom';
 import { Settings } from './pages/Settings';
 import { Dashboard } from './pages/Dashboard';
+import { useBrowserBrightness } from './hooks/useBrowserBrightness';
 
 function App() {
-  const browserBrightness = useColorScheme();
-  const [brightness, setBrightness] = useLocalStorage<ColorScheme>({ key: 'brightness', defaultValue: browserBrightness, getInitialValueInEffect: true });
+  // const browserBrightness = useBrowserBrightness();
+  const [brightness, setBrightness] = useLocalStorage<ColorScheme>({ key: 'brightness', defaultValue: useBrowserBrightness(), getInitialValueInEffect: false });
   const toggleBrightness = () => {
     setBrightness(prev => prev === 'light' ? 'dark' : 'light');
   };

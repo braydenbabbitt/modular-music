@@ -37,7 +37,7 @@ const UserButton = ({ ...props }: UserButtonProps) => {
   return (
     <Menu trigger='hover' openDelay={100} closeDelay={400} position="bottom-end">
       <Menu.Target>
-        <Group style={{ height: '65%', gap: 5 }}>
+        <Group style={{ height: '65%', gap: 5, cursor: 'pointer' }}>
           <img src={props.imageUrl} alt={`An image of ${props.name}`} style={{ borderRadius: '50%', height: '100%' }} />
         </Group>
       </Menu.Target>
