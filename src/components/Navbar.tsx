@@ -1,7 +1,7 @@
 import { Burger, Button, Center, Container, createStyles, Group, Header, Menu, useMantineColorScheme, useMantineTheme } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { useEffect } from "react";
 import { NavLink } from "react-router-dom";
+import { useUser } from "../hooks/useAuthContext";
 import { LoginButton } from "./LoginButton";
 
 const HEADER_HEIGHT = 80;
@@ -43,20 +43,21 @@ const navbarStyles = createStyles((theme) => ({
 }));
 
 export const Navbar = () => {
+  const isUser = !!useUser();
   const styles = navbarStyles();
   const [opened, { toggle }] = useDisclosure(false);
   const brightness = useMantineTheme().colorScheme;
   const headerStyles = {
     borderBottom: 0, boxShadow: `0 0 5px ${brightness === 'light' ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.5)'}`
   };
-  const logoImage = brightness === 'light' ? 'wordmark-black-green.svg' : 'wordmark-white-green.svg';
+  const logoImage = brightness === 'light' ? '/wordmark-black-green.svg' : '/wordmark-white-green.svg';
 
   return (
     <Header height={HEADER_HEIGHT} sx={headerStyles}>
       <Container className={styles.classes.inner} fluid>
         <Group spacing={5} sx={{ height: '65%' }}>
           <Burger opened={opened} onClick={toggle} className={styles.classes.burger} size='sm' />
-          <NavLink to='/' style={{ height: '100%' }}>
+          <NavLink to={isUser ? '/programs' : '/'} style={{ height: '100%' }}>
             <img src={logoImage} alt="Modular Music Logo" style={{ height: '100%' }} />
           </NavLink>
         </Group>

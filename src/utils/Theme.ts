@@ -102,7 +102,7 @@ const THEME = {
 
     }
   }
-}
+};
 
 const MANTINE_THEME: MantineThemeOverride = {
   colors: {
@@ -112,10 +112,10 @@ const MANTINE_THEME: MantineThemeOverride = {
     neutrals: ['#17191C', '#2E3338', '#454C54', '#5C6570', '#727E8D', '#8F98A3', '#ABB2BA', '#C7CCD1', '#E3E5E8', '#F1F2F4'],
   },
   primaryColor: 'primary',
-  primaryShade: { light: 4, dark: 3 },
-  fontFamily: 'inter'
-}
+  primaryShade: { light: 4, dark: 7 },
+  fontFamily: 'inter',
+};
 
 export const getTheme = () => {
   return MANTINE_THEME;
-}
+};

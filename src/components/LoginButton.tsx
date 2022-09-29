@@ -20,7 +20,7 @@ const UserButton = ({ ...props }: UserButtonProps) => {
     {
       label: 'Dashboard',
       icon: <IconHome size={MENU_ICON_SIZE} />,
-      to: '/dashboard'
+      to: '/programs'
     },
     {
       label: 'Settings',

@@ -7,8 +7,9 @@ import { ColorScheme, ColorSchemeProvider, MantineProvider } from '@mantine/core
 import { useLocalStorage } from '@mantine/hooks';
 import { Route, Routes } from 'react-router-dom';
 import { Settings } from './pages/Settings';
-import { Dashboard } from './pages/Dashboard';
+import { ProgramsPage } from './pages/ProgramsPage';
 import { useBrowserBrightness } from './hooks/useBrowserBrightness';
+import { Program } from './pages/programs/Program';
 
 function App() {
   // const browserBrightness = useBrowserBrightness();
@@ -25,9 +26,12 @@ function App() {
         <MantineProvider withGlobalStyles withNormalizeCSS theme={appTheme}>
           <Navbar />
           <Routes>
-            <Route path='/' element={<Home />} />
-            <Route path='/settings' element={<Settings />} />
-            <Route path='/dashboard' element={<Dashboard />} />
+            <Route index element={<Home />} />
+            <Route path='settings' element={<Settings />} />
+            <Route path='programs'>
+              <Route index element={<ProgramsPage />} />
+              <Route path=':programId' element={<Program />} />
+            </Route>
           </Routes>
         </MantineProvider >
       </ColorSchemeProvider>

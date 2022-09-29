@@ -25,32 +25,32 @@ export type User = {
   email: string,
   explicit_content: {
     filterEnabled: boolean,
-    filterLocked: boolean
+    filterLocked: boolean;
   },
   external_urls: {
-    spotify: string
+    spotify: string;
   },
   followers: {
     href: string,
-    total: number
+    total: number;
   },
   href: string,
   id: string,
   images: [{
     url: string,
     height: string,
-    width: string
+    width: string;
   }],
   product: string,
   type: string,
-  uri: string
-}
+  uri: string;
+};
 export type AuthData = {
   user?: User,
-  token?: string
-}
+  token?: string;
+};
 interface AuthProviderProps {
-  children?: ReactNode
+  children?: ReactNode;
 }
 
 const AuthContext = createContext<AuthData | undefined>(undefined);
@@ -65,7 +65,11 @@ export const useAuth = (): [AuthData, React.Dispatch<React.SetStateAction<AuthDa
   } else {
     throw new Error('useAuth must be used within AuthProvider');
   }
-}
+};
+
+export const useUser = () => {
+  return useContext(AuthContext)?.user;
+};
 
 export const AuthProvider = ({ children, ...props }: AuthProviderProps) => {
   const [authData, setAuthData] = useLocalStorage<AuthData>(AUTH_DATA_KEY, {});
@@ -77,9 +81,9 @@ export const AuthProvider = ({ children, ...props }: AuthProviderProps) => {
       </UpdateAuthContext.Provider>
     </AuthContext.Provider>
 
-  )
-}
+  );
+};
 
 export const getAuthLink = (): string => {
   return `${authEndpoint}?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scopes.join('%20')}&response_type=token`;
-}
+};
