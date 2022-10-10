@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react"
+import { useState } from 'react';
 
 export const useLocalStorage = <T>(key: string, initialValue: T) => {
   const [storedValue, setStoredValue] = useState<T>(() => {
@@ -11,7 +11,7 @@ export const useLocalStorage = <T>(key: string, initialValue: T) => {
       console.error(error);
       return initialValue;
     }
-  })
+  });
 
   const setValue = (value: T | ((val: T) => T)) => {
     try {
@@ -24,8 +24,7 @@ export const useLocalStorage = <T>(key: string, initialValue: T) => {
     } catch (error) {
       console.error(error);
     }
-  }
-
+  };
 
   return [storedValue, setValue] as const;
-}
+};

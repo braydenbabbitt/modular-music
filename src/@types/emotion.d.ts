@@ -21,8 +21,8 @@ declare module '@emotion/react' {
           95?: string;
           99?: string;
           100?: string;
-        }
-      }
+        };
+      };
       secondary?: {
         main: string;
         dark?: string;
@@ -41,8 +41,8 @@ declare module '@emotion/react' {
           95?: string;
           99?: string;
           100?: string;
-        }
-      }
+        };
+      };
       tertiary?: {
         main: string;
         dark?: string;
@@ -61,8 +61,8 @@ declare module '@emotion/react' {
           95?: string;
           99?: string;
           100?: string;
-        }
-      }
+        };
+      };
       danger?: {
         main: string;
         dark?: string;
@@ -81,8 +81,8 @@ declare module '@emotion/react' {
           95?: string;
           99?: string;
           100?: string;
-        }
-      }
+        };
+      };
       neutrals?: {
         main?: string;
         dark?: string;
@@ -101,36 +101,36 @@ declare module '@emotion/react' {
           95?: string;
           99?: string;
           100?: string;
-        }
-      }
-    },
+        };
+      };
+    };
     fonts?: {
       [fontType: string]: {
-        font?: string,
-        color?: string,
-        textShadow?: string,
-        letterSpacing?: string,
-        textDecoration?: string,
-        transition?: string,
+        font?: string;
+        color?: string;
+        textShadow?: string;
+        letterSpacing?: string;
+        textDecoration?: string;
+        transition?: string;
         '&.active'?: {
-          font?: string,
-          color?: string,
-          textShadow?: string,
-          textDecoration?: string,
-        },
+          font?: string;
+          color?: string;
+          textShadow?: string;
+          textDecoration?: string;
+        };
         '&:hover'?: {
-          font?: string,
-          color?: string,
-          textShadow?: string,
-          textDecoration?: string,
-        },
+          font?: string;
+          color?: string;
+          textShadow?: string;
+          textDecoration?: string;
+        };
         '&.active:hover'?: {
-          font?: string,
-          color?: string,
-          textShadow?: string,
-          textDecoration?: string,
-        },
+          font?: string;
+          color?: string;
+          textShadow?: string;
+          textDecoration?: string;
+        };
       };
-    }
+    };
   }
 }
