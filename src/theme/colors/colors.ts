@@ -51,11 +51,6 @@ const shades = {
   },
 };
 
-type getShadeProps = {
-  colorScheme: ColorScheme;
-  color: 'primary' | 'neutral' | 'danger';
-};
-
 // const getShade = ({ colorScheme, color }: getShadeProps) => {
 //   return colors[color][shades[colorScheme].default];
 // };
@@ -65,36 +60,6 @@ export const colors = {
   neutral,
   danger,
   // getShade,
-  primary90: primary[90],
-  primary80: primary[80],
-  primary70: primary[70],
-  primary60: primary[60],
-  primary50: primary[50],
-  primary40: primary[40],
-  primary30: primary[30],
-  primary20: primary[20],
-  primary10: primary[10],
-  primary5: primary[5],
-  neutral90: neutral[90],
-  neutral80: neutral[80],
-  neutral70: neutral[70],
-  neutral60: neutral[60],
-  neutral50: neutral[50],
-  neutral40: neutral[40],
-  neutral30: neutral[30],
-  neutral20: neutral[20],
-  neutral10: neutral[10],
-  neutral5: neutral[5],
-  danger90: danger[90],
-  danger80: danger[80],
-  danger70: danger[70],
-  danger60: danger[60],
-  danger50: danger[50],
-  danger40: danger[40],
-  danger30: danger[30],
-  danger20: danger[20],
-  danger10: danger[10],
-  danger5: danger[5],
 };
 const MANTINE_THEME = {
   colors: {

@@ -23,7 +23,7 @@ export const HeaderNavbar = ({ links }: HeaderNavbarProps) => {
   const { colorScheme } = useMantineColorScheme();
   const styles = {
     header: css({
-      backgroundColor: colorScheme === 'light' ? theme.colors.neutral5 : theme.colors.neutral90,
+      backgroundColor: colorScheme === 'light' ? theme.colors.neutral[5] : theme.colors.neutral[90],
       padding: '8px 25px',
     }),
     inner: css({
@@ -34,17 +34,17 @@ export const HeaderNavbar = ({ links }: HeaderNavbarProps) => {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      color: colorScheme === 'light' ? theme.colors.neutral90 : theme.colors.neutral5,
+      color: colorScheme === 'light' ? theme.colors.neutral[90] : theme.colors.neutral[5],
     }),
     logo: css({
       height: '100%',
     }),
     menuItem: css({
-      backgroundColor: colorScheme === 'light' ? theme.colors.neutral5 : theme.colors.neutral90,
+      backgroundColor: colorScheme === 'light' ? theme.colors.neutral[5] : theme.colors.neutral[90],
       height: '100%',
       transition: 'background-color 0.15s',
       '&:hover': {
-        backgroundColor: colorScheme === 'light' ? theme.colors.neutral10 : theme.colors.neutral80,
+        backgroundColor: colorScheme === 'light' ? theme.colors.neutral[10] : theme.colors.neutral[80],
       },
       padding: '5px 8px',
       borderRadius: '5px',

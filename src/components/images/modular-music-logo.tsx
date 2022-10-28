@@ -14,13 +14,13 @@ type ModularMusicLogoProps = {
 export const ModularMusicLogo = ({ colorScheme, height = '100%' }: ModularMusicLogoProps) => {
   const primaryColor =
     colorScheme === 'light'
-      ? theme.colors.neutral90
+      ? theme.colors.neutral[90]
       : colorScheme === 'dark'
-      ? theme.colors.neutral5
+      ? theme.colors.neutral[5]
       : colorScheme.primary;
 
   const secondaryColor =
-    colorScheme === 'dark' || colorScheme === 'light' ? theme.colors.primary50 : colorScheme.secondary ?? primaryColor;
+    colorScheme === 'dark' || colorScheme === 'light' ? theme.colors.primary[50] : colorScheme.secondary ?? primaryColor;
 
   return (
     <svg height={height} viewBox='0 0 488 75' fill='none' xmlns='http://www.w3.org/2000/svg'>
