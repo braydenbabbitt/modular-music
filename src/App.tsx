@@ -2,7 +2,7 @@ import React from 'react';
 import './App.css';
 import { useBrowserColorScheme, useDestructableLocalStorage } from 'den-ui';
 import { ColorSchemeProvider, ColorScheme } from '@mantine/core';
-import { useLocation } from 'react-router-dom';
+import { Route, Routes, useLocation } from 'react-router-dom';
 import { HeaderNavbar } from './components/navbars/header-navbar.component';
 
 function App() {
@@ -15,11 +15,6 @@ function App() {
   // Variables
   const currentLocation = useLocation();
 
-  // Functions
-  const toggleColorScheme = (newValue?: ColorScheme) => {
-    setColorScheme(newValue);
-  };
-
   const headerLinks = [
     {
       label: 'Test Dropdown',
@@ -31,8 +26,12 @@ function App() {
   ];
 
   return (
-    <ColorSchemeProvider colorScheme={colorScheme} toggleColorScheme={toggleColorScheme}>
+    <ColorSchemeProvider colorScheme={colorScheme} toggleColorScheme={setColorScheme}>
       <HeaderNavbar links={headerLinks}></HeaderNavbar>
+      <Routes>
+        <Route path='/' element={<h1>Home</h1>} />
+        <Route path='/spotify-login' element={<h1>Spotify Login Handler</h1>} />
+      </Routes>
     </ColorSchemeProvider>
   );
 }
