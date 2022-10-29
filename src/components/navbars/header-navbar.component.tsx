@@ -1,10 +1,11 @@
 import React from 'react';
 import { css } from '@emotion/react';
-import { Center, Container, Group, Header, Menu, useMantineColorScheme } from '@mantine/core';
+import { Button, Center, Container, Group, Header, Menu, useMantineColorScheme } from '@mantine/core';
 import { theme } from '../../theme';
 import { ModularMusicLogo } from '../images/modular-music-logo';
 import { IconChevronDown } from '@tabler/icons';
 import { useElementSize } from '@mantine/hooks';
+import { useAuth } from '../../hooks/use-auth.hook';
 
 type NavbarItem = {
   label: string;
@@ -21,6 +22,7 @@ type HeaderNavbarProps = {
 
 export const HeaderNavbar = ({ links }: HeaderNavbarProps) => {
   const { colorScheme } = useMantineColorScheme();
+  const { login } = useAuth();
   const styles = {
     header: css({
       backgroundColor: colorScheme === 'light' ? theme.colors.neutral5 : theme.colors.neutral90,
@@ -28,7 +30,7 @@ export const HeaderNavbar = ({ links }: HeaderNavbarProps) => {
     }),
     inner: css({
       height: '100%',
-      maxWidth: '1200px',
+      maxWidth: '1600px',
       padding: 0,
       margin: '0 auto',
       display: 'flex',
@@ -119,6 +121,7 @@ export const HeaderNavbar = ({ links }: HeaderNavbarProps) => {
         <Group css={styles.linksGroup} spacing={5}>
           {linkItems}
         </Group>
+        <Button onClick={() => login()}>Login</Button>
       </Container>
     </Header>
   );
