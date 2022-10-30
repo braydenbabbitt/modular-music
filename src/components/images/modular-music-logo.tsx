@@ -20,7 +20,9 @@ export const ModularMusicLogo = ({ colorScheme, height = '100%' }: ModularMusicL
       : colorScheme.primary;
 
   const secondaryColor =
-    colorScheme === 'dark' || colorScheme === 'light' ? theme.colors.primary[50] : colorScheme.secondary ?? primaryColor;
+    colorScheme === 'dark' || colorScheme === 'light'
+      ? theme.colors.primary[50]
+      : colorScheme.secondary ?? primaryColor;
 
   return (
     <svg height={height} viewBox='0 0 488 75' fill='none' xmlns='http://www.w3.org/2000/svg'>
