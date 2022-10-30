@@ -6,6 +6,7 @@ import { ModularMusicLogo } from '../images/modular-music-logo';
 import { IconChevronDown } from '@tabler/icons';
 import { useElementSize } from '@mantine/hooks';
 import { useAuth } from '../../hooks/use-auth.hook';
+import { Link } from 'react-router-dom';
 
 type NavbarItem = {
   label: string;
@@ -26,7 +27,7 @@ export const HeaderNavbar = ({ links }: HeaderNavbarProps) => {
   const styles = {
     header: css({
       backgroundColor: colorScheme === 'light' ? theme.colors.neutral[5] : theme.colors.neutral[90],
-      padding: '8px 25px',
+      padding: '12px 25px',
     }),
     inner: css({
       height: '100%',
@@ -117,7 +118,9 @@ export const HeaderNavbar = ({ links }: HeaderNavbarProps) => {
   return (
     <Header height={theme.sizes.headerHeight} css={styles.header}>
       <Container css={styles.inner} fluid>
-        <ModularMusicLogo colorScheme={colorScheme} />
+        <Link css={css({ height: '100%' })} to='/'>
+          <ModularMusicLogo colorScheme={colorScheme} />
+        </Link>
         <Group css={styles.linksGroup} spacing={5}>
           {linkItems}
         </Group>
