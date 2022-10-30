@@ -1,6 +1,3 @@
 {
-  "conventionalCommits.scopes": [
-    "theme",
-    ".vscode"
-  ]
+  "conventionalCommits.scopes": ["theme", ".vscode", "app"]
 }
