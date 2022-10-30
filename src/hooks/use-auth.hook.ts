@@ -4,7 +4,6 @@ import { User } from '../services/auth/types';
 
 type AuthData = {
   user?: User;
-  token?: string;
 };
 
 export const useAuth = () => {
@@ -21,5 +20,5 @@ export const useAuth = () => {
     setAuthData({});
   };
 
-  return { authData, login, logout };
+  return { authData, setAuthData, login, logout };
 };
