@@ -1,14 +1,15 @@
+import { useNavigate } from 'react-router-dom';
 import { SpotifyApiRefreshTokenRequest, SpotifyApiRefreshTokenResponse } from './../services/auth/types';
 import { reduceUrlParams } from './../utils/reduce-url-params';
 import { generateRandomString } from '../utils/generate-random-string';
 import { generateCodeChallenge } from '../utils/generate-code-challenge';
 import axios, { AxiosResponse } from 'axios';
 import { SpotifyApiTokenRequest, SpotifyApiTokenResponse, User } from '../services/auth/types';
+import { AUTH_DATA_KEY } from '../utils/constants';
 
 const CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
 const REDIRECT_URI = import.meta.env.VITE_SPOTIFY_LOGIN_REDIRECT_URI;
 const codeVerifierKey = 'code_verifier';
-const authDataKey = 'authData';
 
 const scopes = [
   'ugc-image-upload',
@@ -52,7 +53,7 @@ export const exchangeToken = (authCode: string) => {
       client_id: CLIENT_ID,
       code_verifier,
     });
-    axios
+    return axios
       .post<SpotifyApiTokenRequest, AxiosResponse<SpotifyApiTokenResponse>>(
         'https://accounts.spotify.com/api/token',
         body,
@@ -63,15 +64,13 @@ export const exchangeToken = (authCode: string) => {
         },
       )
       .then((response) => {
-        const expires_at = (Date.now() + response.data.expires_in).toString();
-        localStorage.setItem(
-          authDataKey,
-          JSON.stringify({
-            access_token: response.data.access_token,
-            refresh_token: response.data.refresh_token,
-            expires_at,
-          }),
-        );
+        const expires_at = Date.now() + response.data.expires_in * 1000;
+        localStorage.removeItem(codeVerifierKey);
+        return {
+          access_token: response.data.access_token,
+          refresh_token: response.data.refresh_token,
+          expires_at,
+        };
       })
       .catch((error) => {
         throw Error(error);
@@ -81,6 +80,7 @@ export const exchangeToken = (authCode: string) => {
   }
 
   localStorage.removeItem(codeVerifierKey);
+  return undefined;
 };
 
 export const refreshToken = () => {
@@ -92,7 +92,7 @@ export const refreshToken = () => {
       client_id: CLIENT_ID,
       refresh_token,
     });
-    axios
+    return axios
       .post<SpotifyApiRefreshTokenRequest, AxiosResponse<SpotifyApiRefreshTokenResponse>>(
         'https://accounts.spotify.com/api/token',
         body,
@@ -103,23 +103,21 @@ export const refreshToken = () => {
         },
       )
       .then((response) => {
-        const expires_at = (Date.now() + response.data.expires_in).toString();
-        const prevAuthData = JSON.parse(localStorage.getItem(authDataKey) ?? '{}');
-        localStorage.setItem(authDataKey, {
-          ...prevAuthData,
+        const expires_at = Date.now() + response.data.expires_in * 1000;
+        return {
           access_token: response.data.access_token,
           expires_at,
-        });
+        };
       });
   } else {
     console.error('No refresh token found');
   }
+
+  return undefined;
 };
 
-export const getUser = () => {
-  const access_token = localStorage.getItem('access_token');
-
-  axios
+export const getUser = (access_token: string) => {
+  return axios
     .get<User>('https://api.spotify.com/v1/me', {
       headers: {
         Authorization: 'Bearer ' + access_token,

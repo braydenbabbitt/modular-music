@@ -1,12 +1,22 @@
 import React from 'react';
 import { css } from '@emotion/react';
-import { Button, Center, Container, Group, Header, Menu, useMantineColorScheme } from '@mantine/core';
+import {
+  Avatar,
+  Button,
+  Center,
+  Container,
+  Group,
+  Header,
+  Menu,
+  useMantineColorScheme,
+  useMantineTheme,
+} from '@mantine/core';
 import { theme } from '../../theme';
 import { ModularMusicLogo } from '../images/modular-music-logo';
 import { IconChevronDown } from '@tabler/icons';
 import { useElementSize } from '@mantine/hooks';
-import { useAuth } from '../../hooks/use-auth.hook';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../services/auth/auth.provider';
 
 type NavbarItem = {
   label: string;
@@ -23,7 +33,8 @@ type HeaderNavbarProps = {
 
 export const HeaderNavbar = ({ links }: HeaderNavbarProps) => {
   const { colorScheme } = useMantineColorScheme();
-  const { login } = useAuth();
+  const { user, login, logout } = useAuth();
+  const { activeStyles } = useMantineTheme();
   const styles = {
     header: css({
       backgroundColor: colorScheme === 'light' ? theme.colors.neutral[5] : theme.colors.neutral[90],
@@ -124,8 +135,51 @@ export const HeaderNavbar = ({ links }: HeaderNavbarProps) => {
         <Group css={styles.linksGroup} spacing={5}>
           {linkItems}
         </Group>
-        <Button onClick={() => login()}>Login</Button>
+        {(user && (
+          <UserDropdown imageSource={user.images[0].url} displayName={user.display_name} logout={logout} />
+        )) || <Button onClick={login}>Login</Button>}
       </Container>
     </Header>
+  );
+};
+
+type UserDropdownProps = {
+  imageSource?: string;
+  displayName: string;
+  logout: () => void;
+};
+
+const UserDropdown = ({ imageSource, displayName, logout }: UserDropdownProps) => {
+  const styles = {
+    avatar: css({
+      cursor: 'pointer',
+    }),
+  };
+
+  const actions = [
+    {
+      label: 'Logout',
+      onClick: logout,
+    },
+  ];
+
+  const userInitials =
+    displayName.split(' ')[0].charAt(0).toUpperCase() + displayName.split(' ')[1].charAt(0).toUpperCase();
+
+  return (
+    <Menu trigger='hover' exitTransitionDuration={150}>
+      <Menu.Target>
+        <Avatar css={styles.avatar} src={imageSource}>
+          {userInitials}
+        </Avatar>
+      </Menu.Target>
+      <Menu.Dropdown>
+        {actions.map((item) => (
+          <Menu.Item key={`${item.label}`} onClick={item.onClick}>
+            {item.label}
+          </Menu.Item>
+        ))}
+      </Menu.Dropdown>
+    </Menu>
   );
 };
