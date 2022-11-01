@@ -34,11 +34,15 @@ type HeaderNavbarProps = {
 export const HeaderNavbar = ({ links }: HeaderNavbarProps) => {
   const { colorScheme } = useMantineColorScheme();
   const { user, login, logout } = useAuth();
-  const { activeStyles } = useMantineTheme();
   const styles = {
     header: css({
       backgroundColor: colorScheme === 'light' ? theme.colors.neutral[5] : theme.colors.neutral[90],
       padding: '12px 25px',
+      ' a': {
+        color: 'inherit',
+        textDecoration: 'none',
+        cursor: 'pointer',
+      },
     }),
     inner: css({
       height: '100%',
@@ -71,7 +75,7 @@ export const HeaderNavbar = ({ links }: HeaderNavbarProps) => {
       cursor: 'pointer',
     }),
     linksGroup: css({
-      height: '80%',
+      height: '100%',
     }),
     dropdownIcon: css({
       marginTop: '5px',
@@ -79,9 +83,14 @@ export const HeaderNavbar = ({ links }: HeaderNavbarProps) => {
   };
 
   const linkItems = links.map((linkItem) => {
-    const subItems = linkItem.children?.map((subItem) => (
-      <Menu.Item key={`${subItem.label}:${subItem.link}`}>{subItem.label}</Menu.Item>
-    ));
+    const subItems = linkItem.children?.map((subItem) => {
+      console.log({ subItem });
+      return (
+        <Menu.Item<'a'> component='a' href={subItem.link} key={`${subItem.label}:${subItem.link}`}>
+          {subItem.label}
+        </Menu.Item>
+      );
+    });
 
     if (subItems) {
       return (
@@ -89,15 +98,11 @@ export const HeaderNavbar = ({ links }: HeaderNavbarProps) => {
           key={`${linkItem.label}${linkItem.link ? `:${linkItem.link}` : ''}`}
           trigger='hover'
           exitTransitionDuration={150}
+          width='target'
         >
           <Menu.Target>
             {linkItem.link ? (
-              <Center
-                component='a'
-                href={linkItem.link}
-                onClick={(e) => e.preventDefault()}
-                css={[styles.menuItem, styles.link]}
-              >
+              <Center<'a'> component='a' href={linkItem.link} css={[styles.menuItem, styles.link]}>
                 <span>{linkItem.label}</span>
                 <IconChevronDown size={'1em'} stroke={1.5} css={styles.dropdownIcon} />
               </Center>
@@ -114,10 +119,9 @@ export const HeaderNavbar = ({ links }: HeaderNavbarProps) => {
     }
 
     return (
-      <Center
+      <Center<'a'>
         component='a'
         href={linkItem.link}
-        onClick={(e) => e.preventDefault()}
         css={[styles.menuItem, styles.link]}
         key={`${linkItem.label}${linkItem.link ? `:${linkItem.link}` : ''}`}
       >
@@ -132,12 +136,16 @@ export const HeaderNavbar = ({ links }: HeaderNavbarProps) => {
         <Link css={css({ height: '100%' })} to='/'>
           <ModularMusicLogo colorScheme={colorScheme} />
         </Link>
-        <Group css={styles.linksGroup} spacing={5}>
+        <Group css={styles.linksGroup} spacing={10}>
           {linkItems}
         </Group>
         {(user && (
           <UserDropdown imageSource={user.images[0].url} displayName={user.display_name} logout={logout} />
-        )) || <Button onClick={login}>Login</Button>}
+        )) || (
+          <Button color={theme.colors.primary[50]} onClick={login}>
+            Login
+          </Button>
+        )}
       </Container>
     </Header>
   );
