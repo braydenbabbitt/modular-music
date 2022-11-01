@@ -1,8 +1,11 @@
-import { colors } from './colors/colors';
+import { colors, mantineDeepPartial } from './colors/colors';
 import { sizes } from './sizes/sizes';
 
 export const theme = {
-  colors,
+  colors: {
+    ...colors,
+    mantineDeepPartial,
+  },
   sizes,
 };
 

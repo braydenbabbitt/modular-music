@@ -1,11 +1,12 @@
 import React from 'react';
 import './App.css';
 import { useBrowserColorScheme, useDestructableLocalStorage } from 'den-ui';
-import { ColorSchemeProvider, ColorScheme } from '@mantine/core';
+import { ColorSchemeProvider, ColorScheme, MantineProvider } from '@mantine/core';
 import { Route, Routes } from 'react-router-dom';
 import { HeaderNavbar } from './components/navbars/header-navbar.component';
 import { SpotifyLoginPage } from './pages/spotify/spotify-login.page';
 import { AuthProvider } from './services/auth/auth.provider';
+import { theme } from './theme';
 
 function App() {
   // State
@@ -23,18 +24,34 @@ function App() {
     },
     {
       label: 'Test Direct Link',
+      link: '/',
     },
   ];
 
+  console.log(theme.colors.mantineDeepPartial('primary')[7]);
+
   return (
     <ColorSchemeProvider colorScheme={colorScheme} toggleColorScheme={setColorScheme}>
-      <AuthProvider>
-        <HeaderNavbar links={headerLinks}></HeaderNavbar>
-        <Routes>
-          <Route path='/' element={<h1>Home</h1>} />
-          <Route path='/spotify-login' element={<SpotifyLoginPage />} />
-        </Routes>
-      </AuthProvider>
+      <MantineProvider
+        theme={{
+          colorScheme,
+          colors: {
+            primary: theme.colors.mantineDeepPartial('primary'),
+            danger: theme.colors.mantineDeepPartial('danger'),
+            neutral: theme.colors.mantineDeepPartial('neutral'),
+          },
+          primaryColor: 'primary',
+          primaryShade: { light: 5, dark: 7 },
+        }}
+      >
+        <AuthProvider>
+          <HeaderNavbar links={headerLinks}></HeaderNavbar>
+          <Routes>
+            <Route path='/' element={<h1>Home</h1>} />
+            <Route path='/spotify-login' element={<SpotifyLoginPage />} />
+          </Routes>
+        </AuthProvider>
+      </MantineProvider>
     </ColorSchemeProvider>
   );
 }

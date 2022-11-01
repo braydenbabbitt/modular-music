@@ -1,4 +1,3 @@
-import { ColorScheme } from '@mantine/core';
 const primary = {
   90: '#072C14',
   80: '#0E5827',
@@ -61,6 +60,28 @@ export const colors = {
   danger,
   // getShade,
 };
+
+type MantineDeepPartial = [
+  (string | undefined)?,
+  (string | undefined)?,
+  (string | undefined)?,
+  (string | undefined)?,
+  (string | undefined)?,
+  (string | undefined)?,
+  (string | undefined)?,
+  (string | undefined)?,
+  (string | undefined)?,
+  (string | undefined)?,
+];
+
+export const mantineDeepPartial = (color: keyof typeof colors) => {
+  const result = Object.values(colors[color]).sort((a, b) => (a > b ? -1 : 1));
+  if (result.length > 10) {
+    return result.slice(0, 10) as MantineDeepPartial;
+  }
+  return result as MantineDeepPartial;
+};
+
 const MANTINE_THEME = {
   colors: {
     primary: [
