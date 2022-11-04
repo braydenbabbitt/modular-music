@@ -6,7 +6,7 @@ import { Route, Routes } from 'react-router-dom';
 import { HeaderNavbar } from './components/navbars/header-navbar.component';
 import { SpotifyLoginPage } from './pages/spotify/spotify-login.page';
 import { AuthProvider } from './services/auth/auth.provider';
-import { theme } from './theme';
+import { mantineTheme } from './theme';
 
 function App() {
   // State
@@ -16,7 +16,6 @@ function App() {
   );
 
   // Variables
-
   const headerLinks = [
     {
       label: 'Test Dropdown',
@@ -28,20 +27,12 @@ function App() {
     },
   ];
 
-  console.log(theme.colors.mantineDeepPartial('primary')[7]);
-
   return (
     <ColorSchemeProvider colorScheme={colorScheme} toggleColorScheme={setColorScheme}>
       <MantineProvider
         theme={{
           colorScheme,
-          colors: {
-            primary: theme.colors.mantineDeepPartial('primary'),
-            danger: theme.colors.mantineDeepPartial('danger'),
-            neutral: theme.colors.mantineDeepPartial('neutral'),
-          },
-          primaryColor: 'primary',
-          primaryShade: { light: 5, dark: 7 },
+          ...mantineTheme,
         }}
       >
         <AuthProvider>
