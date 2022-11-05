@@ -1,20 +1,9 @@
 import React from 'react';
 import { css } from '@emotion/react';
-import {
-  Avatar,
-  Button,
-  Center,
-  Container,
-  Group,
-  Header,
-  Menu,
-  useMantineColorScheme,
-  useMantineTheme,
-} from '@mantine/core';
+import { Avatar, Button, Center, Container, Group, Header, Menu, useMantineColorScheme } from '@mantine/core';
 import { theme } from '../../theme';
 import { ModularMusicLogo } from '../images/modular-music-logo';
 import { IconChevronDown } from '@tabler/icons';
-import { useElementSize } from '@mantine/hooks';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../services/auth/auth.provider';
 
@@ -84,9 +73,8 @@ export const HeaderNavbar = ({ links }: HeaderNavbarProps) => {
 
   const linkItems = links.map((linkItem) => {
     const subItems = linkItem.children?.map((subItem) => {
-      console.log({ subItem });
       return (
-        <Menu.Item<'a'> component='a' href={subItem.link} key={`${subItem.label}:${subItem.link}`}>
+        <Menu.Item component={Link} to={subItem.link} key={`${subItem.label}:${subItem.link}`}>
           {subItem.label}
         </Menu.Item>
       );
@@ -102,7 +90,7 @@ export const HeaderNavbar = ({ links }: HeaderNavbarProps) => {
         >
           <Menu.Target>
             {linkItem.link ? (
-              <Center<'a'> component='a' href={linkItem.link} css={[styles.menuItem, styles.link]}>
+              <Center component={Link} to={linkItem.link} css={[styles.menuItem, styles.link]}>
                 <span>{linkItem.label}</span>
                 <IconChevronDown size={'1em'} stroke={1.5} css={styles.dropdownIcon} />
               </Center>
@@ -118,16 +106,24 @@ export const HeaderNavbar = ({ links }: HeaderNavbarProps) => {
       );
     }
 
-    return (
-      <Center<'a'>
-        component='a'
-        href={linkItem.link}
-        css={[styles.menuItem, styles.link]}
-        key={`${linkItem.label}${linkItem.link ? `:${linkItem.link}` : ''}`}
-      >
-        {linkItem.label}
-      </Center>
-    );
+    if (linkItem.link) {
+      return (
+        <Center
+          component={Link}
+          to={linkItem.link}
+          css={[styles.menuItem, styles.link]}
+          key={`${linkItem.label}${linkItem.link ? `:${linkItem.link}` : ''}`}
+        >
+          {linkItem.label}
+        </Center>
+      );
+    } else {
+      return (
+        <Center css={styles.menuItem} key={`${linkItem.label}${linkItem.link ? `:${linkItem.link}` : ''}`}>
+          {linkItem.label}
+        </Center>
+      );
+    }
   });
 
   return (
@@ -166,6 +162,10 @@ const UserDropdown = ({ imageSource, displayName, logout }: UserDropdownProps) =
 
   const actions = [
     {
+      label: 'Settings',
+      route: '/settings',
+    },
+    {
       label: 'Logout',
       onClick: logout,
     },
@@ -175,18 +175,28 @@ const UserDropdown = ({ imageSource, displayName, logout }: UserDropdownProps) =
     displayName.split(' ')[0].charAt(0).toUpperCase() + displayName.split(' ')[1].charAt(0).toUpperCase();
 
   return (
-    <Menu trigger='hover' exitTransitionDuration={150}>
+    <Menu position='top-end' trigger='hover' exitTransitionDuration={150}>
       <Menu.Target>
         <Avatar css={styles.avatar} src={imageSource}>
           {userInitials}
         </Avatar>
       </Menu.Target>
       <Menu.Dropdown>
-        {actions.map((item) => (
-          <Menu.Item key={`${item.label}`} onClick={item.onClick}>
-            {item.label}
-          </Menu.Item>
-        ))}
+        {actions.map((item) => {
+          if (item.route) {
+            return (
+              <Menu.Item component={Link} key={`${item.label}:${item.route}`} to={item.route}>
+                {item.label}
+              </Menu.Item>
+            );
+          } else {
+            return (
+              <Menu.Item key={`${item.label}`} onClick={item.onClick}>
+                {item.label}
+              </Menu.Item>
+            );
+          }
+        })}
       </Menu.Dropdown>
     </Menu>
   );
