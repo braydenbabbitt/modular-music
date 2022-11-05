@@ -1,6 +1,6 @@
-import { useDestructableLocalStorage } from 'den-ui';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
-import { Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { useDestructibleLocalStorage } from 'den-ui';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { exchangeToken, getUser, redirectToAuthPage, refreshToken } from '../../apis/spotify.api';
 import { AUTH_DATA_KEY } from '../../utils/constants';
 import { User } from './types';
@@ -25,7 +25,7 @@ type AuthProviderContextValue = {
 const AuthContext = createContext<AuthProviderContextValue | undefined>(undefined);
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const [authData, setAuthData] = useDestructableLocalStorage<AuthData | undefined>(AUTH_DATA_KEY, undefined, true);
+  const [authData, setAuthData] = useDestructibleLocalStorage<AuthData | undefined>(AUTH_DATA_KEY, undefined, true);
   const [user, setUser] = useState<User>();
   const location = useLocation();
   const [urlParams, setUrlParams] = useSearchParams();
