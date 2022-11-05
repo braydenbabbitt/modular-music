@@ -1,11 +1,9 @@
-import { useNavigate } from 'react-router-dom';
 import { SpotifyApiRefreshTokenRequest, SpotifyApiRefreshTokenResponse } from './../services/auth/types';
 import { reduceUrlParams } from './../utils/reduce-url-params';
 import { generateRandomString } from '../utils/generate-random-string';
 import { generateCodeChallenge } from '../utils/generate-code-challenge';
 import axios, { AxiosResponse } from 'axios';
 import { SpotifyApiTokenRequest, SpotifyApiTokenResponse, User } from '../services/auth/types';
-import { AUTH_DATA_KEY } from '../utils/constants';
 
 const CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
 const REDIRECT_URI = import.meta.env.VITE_SPOTIFY_LOGIN_REDIRECT_URI;
@@ -34,7 +32,7 @@ export const redirectToAuthPage = () => {
       reduceUrlParams({
         response_type: 'code',
         client_id: CLIENT_ID,
-        scope: scopes,
+        scope: scopes.join(' '),
         redirect_uri: REDIRECT_URI,
         code_challenge_method: 'S256',
         code_challenge,
