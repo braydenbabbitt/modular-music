@@ -77,12 +77,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           });
         }
       } else {
-        refreshToken()?.then((newTokenData) => {
-          setAuthData((prev) => ({
-            ...prev,
-            ...newTokenData,
-          }));
-        });
+        if (authData.refresh_token) {
+          refreshToken(authData.refresh_token).then((newTokenData) => {
+            setAuthData((prev) => ({
+              ...prev,
+              ...newTokenData,
+            }));
+          });
+        } else {
+          console.error('No refresh token found');
+        }
       }
     }
   }, [authData, location, setAuthData, user]);

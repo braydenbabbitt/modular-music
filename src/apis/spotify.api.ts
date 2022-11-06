@@ -81,37 +81,29 @@ export const exchangeToken = (authCode: string) => {
   return undefined;
 };
 
-export const refreshToken = () => {
-  const refresh_token = localStorage.getItem('refresh_token');
-
-  if (refresh_token) {
-    const body = new URLSearchParams({
-      grant_type: 'refresh_token',
-      client_id: CLIENT_ID,
-      refresh_token,
-    });
-    return axios
-      .post<SpotifyApiRefreshTokenRequest, AxiosResponse<SpotifyApiRefreshTokenResponse>>(
-        'https://accounts.spotify.com/api/token',
-        body,
-        {
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
+export const refreshToken = (refresh_token: string) => {
+  const body = new URLSearchParams({
+    grant_type: 'refresh_token',
+    client_id: CLIENT_ID,
+    refresh_token,
+  });
+  return axios
+    .post<SpotifyApiRefreshTokenRequest, AxiosResponse<SpotifyApiRefreshTokenResponse>>(
+      'https://accounts.spotify.com/api/token',
+      body,
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
         },
-      )
-      .then((response) => {
-        const expires_at = Date.now() + response.data.expires_in * 1000;
-        return {
-          access_token: response.data.access_token,
-          expires_at,
-        };
-      });
-  } else {
-    console.error('No refresh token found');
-  }
-
-  return undefined;
+      },
+    )
+    .then((response) => {
+      const expires_at = Date.now() + response.data.expires_in * 1000;
+      return {
+        access_token: response.data.access_token,
+        expires_at,
+      };
+    });
 };
 
 export const getUser = (access_token: string) => {
