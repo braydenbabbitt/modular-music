@@ -26,7 +26,7 @@ export const HeaderNavbar = ({ links }: HeaderNavbarProps) => {
   const styles = {
     header: css({
       backgroundColor: colorScheme === 'light' ? theme.colors.neutral[5] : theme.colors.neutral[90],
-      padding: '12px 25px',
+      padding: `12px ${theme.sizes.pagePadding}px`,
       ' a': {
         color: 'inherit',
         textDecoration: 'none',
@@ -35,7 +35,7 @@ export const HeaderNavbar = ({ links }: HeaderNavbarProps) => {
     }),
     inner: css({
       height: '100%',
-      maxWidth: '1600px',
+      maxWidth: theme.sizes.innerMaxWidth,
       padding: 0,
       margin: '0 auto',
       display: 'flex',
