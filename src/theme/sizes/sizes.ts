@@ -1,3 +1,5 @@
 export const sizes = {
-  headerHeight: '65px',
+  headerHeight: 65,
+  pagePadding: 25,
+  innerMaxWidth: 1600,
 };

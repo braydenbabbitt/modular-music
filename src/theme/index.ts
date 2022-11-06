@@ -17,6 +17,7 @@ export const mantineTheme = {
   },
   primaryColor: 'primary',
   primaryShade: { light: 5, dark: 7 },
+  fontFamily: 'inter',
 } as MantineThemeOverride;
 
 export type themeType = typeof theme;
