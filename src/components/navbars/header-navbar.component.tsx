@@ -17,7 +17,7 @@ type NavbarItem = {
 };
 
 type HeaderNavbarProps = {
-  links: NavbarItem[];
+  links?: NavbarItem[];
 };
 
 export const HeaderNavbar = ({ links }: HeaderNavbarProps) => {
@@ -71,7 +71,7 @@ export const HeaderNavbar = ({ links }: HeaderNavbarProps) => {
     }),
   };
 
-  const linkItems = links.map((linkItem) => {
+  const linkItems = links?.map((linkItem) => {
     const subItems = linkItem.children?.map((subItem) => {
       return (
         <Menu.Item component={Link} to={subItem.link} key={`${subItem.label}:${subItem.link}`}>
@@ -129,12 +129,14 @@ export const HeaderNavbar = ({ links }: HeaderNavbarProps) => {
   return (
     <Header height={theme.sizes.headerHeight} css={styles.header}>
       <Container css={styles.inner} fluid>
-        <Link css={css({ height: '100%' })} to='/'>
+        <Link css={css({ height: '100%' })} to={user ? '/dashboard' : '/'}>
           <ModularMusicLogo colorScheme={colorScheme} />
         </Link>
-        <Group css={styles.linksGroup} spacing={10}>
-          {linkItems}
-        </Group>
+        {linkItems && (
+          <Group css={styles.linksGroup} spacing={10}>
+            {linkItems}
+          </Group>
+        )}
         {(user && (
           <UserDropdown imageSource={user.images[0].url} displayName={user.display_name} logout={logout} />
         )) || (

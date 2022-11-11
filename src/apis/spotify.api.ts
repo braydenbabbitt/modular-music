@@ -4,6 +4,7 @@ import { generateRandomString } from '../utils/generate-random-string';
 import { generateCodeChallenge } from '../utils/generate-code-challenge';
 import axios, { AxiosResponse } from 'axios';
 import { SpotifyApiTokenRequest, SpotifyApiTokenResponse, User } from '../services/auth/types';
+import { AuthData } from '../services/auth/auth.provider';
 
 const CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
 const REDIRECT_URI = import.meta.env.VITE_SPOTIFY_LOGIN_REDIRECT_URI;
@@ -99,10 +100,17 @@ export const refreshToken = (refresh_token: string) => {
     )
     .then((response) => {
       const expires_at = Date.now() + response.data.expires_in * 1000;
-      return {
+
+      const newTokenData: AuthData = {
         access_token: response.data.access_token,
         expires_at,
       };
+
+      if (response.data.refresh_token) {
+        newTokenData.refresh_token = response.data.refresh_token;
+      }
+
+      return newTokenData;
     });
 };
 

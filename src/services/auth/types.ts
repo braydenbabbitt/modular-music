@@ -52,4 +52,5 @@ export type SpotifyApiRefreshTokenResponse = {
   token_type: string;
   scope: string;
   expires_in: number;
+  refresh_token?: string;
 };
