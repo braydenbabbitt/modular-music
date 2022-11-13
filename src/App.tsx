@@ -13,6 +13,9 @@ import { PageContainer } from './components/containers/page-container.component'
 import { DashboardPage } from './pages/dashboard/dashboard.page';
 import { HomePage } from './pages/home/home.page';
 import { HotKeys } from 'react-hotkeys';
+import { QueryClient, QueryClientProvider } from 'react-query';
+
+const queryClient = new QueryClient();
 
 function App() {
   // State
@@ -41,28 +44,30 @@ function App() {
   };
 
   return (
-    <ColorSchemeProvider colorScheme={colorScheme} toggleColorScheme={setColorScheme}>
-      <MantineProvider
-        theme={{
-          colorScheme,
-          ...mantineTheme,
-        }}
-      >
-        <HotKeys {...hotkeys}>
-          <AuthProvider>
-            <HeaderNavbar />
-            <PageContainer>
-              <Routes>
-                <Route path='/' element={<HomePage />} />
-                <Route path='/dashboard' element={<DashboardPage />} />
-                <Route path='/spotify-login' element={<SpotifyLoginPage />} />
-                <Route path='/settings' element={<SettingsPage />} />
-              </Routes>
-            </PageContainer>
-          </AuthProvider>
-        </HotKeys>
-      </MantineProvider>
-    </ColorSchemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <ColorSchemeProvider colorScheme={colorScheme} toggleColorScheme={setColorScheme}>
+        <MantineProvider
+          theme={{
+            colorScheme,
+            ...mantineTheme,
+          }}
+        >
+          <HotKeys {...hotkeys}>
+            <AuthProvider>
+              <HeaderNavbar />
+              <PageContainer>
+                <Routes>
+                  <Route path='/' element={<HomePage />} />
+                  <Route path='/dashboard' element={<DashboardPage />} />
+                  <Route path='/spotify-login' element={<SpotifyLoginPage />} />
+                  <Route path='/settings' element={<SettingsPage />} />
+                </Routes>
+              </PageContainer>
+            </AuthProvider>
+          </HotKeys>
+        </MantineProvider>
+      </ColorSchemeProvider>
+    </QueryClientProvider>
   );
 }
 

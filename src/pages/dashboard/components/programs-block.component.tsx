@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ActionIcon,
   Button,
@@ -6,30 +6,98 @@ import {
   Divider,
   Flex,
   Group,
+  Loader,
+  Modal,
   Paper,
   Stack,
   Text,
+  TextInput,
   Title,
   useMantineColorScheme,
   useMantineTheme,
 } from '@mantine/core';
 import { IconPencil, IconPlus, IconTrash } from '@tabler/icons';
 import { theme } from '../../../theme';
+import { useForm } from '@mantine/form';
+import { getUserPrograms, removeUserProgram, writeUserProgram } from '../../../apis/programs/programs.api';
+import { useFocusTrap } from '@mantine/hooks';
 
 export type Program = {
   id: string;
   name: string;
+  created_at: number;
+  edited_at?: number;
 };
 
-type ProgramsBlockProps = {
-  programs: Program[];
-  removeProgram: (id: string) => void;
-  addProgram: () => void;
-};
-
-export const ProgramsBlock = ({ programs, removeProgram, addProgram }: ProgramsBlockProps) => {
+export const ProgramsBlock = () => {
   const { colorScheme } = useMantineColorScheme();
   const mantineTheme = useMantineTheme();
+  const [programs, setPrograms] = useState<Program[]>([]);
+  const [programModalOpen, setProgramModalOpen] = useState(false);
+  const modalFocusRef = useFocusTrap();
+  const [loading, setLoading] = useState(true);
+  const [selectedProgramId, setSelectedProgramId] = useState<string>();
+  const programForm = useForm({
+    initialValues: {
+      programName: '',
+    },
+    validate: (values) => ({
+      programName: values.programName ? null : 'Program name is required',
+    }),
+  });
+
+  const openProgramModal = () => {
+    setProgramModalOpen(true);
+  };
+
+  const closeProgramModal = () => {
+    setProgramModalOpen(false);
+    if (selectedProgramId) setSelectedProgramId(undefined);
+    programForm.reset();
+  };
+
+  const handleProgramModalConfirm = (values: { programName: string }) => {
+    setLoading(true);
+    if (selectedProgramId) {
+      writeProgram(values.programName, selectedProgramId);
+    } else {
+      writeProgram(values.programName);
+    }
+  };
+
+  const removeProgram = (id: string) => {
+    removeUserProgram({ userId: 'brayden-test', programId: id }).then((result) => setPrograms(result));
+  };
+
+  const writeProgram = (name: string, id?: string) => {
+    writeUserProgram({ userId: 'brayden-test', name, programId: id }).then((result) => {
+      setPrograms(result);
+      setLoading(false);
+      closeProgramModal();
+    });
+  };
+
+  const editProgram = (id: string) => {
+    setSelectedProgramId(id);
+    const previousName = programs.find((program) => program.id === id)?.name;
+    if (previousName) {
+      programForm.setValues((values) => ({
+        ...values,
+        programName: previousName,
+      }));
+      openProgramModal();
+    } else {
+      console.error(`Could not find program with id: ${id}`);
+    }
+  };
+
+  useEffect(() => {
+    getUserPrograms({ userId: 'brayden-test' }).then((programs) => {
+      setPrograms(programs);
+      setLoading(false);
+    });
+  }, []);
+
   const programRows = programs.map((program, index) => {
     return (
       <React.Fragment key={program.id}>
@@ -37,7 +105,7 @@ export const ProgramsBlock = ({ programs, removeProgram, addProgram }: ProgramsB
           <Text>{program.name}</Text>
           <Group spacing='xs'>
             <ActionIcon>
-              <IconPencil />
+              <IconPencil onClick={() => editProgram(program.id)} />
             </ActionIcon>
             <ActionIcon color='danger' onClick={() => removeProgram(program.id)}>
               <IconTrash />
@@ -55,7 +123,7 @@ export const ProgramsBlock = ({ programs, removeProgram, addProgram }: ProgramsB
     <>
       <Flex justify='space-between'>
         <Title order={2}>Programs</Title>
-        <Button leftIcon={<IconPlus />} onClick={() => addProgram()}>
+        <Button leftIcon={<IconPlus />} onClick={() => setProgramModalOpen(true)}>
           Create Program
         </Button>
       </Flex>
@@ -68,12 +136,45 @@ export const ProgramsBlock = ({ programs, removeProgram, addProgram }: ProgramsB
         radius='md'
         shadow='lg'
       >
-        {(programRows.length > 0 && <Stack spacing='xs'>{programRows}</Stack>) || (
+        {(loading && (
           <Center>
-            <Text>No Programs created</Text>
+            <Loader />
           </Center>
-        )}
+        )) ||
+          (programRows.length > 0 && <Stack spacing='xs'>{programRows}</Stack>) || (
+            <Center>
+              <Text>No Programs created</Text>
+            </Center>
+          )}
       </Paper>
+      <Modal
+        opened={programModalOpen}
+        onClose={closeProgramModal}
+        title={selectedProgramId ? 'Edit Program' : 'Create a new program'}
+        centered
+      >
+        <form
+          onSubmit={programForm.onSubmit((values) => {
+            handleProgramModalConfirm(values);
+          })}
+          css={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: mantineTheme.spacing.sm,
+          }}
+        >
+          <TextInput
+            {...programForm.getInputProps('programName')}
+            autoFocus
+            placeholder='Program name'
+            label='Program name'
+            ref={modalFocusRef}
+          />
+          <Button type='submit' loading={loading} color={programForm.isDirty() ? 'primary' : 'neutral'}>
+            {programForm.isDirty() ? (selectedProgramId ? 'Save Program' : 'Create Program') : 'Cancel'}
+          </Button>
+        </form>
+      </Modal>
     </>
   );
 };

@@ -3,7 +3,7 @@ import { css } from '@emotion/react';
 import { Avatar, Button, Center, Container, Group, Header, Menu, useMantineColorScheme } from '@mantine/core';
 import { theme } from '../../theme';
 import { ModularMusicLogo } from '../images/modular-music-logo';
-import { IconChevronDown } from '@tabler/icons';
+import { IconChevronDown, IconLogout, IconSettings } from '@tabler/icons';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../services/auth/auth.provider';
 
@@ -28,7 +28,6 @@ export const HeaderNavbar = ({ links }: HeaderNavbarProps) => {
       backgroundColor: colorScheme === 'light' ? theme.colors.neutral[5] : theme.colors.neutral[90],
       padding: `12px ${theme.sizes.pagePadding}px`,
       ' a': {
-        color: 'inherit',
         textDecoration: 'none',
         cursor: 'pointer',
       },
@@ -165,10 +164,12 @@ const UserDropdown = ({ imageSource, displayName, logout }: UserDropdownProps) =
   const actions = [
     {
       label: 'Settings',
+      icon: <IconSettings size={14} />,
       route: '/settings',
     },
     {
       label: 'Logout',
+      icon: <IconLogout size={14} />,
       onClick: logout,
     },
   ];
@@ -187,13 +188,13 @@ const UserDropdown = ({ imageSource, displayName, logout }: UserDropdownProps) =
         {actions.map((item) => {
           if (item.route) {
             return (
-              <Menu.Item component={Link} key={`${item.label}:${item.route}`} to={item.route}>
+              <Menu.Item component={Link} icon={item.icon} key={`${item.label}:${item.route}`} to={item.route}>
                 {item.label}
               </Menu.Item>
             );
           } else {
             return (
-              <Menu.Item key={`${item.label}`} onClick={item.onClick}>
+              <Menu.Item key={`${item.label}`} icon={item.icon} onClick={item.onClick}>
                 {item.label}
               </Menu.Item>
             );
