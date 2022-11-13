@@ -20,7 +20,6 @@ import { IconPencil, IconPlus, IconTrash } from '@tabler/icons';
 import { theme } from '../../../theme';
 import { useForm } from '@mantine/form';
 import { getUserPrograms, removeUserProgram, writeUserProgram } from '../../../apis/programs/programs.api';
-import { useFocusTrap } from '@mantine/hooks';
 
 export type Program = {
   id: string;
@@ -34,7 +33,6 @@ export const ProgramsBlock = () => {
   const mantineTheme = useMantineTheme();
   const [programs, setPrograms] = useState<Program[]>([]);
   const [programModalOpen, setProgramModalOpen] = useState(false);
-  const modalFocusRef = useFocusTrap();
   const [loading, setLoading] = useState(true);
   const [selectedProgramId, setSelectedProgramId] = useState<string>();
   const programForm = useForm({
@@ -166,9 +164,9 @@ export const ProgramsBlock = () => {
           <TextInput
             {...programForm.getInputProps('programName')}
             autoFocus
+            data-autofocus
             placeholder='Program name'
             label='Program name'
-            ref={modalFocusRef}
           />
           <Button type='submit' loading={loading} color={programForm.isDirty() ? 'primary' : 'neutral'}>
             {programForm.isDirty() ? (selectedProgramId ? 'Save Program' : 'Create Program') : 'Cancel'}
