@@ -20,6 +20,7 @@ import { IconPencil, IconPlus, IconTrash } from '@tabler/icons';
 import { theme } from '../../../theme';
 import { useForm } from '@mantine/form';
 import { getUserPrograms, removeUserProgram, writeUserProgram } from '../../../apis/programs/programs.api';
+import { useMutation, useQuery, useQueryClient } from 'react-query';
 
 export type Program = {
   id: string;
@@ -28,12 +29,46 @@ export type Program = {
   edited_at?: number;
 };
 
+const USER_PROGRAM_QUERY_KEY = 'user-programs';
+
 export const ProgramsBlock = () => {
+  // Theme
   const { colorScheme } = useMantineColorScheme();
   const mantineTheme = useMantineTheme();
-  const [programs, setPrograms] = useState<Program[]>([]);
+
+  // Query Data
+  const queryClient = useQueryClient();
+  const { isLoading, data: programs } = useQuery({
+    queryKey: [USER_PROGRAM_QUERY_KEY],
+    queryFn: () => getUserPrograms({ userId: 'brayden-test' }),
+    refetchOnWindowFocus: false,
+  });
+  const writeProgramMutation = useMutation({
+    mutationFn: (variables: { name: string; id?: string }) => {
+      return writeUserProgram({ userId: 'brayden-test', name: variables.name, programId: variables.id }).then(
+        (result) => {
+          closeProgramModal();
+          return result;
+        },
+      );
+    },
+    mutationKey: [USER_PROGRAM_QUERY_KEY],
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [USER_PROGRAM_QUERY_KEY] });
+    },
+  });
+  const removeProgramMutation = useMutation({
+    mutationFn: (variables: { programId: string }) => {
+      return removeUserProgram({ userId: 'brayden-test', programId: variables.programId });
+    },
+    mutationKey: [USER_PROGRAM_QUERY_KEY],
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [USER_PROGRAM_QUERY_KEY] });
+    },
+  });
+
+  // State
   const [programModalOpen, setProgramModalOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [selectedProgramId, setSelectedProgramId] = useState<string>();
   const programForm = useForm({
     initialValues: {
@@ -44,6 +79,7 @@ export const ProgramsBlock = () => {
     }),
   });
 
+  // Functions
   const openProgramModal = () => {
     setProgramModalOpen(true);
   };
@@ -55,29 +91,16 @@ export const ProgramsBlock = () => {
   };
 
   const handleProgramModalConfirm = (values: { programName: string }) => {
-    setLoading(true);
     if (selectedProgramId) {
-      writeProgram(values.programName, selectedProgramId);
+      writeProgramMutation.mutate({ name: values.programName, id: selectedProgramId });
     } else {
-      writeProgram(values.programName);
+      writeProgramMutation.mutate({ name: values.programName });
     }
-  };
-
-  const removeProgram = (id: string) => {
-    removeUserProgram({ userId: 'brayden-test', programId: id }).then((result) => setPrograms(result));
-  };
-
-  const writeProgram = (name: string, id?: string) => {
-    writeUserProgram({ userId: 'brayden-test', name, programId: id }).then((result) => {
-      setPrograms(result);
-      setLoading(false);
-      closeProgramModal();
-    });
   };
 
   const editProgram = (id: string) => {
     setSelectedProgramId(id);
-    const previousName = programs.find((program) => program.id === id)?.name;
+    const previousName = programs?.find((program) => program.id === id)?.name;
     if (previousName) {
       programForm.setValues((values) => ({
         ...values,
@@ -89,14 +112,7 @@ export const ProgramsBlock = () => {
     }
   };
 
-  useEffect(() => {
-    getUserPrograms({ userId: 'brayden-test' }).then((programs) => {
-      setPrograms(programs);
-      setLoading(false);
-    });
-  }, []);
-
-  const programRows = programs.map((program, index) => {
+  const programRows = programs?.map((program, index) => {
     return (
       <React.Fragment key={program.id}>
         <Flex justify='space-between' align='center' css={{ padding: `2px 0px` }}>
@@ -105,7 +121,7 @@ export const ProgramsBlock = () => {
             <ActionIcon>
               <IconPencil onClick={() => editProgram(program.id)} />
             </ActionIcon>
-            <ActionIcon color='danger' onClick={() => removeProgram(program.id)}>
+            <ActionIcon color='danger' onClick={() => removeProgramMutation.mutate({ programId: program.id })}>
               <IconTrash />
             </ActionIcon>
           </Group>
@@ -134,12 +150,12 @@ export const ProgramsBlock = () => {
         radius='md'
         shadow='lg'
       >
-        {(loading && (
+        {(!programModalOpen && isLoading && (
           <Center>
-            <Loader />
+            <Loader color='neutral' />
           </Center>
         )) ||
-          (programRows.length > 0 && <Stack spacing='xs'>{programRows}</Stack>) || (
+          (programRows && programRows.length > 0 && <Stack spacing='xs'>{programRows}</Stack>) || (
             <Center>
               <Text>No Programs created</Text>
             </Center>
@@ -163,12 +179,11 @@ export const ProgramsBlock = () => {
         >
           <TextInput
             {...programForm.getInputProps('programName')}
-            autoFocus
             data-autofocus
             placeholder='Program name'
             label='Program name'
           />
-          <Button type='submit' loading={loading} color={programForm.isDirty() ? 'primary' : 'neutral'}>
+          <Button type='submit' loading={isLoading} color={programForm.isDirty() ? 'primary' : 'neutral'}>
             {programForm.isDirty() ? (selectedProgramId ? 'Save Program' : 'Create Program') : 'Cancel'}
           </Button>
         </form>
