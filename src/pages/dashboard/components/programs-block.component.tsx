@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   ActionIcon,
   Button,
@@ -59,7 +59,10 @@ export const ProgramsBlock = () => {
   });
   const removeProgramMutation = useMutation({
     mutationFn: (variables: { programId: string }) => {
-      return removeUserProgram({ userId: 'brayden-test', programId: variables.programId });
+      return removeUserProgram({ userId: 'brayden-test', programId: variables.programId }).then((result) => {
+        closeDeleteConfirmation();
+        return result;
+      });
     },
     mutationKey: [USER_PROGRAM_QUERY_KEY],
     onSuccess: () => {
@@ -69,7 +72,8 @@ export const ProgramsBlock = () => {
 
   // State
   const [programModalOpen, setProgramModalOpen] = useState(false);
-  const [selectedProgramId, setSelectedProgramId] = useState<string>();
+  const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
+  const [selectedProgram, setSelectedProgram] = useState<Program>();
   const programForm = useForm({
     initialValues: {
       programName: '',
@@ -83,35 +87,55 @@ export const ProgramsBlock = () => {
   const openProgramModal = () => {
     setProgramModalOpen(true);
   };
-
   const closeProgramModal = () => {
     setProgramModalOpen(false);
-    if (selectedProgramId) setSelectedProgramId(undefined);
+    if (selectedProgram) setSelectedProgram(undefined);
     programForm.reset();
   };
-
   const handleProgramModalConfirm = (values: { programName: string }) => {
-    if (selectedProgramId) {
-      writeProgramMutation.mutate({ name: values.programName, id: selectedProgramId });
+    if (selectedProgram) {
+      writeProgramMutation.mutate({ name: values.programName, id: selectedProgram.id });
     } else {
       writeProgramMutation.mutate({ name: values.programName });
     }
   };
-
+  const selectProgram = (id: string) => {
+    const newSelectedProgram = programs?.find((item) => item.id === id);
+    setSelectedProgram(newSelectedProgram);
+    return newSelectedProgram;
+  };
   const editProgram = (id: string) => {
-    setSelectedProgramId(id);
-    const previousName = programs?.find((program) => program.id === id)?.name;
-    if (previousName) {
+    const newSelectedProgram = selectProgram(id);
+    setSelectedProgram(newSelectedProgram);
+    if (newSelectedProgram) {
       programForm.setValues((values) => ({
         ...values,
-        programName: previousName,
+        programName: newSelectedProgram.name,
       }));
       openProgramModal();
     } else {
       console.error(`Could not find program with id: ${id}`);
     }
   };
+  const openDeleteConfirmation = (id: string) => {
+    const newSelectedProgram = selectProgram(id);
+    if (newSelectedProgram) {
+      setDeleteConfirmationOpen(true);
+    } else {
+      console.error(`Could not find program with id: ${id}`);
+    }
+  };
+  const closeDeleteConfirmation = () => {
+    setDeleteConfirmationOpen(false);
+    if (selectedProgram) setSelectedProgram(undefined);
+  };
+  const removeProgram = () => {
+    if (selectedProgram) {
+      removeProgramMutation.mutate({ programId: selectedProgram.id });
+    }
+  };
 
+  // Render
   const programRows = programs?.map((program, index) => {
     return (
       <React.Fragment key={program.id}>
@@ -121,7 +145,7 @@ export const ProgramsBlock = () => {
             <ActionIcon>
               <IconPencil onClick={() => editProgram(program.id)} />
             </ActionIcon>
-            <ActionIcon color='danger' onClick={() => removeProgramMutation.mutate({ programId: program.id })}>
+            <ActionIcon color='danger' onClick={() => openDeleteConfirmation(program.id)}>
               <IconTrash />
             </ActionIcon>
           </Group>
@@ -161,10 +185,11 @@ export const ProgramsBlock = () => {
             </Center>
           )}
       </Paper>
+      {/* Creation/Edit Modal */}
       <Modal
         opened={programModalOpen}
         onClose={closeProgramModal}
-        title={selectedProgramId ? 'Edit Program' : 'Create a new program'}
+        title={selectedProgram ? 'Edit Program' : 'Create a new program'}
         centered
       >
         <form
@@ -184,9 +209,34 @@ export const ProgramsBlock = () => {
             label='Program name'
           />
           <Button type='submit' loading={isLoading} color={programForm.isDirty() ? 'primary' : 'neutral'}>
-            {programForm.isDirty() ? (selectedProgramId ? 'Save Program' : 'Create Program') : 'Cancel'}
+            {programForm.isDirty() ? (selectedProgram ? 'Save Program' : 'Create Program') : 'Cancel'}
           </Button>
         </form>
+      </Modal>
+      {/* Delete Confirmation Modal */}
+      <Modal
+        opened={deleteConfirmationOpen}
+        onClose={() => setDeleteConfirmationOpen(false)}
+        title='Delete a program'
+        centered
+      >
+        <Stack>
+          <Center>
+            <Text>
+              {selectedProgram
+                ? `Are you sure you want to delete "${selectedProgram.name}"?`
+                : `Could not find program`}
+            </Text>
+          </Center>
+          <Group grow>
+            <Button color='neutral' onClick={closeDeleteConfirmation}>
+              Cancel
+            </Button>
+            <Button loading={isLoading} color='danger' onClick={removeProgram}>
+              Delete
+            </Button>
+          </Group>
+        </Stack>
       </Modal>
     </>
   );
