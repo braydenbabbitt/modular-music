@@ -22,7 +22,7 @@ type HeaderNavbarProps = {
 
 export const HeaderNavbar = ({ links }: HeaderNavbarProps) => {
   const { colorScheme } = useMantineColorScheme();
-  const { user, login, logout } = useAuth();
+  const { spotifyUser, login, logout } = useAuth();
   const styles = {
     header: css({
       backgroundColor: colorScheme === 'light' ? theme.colors.neutral[5] : theme.colors.neutral[90],
@@ -128,7 +128,7 @@ export const HeaderNavbar = ({ links }: HeaderNavbarProps) => {
   return (
     <Header height={theme.sizes.headerHeight} css={styles.header}>
       <Container css={styles.inner} fluid>
-        <Link css={css({ height: '100%' })} to={user ? '/dashboard' : '/'}>
+        <Link css={css({ height: '100%' })} to={spotifyUser ? '/dashboard' : '/'}>
           <ModularMusicLogo colorScheme={colorScheme} />
         </Link>
         {linkItems && (
@@ -136,8 +136,12 @@ export const HeaderNavbar = ({ links }: HeaderNavbarProps) => {
             {linkItems}
           </Group>
         )}
-        {(user && (
-          <UserDropdown imageSource={user.images[0].url} displayName={user.display_name} logout={logout} />
+        {(spotifyUser && (
+          <UserDropdown
+            imageSource={spotifyUser.images[0].url}
+            displayName={spotifyUser.display_name}
+            logout={logout}
+          />
         )) || (
           <Button color={theme.colors.primary[50]} onClick={login}>
             Login

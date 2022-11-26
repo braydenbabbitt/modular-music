@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ActionIcon,
   Button,
@@ -19,61 +19,44 @@ import {
 import { IconPencil, IconPlus, IconTrash } from '@tabler/icons';
 import { theme } from '../../../theme';
 import { useForm } from '@mantine/form';
-import { getUserPrograms, removeUserProgram, writeUserProgram } from '../../../apis/programs/programs.api';
-import { useMutation, useQuery, useQueryClient } from 'react-query';
+import {
+  createUserProgram,
+  deleteProgram,
+  editProgram,
+  getUserPrograms,
+} from '../../../services/supabase/programs/programs.api';
+import { useSupabase } from '../../../services/supabase/client/client';
+import { useAuth } from '../../../services/auth/auth.provider';
+import { Database } from '../../../services/supabase/types/database.types';
+import { showNotification } from '@mantine/notifications';
 
-export type Program = {
-  id: string;
-  name: string;
-  created_at: number;
-  edited_at?: number;
-};
-
-const USER_PROGRAM_QUERY_KEY = 'user-programs';
+type DatabaseProgram = Database['public']['Tables']['programs']['Row'];
 
 export const ProgramsBlock = () => {
   // Theme
   const { colorScheme } = useMantineColorScheme();
+  const supabaseClient = useSupabase();
+  const { user } = useAuth();
   const mantineTheme = useMantineTheme();
+  const [programs, setPrograms] = useState<DatabaseProgram[]>();
 
-  // Query Data
-  const queryClient = useQueryClient();
-  const { isLoading, data: programs } = useQuery({
-    queryKey: [USER_PROGRAM_QUERY_KEY],
-    queryFn: () => getUserPrograms({ userId: 'brayden-test' }),
-    refetchOnWindowFocus: false,
-  });
-  const writeProgramMutation = useMutation({
-    mutationFn: (variables: { name: string; id?: string }) => {
-      return writeUserProgram({ userId: 'brayden-test', name: variables.name, programId: variables.id }).then(
-        (result) => {
-          closeProgramModal();
-          return result;
-        },
-      );
-    },
-    mutationKey: [USER_PROGRAM_QUERY_KEY],
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [USER_PROGRAM_QUERY_KEY] });
-    },
-  });
-  const removeProgramMutation = useMutation({
-    mutationFn: (variables: { programId: string }) => {
-      return removeUserProgram({ userId: 'brayden-test', programId: variables.programId }).then((result) => {
-        closeDeleteConfirmation();
-        return result;
+  useEffect(() => {
+    if (user?.id) {
+      getUserPrograms({ supabaseClient, userId: user.id }).then((res) => {
+        if (res) {
+          setPrograms(res ?? undefined);
+        }
+        setIsLoading(false);
       });
-    },
-    mutationKey: [USER_PROGRAM_QUERY_KEY],
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [USER_PROGRAM_QUERY_KEY] });
-    },
-  });
+    }
+  }, [supabaseClient, user]);
 
   // State
   const [programModalOpen, setProgramModalOpen] = useState(false);
   const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
-  const [selectedProgram, setSelectedProgram] = useState<Program>();
+  const [formSubmitted, setFormSubmitted] = useState(false);
+  const [selectedProgram, setSelectedProgram] = useState<DatabaseProgram>();
+  const [isLoading, setIsLoading] = useState(true);
   const programForm = useForm({
     initialValues: {
       programName: '',
@@ -83,30 +66,23 @@ export const ProgramsBlock = () => {
     }),
   });
 
-  // Functions
+  // // Functions
   const openProgramModal = () => {
     setProgramModalOpen(true);
   };
   const closeProgramModal = () => {
     setProgramModalOpen(false);
+    setFormSubmitted(false);
     if (selectedProgram) setSelectedProgram(undefined);
     programForm.reset();
-  };
-  const handleProgramModalConfirm = (values: { programName: string }) => {
-    if (selectedProgram) {
-      writeProgramMutation.mutate({ name: values.programName, id: selectedProgram.id });
-    } else {
-      writeProgramMutation.mutate({ name: values.programName });
-    }
   };
   const selectProgram = (id: string) => {
     const newSelectedProgram = programs?.find((item) => item.id === id);
     setSelectedProgram(newSelectedProgram);
     return newSelectedProgram;
   };
-  const editProgram = (id: string) => {
+  const openEditProgram = (id: string) => {
     const newSelectedProgram = selectProgram(id);
-    setSelectedProgram(newSelectedProgram);
     if (newSelectedProgram) {
       programForm.setValues((values) => ({
         ...values,
@@ -114,7 +90,13 @@ export const ProgramsBlock = () => {
       }));
       openProgramModal();
     } else {
-      console.error(`Could not find program with id: ${id}`);
+      const errorMessage = `Could not find program with id: ${id}`;
+      console.error(errorMessage);
+      showNotification({
+        color: 'danger',
+        title: 'Error',
+        message: errorMessage,
+      });
     }
   };
   const openDeleteConfirmation = (id: string) => {
@@ -127,11 +109,21 @@ export const ProgramsBlock = () => {
   };
   const closeDeleteConfirmation = () => {
     setDeleteConfirmationOpen(false);
+    setFormSubmitted(false);
     if (selectedProgram) setSelectedProgram(undefined);
   };
   const removeProgram = () => {
-    if (selectedProgram) {
-      removeProgramMutation.mutate({ programId: selectedProgram.id });
+    setFormSubmitted(true);
+    if (selectedProgram && user) {
+      deleteProgram({ supabaseClient, userId: user.id, programId: selectedProgram.id, refetch: true }).then(
+        (newPrograms) => {
+          if (newPrograms) {
+            setPrograms(newPrograms);
+          }
+          setIsLoading(false);
+          closeDeleteConfirmation();
+        },
+      );
     }
   };
 
@@ -143,7 +135,7 @@ export const ProgramsBlock = () => {
           <Text>{program.name}</Text>
           <Group spacing='xs'>
             <ActionIcon>
-              <IconPencil onClick={() => editProgram(program.id)} />
+              <IconPencil onClick={() => openEditProgram(program.id)} />
             </ActionIcon>
             <ActionIcon color='danger' onClick={() => openDeleteConfirmation(program.id)}>
               <IconTrash />
@@ -161,7 +153,7 @@ export const ProgramsBlock = () => {
     <>
       <Flex justify='space-between'>
         <Title order={2}>Programs</Title>
-        <Button leftIcon={<IconPlus />} onClick={() => setProgramModalOpen(true)}>
+        <Button leftIcon={<IconPlus />} onClick={openProgramModal}>
           Create Program
         </Button>
       </Flex>
@@ -185,6 +177,7 @@ export const ProgramsBlock = () => {
             </Center>
           )}
       </Paper>
+
       {/* Creation/Edit Modal */}
       <Modal
         opened={programModalOpen}
@@ -194,7 +187,34 @@ export const ProgramsBlock = () => {
       >
         <form
           onSubmit={programForm.onSubmit((values) => {
-            handleProgramModalConfirm(values);
+            if (user) {
+              setIsLoading(true);
+              if (selectedProgram) {
+                editProgram({
+                  supabaseClient,
+                  userId: user.id,
+                  programId: selectedProgram.id,
+                  name: values.programName,
+                  refetch: true,
+                }).then((newPrograms) => {
+                  if (newPrograms) {
+                    setPrograms(newPrograms);
+                  }
+                  setIsLoading(false);
+                  closeProgramModal();
+                });
+              } else {
+                createUserProgram({ supabaseClient, userId: user?.id, name: values.programName, refetch: true }).then(
+                  (newPrograms) => {
+                    if (newPrograms) {
+                      setPrograms(newPrograms);
+                    }
+                    setIsLoading(false);
+                    closeProgramModal();
+                  },
+                );
+              }
+            }
           })}
           css={{
             display: 'flex',
@@ -208,11 +228,16 @@ export const ProgramsBlock = () => {
             placeholder='Program name'
             label='Program name'
           />
-          <Button type='submit' loading={isLoading} color={programForm.isDirty() ? 'primary' : 'neutral'}>
+          <Button
+            type='submit'
+            loading={isLoading || formSubmitted}
+            color={programForm.isDirty() ? 'primary' : 'neutral'}
+          >
             {programForm.isDirty() ? (selectedProgram ? 'Save Program' : 'Create Program') : 'Cancel'}
           </Button>
         </form>
       </Modal>
+
       {/* Delete Confirmation Modal */}
       <Modal
         opened={deleteConfirmationOpen}
@@ -232,7 +257,7 @@ export const ProgramsBlock = () => {
             <Button color='neutral' onClick={closeDeleteConfirmation}>
               Cancel
             </Button>
-            <Button loading={isLoading} color='danger' onClick={removeProgram}>
+            <Button loading={isLoading || formSubmitted} color='danger' onClick={removeProgram}>
               Delete
             </Button>
           </Group>

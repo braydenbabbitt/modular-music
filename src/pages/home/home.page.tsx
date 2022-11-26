@@ -4,10 +4,10 @@ import { useAuth } from '../../services/auth/auth.provider';
 import { Text } from '@mantine/core';
 
 export const HomePage = () => {
-  const { user } = useAuth();
+  const { spotifyUser } = useAuth();
   const navigate = useNavigate();
 
-  if (user) {
+  if (spotifyUser) {
     navigate('/dashboard');
     return <></>;
   } else {

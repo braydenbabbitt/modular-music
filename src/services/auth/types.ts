@@ -1,4 +1,4 @@
-export type User = {
+export type SpotifyUser = {
   country: string;
   display_name: string;
   email: string;

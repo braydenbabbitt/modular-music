@@ -1,117 +1,96 @@
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
-import { useDestructibleLocalStorage } from 'den-ui';
-import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { exchangeToken, getUser, redirectToAuthPage, refreshToken } from '../../apis/spotify.api';
-import { AUTH_DATA_KEY } from '../../utils/constants';
-import { User } from './types';
+import { showNotification } from '@mantine/notifications';
+import { useNavigate } from 'react-router-dom';
+import { getUser } from '../../apis/spotify.api';
+import { SpotifyUser } from './types';
+import { useSupabase } from '../supabase/client/client';
+import { User, UserResponse } from '@supabase/supabase-js';
 
 type AuthProviderProps = {
   children: ReactNode;
 };
 
-export type AuthData = {
-  access_token: string;
-  expires_at: number;
-  refresh_token?: string;
-};
-
 type AuthProviderContextValue = {
-  authData?: AuthData;
   user?: User;
+  spotifyUser?: SpotifyUser;
   login: () => void;
   logout: () => void;
 };
 
+const spotifyScopes = [
+  'ugc-image-upload',
+  'user-read-recently-played',
+  'user-top-read',
+  'playlist-read-collaborative',
+  'playlist-modify-public',
+  'playlist-read-private',
+  'playlist-modify-private',
+  'user-read-email',
+  'user-library-modify',
+  'user-library-read',
+];
+
 const AuthContext = createContext<AuthProviderContextValue | undefined>(undefined);
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const [authData, setAuthData] = useDestructibleLocalStorage<AuthData | undefined>(AUTH_DATA_KEY, undefined, true);
+  const supabaseClient = useSupabase();
   const [user, setUser] = useState<User>();
-  const location = useLocation();
-  const [urlParams, setUrlParams] = useSearchParams();
+  const [spotifyUser, setSpotifyUser] = useState<SpotifyUser>();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (location.pathname === '/spotify-login') {
-      if (urlParams.get('error')) {
-        console.error('Spofity access denied');
-      } else {
-        const authCode = urlParams.get('code');
-        if (authCode) {
-          exchangeToken(authCode)?.then((tokenExchangeResult) => {
-            setAuthData((prev) => {
-              return {
-                ...prev,
-                ...tokenExchangeResult,
-              };
-            });
-            getUser(tokenExchangeResult.access_token).then((user) => {
-              if (user) {
-                setUser(user);
-              } else {
-                console.error('No user returned from Spotify');
-              }
-            });
+    supabaseClient.auth.getSession().then((session) => {
+      console.log(session);
+      if (session) {
+        supabaseClient.auth.getUser().then((user: UserResponse) => {
+          if (user.data.user) {
+            setUser(user.data.user);
+          }
+        });
+        if (session.data.session?.provider_token) {
+          getUser(session.data.session?.provider_token).then((userResponse) => {
+            setSpotifyUser(userResponse);
           });
-        } else {
-          console.error('No access code found');
         }
       }
-      setUrlParams('', {
-        replace: true,
-      });
-      navigate('/');
-    }
-  }, [location, navigate, setAuthData, setUrlParams, urlParams]);
+    });
+  }, [supabaseClient.auth]);
 
-  useEffect(() => {
-    if (authData) {
-      if (authData.expires_at > Date.now()) {
-        if (!user) {
-          getUser(authData.access_token).then((user) => {
-            if (user) {
-              setUser(user);
-            } else {
-              console.error('No user returned from Spotify');
-            }
-          });
-        }
-      } else {
-        if (authData.refresh_token) {
-          refreshToken(authData.refresh_token).then((newTokenData) => {
-            setAuthData((prev) => ({
-              ...prev,
-              ...newTokenData,
-            }));
-          });
-        } else {
-          console.error('No refresh token found');
-        }
+  const login = async () => {
+    const { data, error } = await supabaseClient.auth.signInWithOAuth({
+      provider: 'spotify',
+      options: {
+        scopes: spotifyScopes.join(' '),
+        redirectTo: '/dashboard',
+      },
+    });
+
+    if (error) {
+      if (!data) {
+        showNotification({
+          title: 'Authentication Error',
+          message: 'Unable to log you in. Try again.',
+          color: 'danger',
+        });
       }
+      console.error(error);
     }
-  }, [authData, location, setAuthData, user]);
 
-  const login = () => {
-    if (authData?.access_token && !user) {
-      getUser(authData.access_token).then((user) => {
-        setUser(user);
-      });
-    } else {
-      redirectToAuthPage();
-    }
+    return { error };
   };
 
   const logout = () => {
-    if (authData) setAuthData();
-    if (user) setUser(undefined);
-    navigate('/');
+    supabaseClient.auth.signOut().then(() => {
+      if (spotifyUser) setSpotifyUser(undefined);
+      navigate('/');
+    });
   };
 
   return (
     <AuthContext.Provider
       value={{
-        authData,
         user,
+        spotifyUser,
         login,
         logout,
       }}
