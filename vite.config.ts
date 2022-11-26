@@ -1,21 +1,23 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react({
-    jsxImportSource: '@emotion/react',
-    babel: {
-      plugins: ['@emotion/babel-plugin'],
-    }
-  })],
+  plugins: [
+    react({
+      jsxImportSource: '@emotion/react',
+      babel: {
+        plugins: ['@emotion/babel-plugin'],
+      },
+    }),
+  ],
   server: {
     open: '/',
-    host: true
+    host: true,
   },
   esbuild: {
     logOverride: {
-      'this-is-undefined-in-esm': 'silent'
-    }
-  }
-})
+      'this-is-undefined-in-esm': 'silent',
+    },
+  },
+});
