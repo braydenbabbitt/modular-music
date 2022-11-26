@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { SpotifyUser } from '../services/auth/types';
+import { SpotifyUser } from '../auth/types';
 
 export const getUser = (access_token: string) => {
   return axios

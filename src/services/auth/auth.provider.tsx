@@ -1,7 +1,7 @@
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { showNotification } from '@mantine/notifications';
 import { useNavigate } from 'react-router-dom';
-import { getUser } from '../../apis/spotify.api';
+import { getUser } from '../spotify/spotify.api';
 import { SpotifyUser } from './types';
 import { useSupabase } from '../supabase/client/client';
 import { User, UserResponse } from '@supabase/supabase-js';
