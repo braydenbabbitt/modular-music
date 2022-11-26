@@ -2,6 +2,7 @@ import React from 'react';
 import './App.css';
 import { useBrowserColorScheme, useDestructibleLocalStorage } from 'den-ui';
 import { ColorSchemeProvider, ColorScheme, MantineProvider } from '@mantine/core';
+import { NotificationsProvider } from '@mantine/notifications';
 import { Route, Routes } from 'react-router-dom';
 import { HeaderNavbar } from './components/navbars/header-navbar.component';
 import { SpotifyLoginPage } from './pages/spotify/spotify-login.page';
@@ -14,6 +15,7 @@ import { DashboardPage } from './pages/dashboard/dashboard.page';
 import { HomePage } from './pages/home/home.page';
 import { HotKeys } from 'react-hotkeys';
 import { QueryClient, QueryClientProvider } from 'react-query';
+import { SupabaseClientProvider } from './services/supabase/client/client';
 
 const queryClient = new QueryClient();
 
@@ -53,17 +55,21 @@ function App() {
           }}
         >
           <HotKeys {...hotkeys}>
-            <AuthProvider>
-              <HeaderNavbar />
-              <PageContainer>
-                <Routes>
-                  <Route path='/' element={<HomePage />} />
-                  <Route path='/dashboard' element={<DashboardPage />} />
-                  <Route path='/spotify-login' element={<SpotifyLoginPage />} />
-                  <Route path='/settings' element={<SettingsPage />} />
-                </Routes>
-              </PageContainer>
-            </AuthProvider>
+            <NotificationsProvider>
+              <SupabaseClientProvider>
+                <AuthProvider>
+                  <HeaderNavbar />
+                  <PageContainer>
+                    <Routes>
+                      <Route path='/' element={<HomePage />} />
+                      <Route path='/dashboard' element={<DashboardPage />} />
+                      <Route path='/spotify-login' element={<SpotifyLoginPage />} />
+                      <Route path='/settings' element={<SettingsPage />} />
+                    </Routes>
+                  </PageContainer>
+                </AuthProvider>
+              </SupabaseClientProvider>
+            </NotificationsProvider>
           </HotKeys>
         </MantineProvider>
       </ColorSchemeProvider>
