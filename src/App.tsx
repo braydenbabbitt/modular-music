@@ -16,6 +16,7 @@ import { HomePage } from './pages/home/home.page';
 import { HotKeys } from 'react-hotkeys';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { SupabaseClientProvider } from './services/supabase/client/client';
+import { CreateProgramPage } from './pages/program/create-program.page';
 
 const queryClient = new QueryClient();
 
@@ -63,6 +64,9 @@ function App() {
                     <Routes>
                       <Route path='/' element={<HomePage />} />
                       <Route path='/dashboard' element={<DashboardPage />} />
+                      <Route path='/program'>
+                        <Route path=':programId' element={<CreateProgramPage />} />
+                      </Route>
                       <Route path='/spotify-login' element={<SpotifyLoginPage />} />
                       <Route path='/settings' element={<SettingsPage />} />
                     </Routes>

@@ -1,6 +1,44 @@
 import { showNotification } from '@mantine/notifications';
-import { SupabaseClient } from '@supabase/supabase-js';
+import {
+  PostgrestMaybeSingleResponse,
+  PostgrestResponse,
+  PostgrestSingleResponse,
+  SupabaseClient,
+} from '@supabase/supabase-js';
 import { Database } from '../types/database.types';
+
+const supabaseResponseHandler = <T>(response: PostgrestResponse<T>, errorMessage?: string) => {
+  if (response.data) {
+    return response.data;
+  } else if (response.error) {
+    console.error(response.error);
+    if (errorMessage) {
+      showNotification({
+        color: 'danger',
+        title: 'Error',
+        message: errorMessage,
+      });
+    }
+  }
+};
+
+const supabaseSingleResponseHandler = <T>(
+  response: PostgrestSingleResponse<T> | PostgrestMaybeSingleResponse<T>,
+  errorMessage?: string,
+) => {
+  if (response.data) {
+    return response.data;
+  } else if (response.error) {
+    console.error(response.error);
+    if (errorMessage) {
+      showNotification({
+        color: 'danger',
+        title: 'Error',
+        message: errorMessage,
+      });
+    }
+  }
+};
 
 type GetUserProgramsRequest = {
   supabaseClient: SupabaseClient<Database>;
@@ -13,62 +51,79 @@ export const getUserPrograms = async ({ supabaseClient, userId }: GetUserProgram
     .select()
     .eq('user_id', userId)
     .order('created_at')
-    .then((response) => {
-      if (response.data) {
-        return response.data;
-      } else if (response.error) {
-        console.error(response.error);
-        showNotification({
-          color: 'danger',
-          title: 'Error',
-          message: 'There was an issue loading your programs.',
-        });
-      }
-    });
+    .then((response) => supabaseResponseHandler(response, 'There was an issue loading your programs.'));
 };
 
 type CreateUserProgramRequest = {
   supabaseClient: SupabaseClient<Database>;
   userId: string;
   name: string;
-  refetch?: boolean;
 };
 
-export const createUserProgram = async ({
-  supabaseClient,
-  userId,
-  name,
-  refetch = false,
-}: CreateUserProgramRequest) => {
-  await supabaseClient.from('programs').insert({
-    name,
-    user_id: userId,
-  });
+export const createUserProgram = async ({ supabaseClient, userId, name }: CreateUserProgramRequest) => {
+  return await supabaseClient
+    .from('programs')
+    .insert({
+      name,
+      user_id: userId,
+    })
+    .select()
+    .single()
+    .then((response) => supabaseSingleResponseHandler(response, 'There was an issue creating your program.'));
+};
 
-  if (refetch) {
-    return await getUserPrograms({ supabaseClient, userId });
-  }
+type GetProgramRequest = {
+  supabaseClient: SupabaseClient<Database>;
+  programId: string;
+};
+
+export const getProgram = async ({ supabaseClient, programId }: GetProgramRequest) => {
+  return await supabaseClient
+    .from('programs')
+    .select()
+    .eq('id', programId)
+    .single()
+    .then((response) => supabaseSingleResponseHandler(response, 'There was an issue fetching your program.'));
 };
 
 type EditProgramRequest = {
   supabaseClient: SupabaseClient<Database>;
-  userId: string;
   programId: string;
   name: string;
   refetch?: boolean;
 };
 
-export const editProgram = async ({ supabaseClient, userId, programId, name, refetch = false }: EditProgramRequest) => {
-  await supabaseClient
-    .from('programs')
-    .update({
-      name,
-      edited_at: new Date().toISOString(),
-    })
-    .eq('id', programId);
-
+export const editProgram = async ({ supabaseClient, programId, name, refetch = true }: EditProgramRequest) => {
   if (refetch) {
-    return await getUserPrograms({ supabaseClient, userId });
+    return await supabaseClient
+      .from('programs')
+      .update({
+        name,
+        edited_at: new Date().toISOString(),
+      })
+      .eq('id', programId)
+      .select()
+      .single()
+      .then((response) => {
+        if (response.data) {
+          return response.data;
+        } else if (response.error) {
+          console.error(response.error);
+          showNotification({
+            color: 'danger',
+            title: 'Error',
+            message: 'There was an issue editing your program.',
+          });
+        }
+      });
+  } else {
+    await supabaseClient
+      .from('programs')
+      .update({
+        name,
+        edited_at: new Date().toISOString(),
+      })
+      .eq('id', programId);
   }
 };
 

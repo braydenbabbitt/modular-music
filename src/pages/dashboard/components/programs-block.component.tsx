@@ -27,10 +27,9 @@ import {
 } from '../../../services/supabase/programs/programs.api';
 import { useSupabase } from '../../../services/supabase/client/client';
 import { useAuth } from '../../../services/auth/auth.provider';
-import { Database } from '../../../services/supabase/types/database.types';
 import { showNotification } from '@mantine/notifications';
-
-type DatabaseProgram = Database['public']['Tables']['programs']['Row'];
+import { useNavigate } from 'react-router-dom';
+import { DatabaseProgram } from '../../program/types';
 
 export const ProgramsBlock = () => {
   // Theme
@@ -39,6 +38,7 @@ export const ProgramsBlock = () => {
   const { user } = useAuth();
   const mantineTheme = useMantineTheme();
   const [programs, setPrograms] = useState<DatabaseProgram[]>();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (user?.id) {
@@ -66,7 +66,7 @@ export const ProgramsBlock = () => {
     }),
   });
 
-  // // Functions
+  // Functions
   const openProgramModal = () => {
     setProgramModalOpen(true);
   };
@@ -135,7 +135,7 @@ export const ProgramsBlock = () => {
           <Text>{program.name}</Text>
           <Group spacing='xs'>
             <ActionIcon>
-              <IconPencil onClick={() => openEditProgram(program.id)} />
+              <IconPencil onClick={() => navigate(`/program/${program.id}`)} />
             </ActionIcon>
             <ActionIcon color='danger' onClick={() => openDeleteConfirmation(program.id)}>
               <IconTrash />
@@ -192,27 +192,28 @@ export const ProgramsBlock = () => {
               if (selectedProgram) {
                 editProgram({
                   supabaseClient,
-                  userId: user.id,
                   programId: selectedProgram.id,
                   name: values.programName,
                   refetch: true,
                 }).then((newPrograms) => {
-                  if (newPrograms) {
-                    setPrograms(newPrograms);
-                  }
+                  // if (newPrograms) {
+                  //   setPrograms(newPrograms);
+                  // }
                   setIsLoading(false);
                   closeProgramModal();
                 });
               } else {
-                createUserProgram({ supabaseClient, userId: user?.id, name: values.programName, refetch: true }).then(
-                  (newPrograms) => {
-                    if (newPrograms) {
-                      setPrograms(newPrograms);
-                    }
-                    setIsLoading(false);
-                    closeProgramModal();
-                  },
-                );
+                createUserProgram({
+                  supabaseClient,
+                  userId: user?.id,
+                  name: values.programName,
+                }).then((newProgram) => {
+                  if (newProgram) {
+                    navigate(`/program/${newProgram.id}`);
+                  }
+                  setIsLoading(false);
+                  closeProgramModal();
+                });
               }
             }
           })}
@@ -228,13 +229,15 @@ export const ProgramsBlock = () => {
             placeholder='Program name'
             label='Program name'
           />
-          <Button
-            type='submit'
-            loading={isLoading || formSubmitted}
-            color={programForm.isDirty() ? 'primary' : 'neutral'}
-          >
-            {programForm.isDirty() ? (selectedProgram ? 'Save Program' : 'Create Program') : 'Cancel'}
-          </Button>
+          {programForm.isDirty() ? (
+            <Button type='submit' loading={isLoading || formSubmitted} color='primary'>
+              {selectedProgram ? 'Save Program' : 'Create Program'}
+            </Button>
+          ) : (
+            <Button onClick={closeProgramModal} color='neutral'>
+              Cancel
+            </Button>
+          )}
         </form>
       </Modal>
 

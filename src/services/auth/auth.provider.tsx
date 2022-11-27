@@ -40,7 +40,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   useEffect(() => {
     supabaseClient.auth.getSession().then((session) => {
-      console.log(session);
       if (session) {
         supabaseClient.auth.getUser().then((user: UserResponse) => {
           if (user.data.user) {
