@@ -1,18 +1,33 @@
 import React, { useEffect, useState } from 'react';
-import { ActionIcon, Button, Center, Flex, Loader, Text, TextInput, Title, useMantineTheme } from '@mantine/core';
-import { useParams } from 'react-router-dom';
-import { IconPencil } from '@tabler/icons';
+import {
+  ActionIcon,
+  Autocomplete,
+  Button,
+  Center,
+  Flex,
+  Loader,
+  NativeSelect,
+  Select,
+  Text,
+  TextInput,
+  Title,
+  useMantineTheme,
+} from '@mantine/core';
+import { useNavigate, useParams } from 'react-router-dom';
+import { IconArrowLeft, IconPencil } from '@tabler/icons';
 import { DatabaseProgram } from './types';
 import { editProgram, getProgram } from '../../services/supabase/programs/programs.api';
 import { useSupabase } from '../../services/supabase/client/client';
 import { useForm } from '@mantine/form';
 import { useAuth } from '../../services/auth/auth.provider';
+import { getBaseSources } from '../../services/supabase/programs/sources.api';
 
-export const CreateProgramPage = () => {
+export const ProgramPage = () => {
   const mantineTheme = useMantineTheme();
   const { programId } = useParams();
   const supabaseClient = useSupabase();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [programQuery, setProgramQuery] = useState<{
     program?: DatabaseProgram;
     isLoading: boolean;
@@ -30,6 +45,8 @@ export const CreateProgramPage = () => {
       name: values.name ? null : 'Program name is required',
     }),
   });
+  const [baseSource, setBaseSource] = useState<string | null>(null);
+  const [sourceOptions, setSourceOptions] = useState<{ id: string; label: string; value: string }[]>([]);
 
   useEffect(() => {
     if (programId) {
@@ -45,19 +62,17 @@ export const CreateProgramPage = () => {
         }
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nameForm.setValues, programId, supabaseClient]);
 
-  const sources = [
-    {
-      id: 1,
-      label: "User's Liked Tracks",
-    },
-    {
-      id: 2,
-      label: 'User Playlist',
-    },
-  ];
+    getBaseSources({ supabaseClient }).then((sources) => {
+      const options = sources?.map((source) => ({
+        id: source.id,
+        label: source.label,
+        value: source.label,
+      }));
+      setSourceOptions(options ?? []);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nameForm.setValues, programId, supabaseClient, setSourceOptions]);
 
   if (programQuery.isLoading && !programQuery.program) {
     return (
@@ -69,6 +84,9 @@ export const CreateProgramPage = () => {
 
   return (
     <>
+      <Button leftIcon={<IconArrowLeft />} variant='subtle' onClick={() => navigate(-1)} color='primary'>
+        Back to Dashboard
+      </Button>
       {editState.name ? (
         <form
           onSubmit={nameForm.onSubmit((values) => {
@@ -79,10 +97,10 @@ export const CreateProgramPage = () => {
             if (user && programId) {
               editProgram({ supabaseClient, programId, name: values.name ?? '' }).then((newProgram) => {
                 if (newProgram) {
-                  setProgramQuery((prev) => ({
+                  setProgramQuery({
                     program: newProgram,
                     isLoading: false,
-                  }));
+                  });
                   setEditState((prev) => ({ ...prev, name: false }));
                 }
               });
@@ -107,6 +125,23 @@ export const CreateProgramPage = () => {
         </Flex>
       )}
       <Text>Program Source:</Text>
+      {sourceOptions && sourceOptions.length > 0 && (
+        <Select
+          placeholder='Select a source'
+          data={sourceOptions}
+          nothingFound='No sources found'
+          value={baseSource}
+          onChange={setBaseSource}
+          searchable
+          clearable
+          filter={(value, item) => {
+            if (value.length === 0) {
+              return true;
+            }
+            return item.label?.toLowerCase().includes(value.toLowerCase().trim()) ?? false;
+          }}
+        />
+      )}
     </>
   );
 };

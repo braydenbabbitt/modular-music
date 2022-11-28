@@ -1,10 +1,8 @@
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { showNotification } from '@mantine/notifications';
 import { useNavigate } from 'react-router-dom';
-import { getUser } from '../spotify/spotify.api';
-import { SpotifyUser } from './types';
 import { useSupabase } from '../supabase/client/client';
-import { User, UserResponse } from '@supabase/supabase-js';
+import { User, UserMetadata, UserResponse } from '@supabase/supabase-js';
 
 type AuthProviderProps = {
   children: ReactNode;
@@ -12,7 +10,7 @@ type AuthProviderProps = {
 
 type AuthProviderContextValue = {
   user?: User;
-  spotifyUser?: SpotifyUser;
+  spotifyUser?: UserMetadata;
   login: () => void;
   logout: () => void;
 };
@@ -35,11 +33,12 @@ const AuthContext = createContext<AuthProviderContextValue | undefined>(undefine
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const supabaseClient = useSupabase();
   const [user, setUser] = useState<User>();
-  const [spotifyUser, setSpotifyUser] = useState<SpotifyUser>();
+  const [spotifyUser, setSpotifyUser] = useState<UserMetadata>();
   const navigate = useNavigate();
 
   useEffect(() => {
     supabaseClient.auth.getSession().then((session) => {
+      console.log({ session });
       if (session) {
         supabaseClient.auth.getUser().then((user: UserResponse) => {
           if (user.data.user) {
@@ -47,8 +46,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           }
         });
         if (session.data.session?.provider_token) {
-          getUser(session.data.session?.provider_token).then((userResponse) => {
-            setSpotifyUser(userResponse);
+          const userMetadata = session.data.session.user.user_metadata;
+          setSpotifyUser(userMetadata);
+        } else {
+          supabaseClient.auth.signInWithOAuth({
+            provider: 'spotify',
+            options: {
+              scopes: spotifyScopes.join(' '),
+              redirectTo: '/dashboard',
+            },
           });
         }
       }

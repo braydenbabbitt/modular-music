@@ -26,6 +26,23 @@ export interface Database {
           user_id?: string;
         };
       };
+      sources: {
+        Row: {
+          id: string;
+          created_at: string | null;
+          label: string;
+        };
+        Insert: {
+          id?: string;
+          created_at?: string | null;
+          label?: string;
+        };
+        Update: {
+          id?: string;
+          created_at?: string | null;
+          label?: string;
+        };
+      };
     };
     Views: {
       [_ in never]: never;

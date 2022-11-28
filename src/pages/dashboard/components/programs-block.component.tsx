@@ -16,18 +16,12 @@ import {
   useMantineColorScheme,
   useMantineTheme,
 } from '@mantine/core';
-import { IconPencil, IconPlus, IconTrash } from '@tabler/icons';
+import { IconChevronRight, IconPencil, IconPlus, IconTrash } from '@tabler/icons';
 import { theme } from '../../../theme';
 import { useForm } from '@mantine/form';
-import {
-  createUserProgram,
-  deleteProgram,
-  editProgram,
-  getUserPrograms,
-} from '../../../services/supabase/programs/programs.api';
+import { createUserProgram, deleteProgram, getUserPrograms } from '../../../services/supabase/programs/programs.api';
 import { useSupabase } from '../../../services/supabase/client/client';
 import { useAuth } from '../../../services/auth/auth.provider';
-import { showNotification } from '@mantine/notifications';
 import { useNavigate } from 'react-router-dom';
 import { DatabaseProgram } from '../../program/types';
 
@@ -81,24 +75,6 @@ export const ProgramsBlock = () => {
     setSelectedProgram(newSelectedProgram);
     return newSelectedProgram;
   };
-  const openEditProgram = (id: string) => {
-    const newSelectedProgram = selectProgram(id);
-    if (newSelectedProgram) {
-      programForm.setValues((values) => ({
-        ...values,
-        programName: newSelectedProgram.name,
-      }));
-      openProgramModal();
-    } else {
-      const errorMessage = `Could not find program with id: ${id}`;
-      console.error(errorMessage);
-      showNotification({
-        color: 'danger',
-        title: 'Error',
-        message: errorMessage,
-      });
-    }
-  };
   const openDeleteConfirmation = (id: string) => {
     const newSelectedProgram = selectProgram(id);
     if (newSelectedProgram) {
@@ -131,14 +107,19 @@ export const ProgramsBlock = () => {
   const programRows = programs?.map((program, index) => {
     return (
       <React.Fragment key={program.id}>
-        <Flex justify='space-between' align='center' css={{ padding: `2px 0px` }}>
-          <Text>{program.name}</Text>
-          <Group spacing='xs'>
-            <ActionIcon>
-              <IconPencil onClick={() => navigate(`/program/${program.id}`)} />
-            </ActionIcon>
+        <Flex align='center' gap={mantineTheme.spacing.sm}>
+          <Text
+            css={{ padding: mantineTheme.spacing.sm, flexGrow: 1, cursor: 'pointer' }}
+            onClick={() => navigate(`/program/${program.id}`)}
+          >
+            {program.name}
+          </Text>
+          <Group spacing='xs' css={{ padding: mantineTheme.spacing.sm }}>
             <ActionIcon color='danger' onClick={() => openDeleteConfirmation(program.id)}>
               <IconTrash />
+            </ActionIcon>
+            <ActionIcon color='neutral' onClick={() => navigate(`/program/${program.id}`)}>
+              <IconChevronRight />
             </ActionIcon>
           </Group>
         </Flex>
@@ -161,7 +142,6 @@ export const ProgramsBlock = () => {
         css={{
           backgroundColor: colorScheme === 'dark' ? theme.colors.neutral[80] : theme.colors.neutral[10],
           marginTop: `12px`,
-          padding: mantineTheme.spacing.sm,
         }}
         radius='md'
         shadow='lg'
@@ -171,7 +151,7 @@ export const ProgramsBlock = () => {
             <Loader color='neutral' />
           </Center>
         )) ||
-          (programRows && programRows.length > 0 && <Stack spacing='xs'>{programRows}</Stack>) || (
+          (programRows && programRows.length > 0 && <Stack spacing={0}>{programRows}</Stack>) || (
             <Center>
               <Text>No Programs created</Text>
             </Center>
@@ -179,42 +159,22 @@ export const ProgramsBlock = () => {
       </Paper>
 
       {/* Creation/Edit Modal */}
-      <Modal
-        opened={programModalOpen}
-        onClose={closeProgramModal}
-        title={selectedProgram ? 'Edit Program' : 'Create a new program'}
-        centered
-      >
+      <Modal opened={programModalOpen} onClose={closeProgramModal} title='Create a new program' centered>
         <form
           onSubmit={programForm.onSubmit((values) => {
             if (user) {
               setIsLoading(true);
-              if (selectedProgram) {
-                editProgram({
-                  supabaseClient,
-                  programId: selectedProgram.id,
-                  name: values.programName,
-                  refetch: true,
-                }).then((newPrograms) => {
-                  // if (newPrograms) {
-                  //   setPrograms(newPrograms);
-                  // }
-                  setIsLoading(false);
-                  closeProgramModal();
-                });
-              } else {
-                createUserProgram({
-                  supabaseClient,
-                  userId: user?.id,
-                  name: values.programName,
-                }).then((newProgram) => {
-                  if (newProgram) {
-                    navigate(`/program/${newProgram.id}`);
-                  }
-                  setIsLoading(false);
-                  closeProgramModal();
-                });
-              }
+              createUserProgram({
+                supabaseClient,
+                userId: user?.id,
+                name: values.programName,
+              }).then((newProgram) => {
+                if (newProgram) {
+                  navigate(`/program/${newProgram.id}`);
+                }
+                setIsLoading(false);
+                closeProgramModal();
+              });
             }
           })}
           css={{
@@ -231,7 +191,7 @@ export const ProgramsBlock = () => {
           />
           {programForm.isDirty() ? (
             <Button type='submit' loading={isLoading || formSubmitted} color='primary'>
-              {selectedProgram ? 'Save Program' : 'Create Program'}
+              Create Program
             </Button>
           ) : (
             <Button onClick={closeProgramModal} color='neutral'>

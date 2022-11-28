@@ -137,11 +137,7 @@ export const HeaderNavbar = ({ links }: HeaderNavbarProps) => {
           </Group>
         )}
         {(spotifyUser && (
-          <UserDropdown
-            imageSource={spotifyUser.images[0].url}
-            displayName={spotifyUser.display_name}
-            logout={logout}
-          />
+          <UserDropdown imageSource={spotifyUser.picture} displayName={spotifyUser.name} logout={logout} />
         )) || (
           <Button color={theme.colors.primary[50]} onClick={login}>
             Login

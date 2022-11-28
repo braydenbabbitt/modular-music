@@ -1,44 +1,7 @@
 import { showNotification } from '@mantine/notifications';
-import {
-  PostgrestMaybeSingleResponse,
-  PostgrestResponse,
-  PostgrestSingleResponse,
-  SupabaseClient,
-} from '@supabase/supabase-js';
+import { SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '../types/database.types';
-
-const supabaseResponseHandler = <T>(response: PostgrestResponse<T>, errorMessage?: string) => {
-  if (response.data) {
-    return response.data;
-  } else if (response.error) {
-    console.error(response.error);
-    if (errorMessage) {
-      showNotification({
-        color: 'danger',
-        title: 'Error',
-        message: errorMessage,
-      });
-    }
-  }
-};
-
-const supabaseSingleResponseHandler = <T>(
-  response: PostgrestSingleResponse<T> | PostgrestMaybeSingleResponse<T>,
-  errorMessage?: string,
-) => {
-  if (response.data) {
-    return response.data;
-  } else if (response.error) {
-    console.error(response.error);
-    if (errorMessage) {
-      showNotification({
-        color: 'danger',
-        title: 'Error',
-        message: errorMessage,
-      });
-    }
-  }
-};
+import { supabaseResponseHandler, supabaseSingleResponseHandler } from '../utils';
 
 type GetUserProgramsRequest = {
   supabaseClient: SupabaseClient<Database>;
