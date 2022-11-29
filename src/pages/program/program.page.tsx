@@ -1,13 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { forwardRef, useEffect, useState } from 'react';
 import {
   ActionIcon,
-  Autocomplete,
+  Avatar,
   Button,
   Center,
   Flex,
+  Group,
   Loader,
-  NativeSelect,
   Select,
+  SelectItem,
   Text,
   TextInput,
   Title,
@@ -21,6 +22,9 @@ import { useSupabase } from '../../services/supabase/client/client';
 import { useForm } from '@mantine/form';
 import { useAuth } from '../../services/auth/auth.provider';
 import { getBaseSources } from '../../services/supabase/programs/sources.api';
+import { getUserPlaylists } from '../../services/spotify/spotify.api';
+
+const USER_PLAYLIST_SOURCE_ID = 'e6273f47-8dfc-485c-b594-0bb4dc80a1d3';
 
 export const ProgramPage = () => {
   const mantineTheme = useMantineTheme();
@@ -46,7 +50,16 @@ export const ProgramPage = () => {
     }),
   });
   const [baseSource, setBaseSource] = useState<string | null>(null);
-  const [sourceOptions, setSourceOptions] = useState<{ id: string; label: string; value: string }[]>([]);
+  const [sourceOptions, setSourceOptions] = useState<SelectItem[]>([]);
+  const [userPlaylists, setUserPlaylists] = useState<any[]>([]);
+  const [userPlaylistOptions, setUserPlaylistOptions] = useState<
+    {
+      image: string;
+      label: string;
+      value: string;
+    }[]
+  >([]);
+  const [userPlaylistSelection, setUserPlaylistSelection] = useState<string | null>(null);
 
   useEffect(() => {
     if (programId) {
@@ -65,14 +78,36 @@ export const ProgramPage = () => {
 
     getBaseSources({ supabaseClient }).then((sources) => {
       const options = sources?.map((source) => ({
-        id: source.id,
+        value: source.id,
         label: source.label,
-        value: source.label,
       }));
       setSourceOptions(options ?? []);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nameForm.setValues, programId, supabaseClient, setSourceOptions]);
+
+  useEffect(() => {
+    if (baseSource === USER_PLAYLIST_SOURCE_ID && userPlaylists.length < 1) {
+      supabaseClient.auth.getSession().then((session) => {
+        if (session.data.session?.provider_token) {
+          getUserPlaylists(session.data.session.provider_token).then((playlists) => {
+            console.log({ playlists });
+            setUserPlaylists(playlists);
+          });
+        }
+      });
+    }
+  }, [baseSource]);
+
+  useEffect(() => {
+    const newOptions = userPlaylists.map((playlist) => ({
+      image: playlist.images[0]?.url ?? 'playlist-icon@512.png',
+      label: playlist.name,
+      value: playlist.id,
+    }));
+    // .sort((a, b) => (a.label > b.label ? 1 : 0));
+    setUserPlaylistOptions(newOptions);
+  }, [userPlaylists]);
 
   if (programQuery.isLoading && !programQuery.program) {
     return (
@@ -125,23 +160,55 @@ export const ProgramPage = () => {
         </Flex>
       )}
       <Text>Program Source:</Text>
-      {sourceOptions && sourceOptions.length > 0 && (
-        <Select
-          placeholder='Select a source'
-          data={sourceOptions}
-          nothingFound='No sources found'
-          value={baseSource}
-          onChange={setBaseSource}
-          searchable
-          clearable
-          filter={(value, item) => {
-            if (value.length === 0) {
-              return true;
-            }
-            return item.label?.toLowerCase().includes(value.toLowerCase().trim()) ?? false;
-          }}
-        />
-      )}
+      <Group>
+        {sourceOptions && sourceOptions.length > 0 && (
+          <Select
+            placeholder='Select a source'
+            data={sourceOptions}
+            nothingFound='No sources found'
+            value={baseSource}
+            onChange={setBaseSource}
+            searchable
+            clearable
+            filter={(value, item) => {
+              if (value.length === 0) {
+                return true;
+              }
+              return item.label?.toLowerCase().includes(value.toLowerCase().trim()) ?? false;
+            }}
+          />
+        )}
+        {baseSource === USER_PLAYLIST_SOURCE_ID && userPlaylistOptions.length > 0 && (
+          <Select
+            placeholder='Select a playlist'
+            data={userPlaylistOptions}
+            itemComponent={CustomSelectItem}
+            nothingFound='No playlist found'
+            value={userPlaylistSelection}
+            onChange={setUserPlaylistSelection}
+            searchable
+            clearable
+            filter={(value, item) => {
+              if (value.length === 0) {
+                return true;
+              }
+              return item.label?.toLowerCase().includes(value.toLowerCase().trim()) ?? false;
+            }}
+          />
+        )}
+      </Group>
     </>
   );
 };
+
+const CustomSelectItem = forwardRef<HTMLDivElement, { image: string; label: string; value: string }>(
+  ({ image, label, value, ...others }: { image: string; label: string; value: string }, ref) => (
+    <div ref={ref} {...others}>
+      <Group noWrap>
+        <Avatar src={image} />
+        <Text size='sm'>{label}</Text>
+      </Group>
+    </div>
+  ),
+);
+CustomSelectItem.displayName = 'SelectItem';

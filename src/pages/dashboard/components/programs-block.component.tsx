@@ -152,7 +152,7 @@ export const ProgramsBlock = () => {
           </Center>
         )) ||
           (programRows && programRows.length > 0 && <Stack spacing={0}>{programRows}</Stack>) || (
-            <Center>
+            <Center css={{ padding: mantineTheme.spacing.sm }}>
               <Text>No Programs created</Text>
             </Center>
           )}
