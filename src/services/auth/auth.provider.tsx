@@ -1,4 +1,4 @@
-import React, { createContext, ReactNode, useContext, useEffect, useLayoutEffect, useState } from 'react';
+import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { showNotification } from '@mantine/notifications';
 import { useNavigate } from 'react-router-dom';
 import { useSupabase } from '../supabase/client/client';

@@ -1,4 +1,3 @@
-import React from 'react';
 import { css } from '@emotion/react';
 import { Avatar, Button, Center, Container, Group, Header, Menu, useMantineColorScheme } from '@mantine/core';
 import { theme } from '../../theme';

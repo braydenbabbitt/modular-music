@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState, Fragment } from 'react';
 import {
   ActionIcon,
   Button,
@@ -106,7 +106,7 @@ export const ModulesBlock = () => {
   // Render
   const moduleRows = modules?.map((module, index) => {
     return (
-      <React.Fragment key={module.id}>
+      <Fragment key={module.id}>
         <Flex align='center' gap={mantineTheme.spacing.sm}>
           <Text
             css={{ padding: mantineTheme.spacing.sm, flexGrow: 1, cursor: 'pointer' }}
@@ -126,7 +126,7 @@ export const ModulesBlock = () => {
         {index < modules.length - 1 && (
           <Divider color={colorScheme === 'dark' ? theme.colors.neutral[90] : theme.colors.neutral[30]} />
         )}
-      </React.Fragment>
+      </Fragment>
     );
   });
 

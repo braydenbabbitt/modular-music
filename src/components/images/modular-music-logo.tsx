@@ -1,5 +1,4 @@
 import { ColorScheme } from '@mantine/core';
-import React from 'react';
 import { theme } from '../../theme';
 
 type ModularMusicLogoProps = {

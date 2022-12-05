@@ -1,4 +1,3 @@
-import React from 'react';
 import './App.css';
 import { useBrowserColorScheme, useDestructibleLocalStorage } from 'den-ui';
 import { ColorSchemeProvider, ColorScheme, MantineProvider } from '@mantine/core';

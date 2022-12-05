@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { SegmentedControl, Stack, Text, Title, useMantineColorScheme } from '@mantine/core';
 import { COLOR_SCHEME_KEY } from '../../utils/constants';
 

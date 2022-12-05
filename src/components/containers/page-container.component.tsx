@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import { ReactNode } from 'react';
 import { Container, Paper } from '@mantine/core';
 import { theme } from '../../theme';
 
