@@ -16,24 +16,25 @@ import {
 } from '@mantine/core';
 import { useNavigate, useParams } from 'react-router-dom';
 import { IconArrowLeft, IconPencil } from '@tabler/icons';
-import { DatabaseProgram } from './types';
-import { editProgram, getProgram } from '../../services/supabase/programs/programs.api';
+import { DatabaseModule } from './types';
+import { editModule, getModule } from '../../services/supabase/modules/modules.api';
 import { useSupabase } from '../../services/supabase/client/client';
 import { useForm } from '@mantine/form';
-import { useAuth } from '../../services/auth/auth.provider';
-import { getBaseSources } from '../../services/supabase/programs/sources.api';
+import { useAuth, useSpotifyToken } from '../../services/auth/auth.provider';
+import { getBaseSources } from '../../services/supabase/modules/sources.api';
 import { getUserPlaylists } from '../../services/spotify/spotify.api';
 
 const USER_PLAYLIST_SOURCE_ID = 'e6273f47-8dfc-485c-b594-0bb4dc80a1d3';
 
-export const ProgramPage = () => {
+export const ModulePage = () => {
   const mantineTheme = useMantineTheme();
-  const { programId } = useParams();
+  const { moduleId } = useParams();
   const supabaseClient = useSupabase();
-  const { user } = useAuth();
+  const { user, session } = useAuth();
+  const spotifyToken = useSpotifyToken();
   const navigate = useNavigate();
-  const [programQuery, setProgramQuery] = useState<{
-    program?: DatabaseProgram;
+  const [moduleQuery, setModuleQuery] = useState<{
+    module?: DatabaseModule;
     isLoading: boolean;
   }>({
     isLoading: true,
@@ -43,10 +44,10 @@ export const ProgramPage = () => {
   });
   const nameForm = useForm({
     initialValues: {
-      name: programQuery.program?.name,
+      name: moduleQuery.module?.name,
     },
     validate: (values) => ({
-      name: values.name ? null : 'Program name is required',
+      name: values.name ? null : 'Module name is required',
     }),
   });
   const [baseSource, setBaseSource] = useState<string | null>(null);
@@ -62,15 +63,15 @@ export const ProgramPage = () => {
   const [userPlaylistSelection, setUserPlaylistSelection] = useState<string | null>(null);
 
   useEffect(() => {
-    if (programId) {
-      getProgram({ supabaseClient, programId }).then((program) => {
-        if (program) {
-          setProgramQuery({
-            program,
+    if (moduleId) {
+      getModule({ supabaseClient, moduleId }).then((module) => {
+        if (module) {
+          setModuleQuery({
+            module,
             isLoading: false,
           });
           nameForm.setValues({
-            name: program.name,
+            name: module.name,
           });
         }
       });
@@ -84,20 +85,18 @@ export const ProgramPage = () => {
       setSourceOptions(options ?? []);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nameForm.setValues, programId, supabaseClient, setSourceOptions]);
+  }, [nameForm.setValues, moduleId, supabaseClient, setSourceOptions]);
 
   useEffect(() => {
     if (baseSource === USER_PLAYLIST_SOURCE_ID && userPlaylists.length < 1) {
-      supabaseClient.auth.getSession().then((session) => {
-        if (session.data.session?.provider_token) {
-          getUserPlaylists(session.data.session.provider_token).then((playlists) => {
-            console.log({ playlists });
-            setUserPlaylists(playlists);
-          });
-        }
-      });
+      if (spotifyToken) {
+        getUserPlaylists(spotifyToken).then((playlists) => {
+          console.log({ playlists });
+          setUserPlaylists(playlists);
+        });
+      }
     }
-  }, [baseSource]);
+  }, [baseSource, spotifyToken, userPlaylists.length]);
 
   useEffect(() => {
     const newOptions = userPlaylists.map((playlist) => ({
@@ -105,11 +104,10 @@ export const ProgramPage = () => {
       label: playlist.name,
       value: playlist.id,
     }));
-    // .sort((a, b) => (a.label > b.label ? 1 : 0));
     setUserPlaylistOptions(newOptions);
   }, [userPlaylists]);
 
-  if (programQuery.isLoading && !programQuery.program) {
+  if (moduleQuery.isLoading && !moduleQuery.module) {
     return (
       <Center>
         <Loader />
@@ -125,15 +123,15 @@ export const ProgramPage = () => {
       {editState.name ? (
         <form
           onSubmit={nameForm.onSubmit((values) => {
-            setProgramQuery((prev) => ({
+            setModuleQuery((prev) => ({
               ...prev,
               isLoading: true,
             }));
-            if (user && programId) {
-              editProgram({ supabaseClient, programId, name: values.name ?? '' }).then((newProgram) => {
-                if (newProgram) {
-                  setProgramQuery({
-                    program: newProgram,
+            if (user && moduleId) {
+              editModule({ supabaseClient, moduleId, name: values.name ?? '' }).then((newModule) => {
+                if (newModule) {
+                  setModuleQuery({
+                    module: newModule,
                     isLoading: false,
                   });
                   setEditState((prev) => ({ ...prev, name: false }));
@@ -145,21 +143,21 @@ export const ProgramPage = () => {
           })}
         >
           <Flex gap={mantineTheme.spacing.sm} align='center'>
-            <TextInput {...nameForm.getInputProps('name')} placeholder='Unnamed program' autoFocus />
-            <Button type='submit' loading={programQuery.isLoading}>
+            <TextInput {...nameForm.getInputProps('name')} placeholder='Unnamed module' autoFocus />
+            <Button type='submit' loading={moduleQuery.isLoading}>
               Save
             </Button>
           </Flex>
         </form>
       ) : (
         <Flex gap={mantineTheme.spacing.sm} align='baseline'>
-          <Title>{programQuery.program?.name ?? 'Unnamed program'}</Title>
+          <Title>{moduleQuery.module?.name ?? 'Unnamed module'}</Title>
           <ActionIcon onClick={() => setEditState((prev) => ({ ...prev, name: true }))}>
             <IconPencil />
           </ActionIcon>
         </Flex>
       )}
-      <Text>Program Source:</Text>
+      <Title order={3}>Sources:</Title>
       <Group>
         {sourceOptions && sourceOptions.length > 0 && (
           <Select

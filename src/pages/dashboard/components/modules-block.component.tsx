@@ -19,26 +19,26 @@ import {
 import { IconChevronRight, IconPencil, IconPlus, IconTrash } from '@tabler/icons';
 import { theme } from '../../../theme';
 import { useForm } from '@mantine/form';
-import { createUserProgram, deleteProgram, getUserPrograms } from '../../../services/supabase/programs/programs.api';
+import { createUserModule, deleteModule, getUserModules } from '../../../services/supabase/modules/modules.api';
 import { useSupabase } from '../../../services/supabase/client/client';
 import { useAuth } from '../../../services/auth/auth.provider';
 import { useNavigate } from 'react-router-dom';
-import { DatabaseProgram } from '../../program/types';
+import { DatabaseModule } from '../../module/types';
 
-export const ProgramsBlock = () => {
+export const ModulesBlock = () => {
   // Theme
   const { colorScheme } = useMantineColorScheme();
   const supabaseClient = useSupabase();
   const { user } = useAuth();
   const mantineTheme = useMantineTheme();
-  const [programs, setPrograms] = useState<DatabaseProgram[]>();
+  const [modules, setModules] = useState<DatabaseModule[]>();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (user?.id) {
-      getUserPrograms({ supabaseClient, userId: user.id }).then((res) => {
+      getUserModules({ supabaseClient, userId: user.id }).then((res) => {
         if (res) {
-          setPrograms(res ?? undefined);
+          setModules(res ?? undefined);
         }
         setIsLoading(false);
       });
@@ -46,55 +46,55 @@ export const ProgramsBlock = () => {
   }, [supabaseClient, user]);
 
   // State
-  const [programModalOpen, setProgramModalOpen] = useState(false);
+  const [moduleModalOpen, setModuleModalOpen] = useState(false);
   const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
   const [formSubmitted, setFormSubmitted] = useState(false);
-  const [selectedProgram, setSelectedProgram] = useState<DatabaseProgram>();
+  const [selectedModule, setSelectedModule] = useState<DatabaseModule>();
   const [isLoading, setIsLoading] = useState(true);
-  const programForm = useForm({
+  const moduleForm = useForm({
     initialValues: {
-      programName: '',
+      moduleName: '',
     },
     validate: (values) => ({
-      programName: values.programName ? null : 'Program name is required',
+      moduleName: values.moduleName ? null : 'Module name is required',
     }),
   });
 
   // Functions
-  const openProgramModal = () => {
-    setProgramModalOpen(true);
+  const openModuleModal = () => {
+    setModuleModalOpen(true);
   };
-  const closeProgramModal = () => {
-    setProgramModalOpen(false);
+  const closeModuleModal = () => {
+    setModuleModalOpen(false);
     setFormSubmitted(false);
-    if (selectedProgram) setSelectedProgram(undefined);
-    programForm.reset();
+    if (selectedModule) setSelectedModule(undefined);
+    moduleForm.reset();
   };
-  const selectProgram = (id: string) => {
-    const newSelectedProgram = programs?.find((item) => item.id === id);
-    setSelectedProgram(newSelectedProgram);
-    return newSelectedProgram;
+  const selectModule = (id: string) => {
+    const newSelectedModule = modules?.find((item) => item.id === id);
+    setSelectedModule(newSelectedModule);
+    return newSelectedModule;
   };
   const openDeleteConfirmation = (id: string) => {
-    const newSelectedProgram = selectProgram(id);
-    if (newSelectedProgram) {
+    const newSelectedModule = selectModule(id);
+    if (newSelectedModule) {
       setDeleteConfirmationOpen(true);
     } else {
-      console.error(`Could not find program with id: ${id}`);
+      console.error(`Could not find module with id: ${id}`);
     }
   };
   const closeDeleteConfirmation = () => {
     setDeleteConfirmationOpen(false);
     setFormSubmitted(false);
-    if (selectedProgram) setSelectedProgram(undefined);
+    if (selectedModule) setSelectedModule(undefined);
   };
-  const removeProgram = () => {
+  const removeModule = () => {
     setFormSubmitted(true);
-    if (selectedProgram && user) {
-      deleteProgram({ supabaseClient, userId: user.id, programId: selectedProgram.id, refetch: true }).then(
-        (newPrograms) => {
-          if (newPrograms) {
-            setPrograms(newPrograms);
+    if (selectedModule && user) {
+      deleteModule({ supabaseClient, userId: user.id, moduleId: selectedModule.id, refetch: true }).then(
+        (newModules) => {
+          if (newModules) {
+            setModules(newModules);
           }
           setIsLoading(false);
           closeDeleteConfirmation();
@@ -104,26 +104,26 @@ export const ProgramsBlock = () => {
   };
 
   // Render
-  const programRows = programs?.map((program, index) => {
+  const moduleRows = modules?.map((module, index) => {
     return (
-      <React.Fragment key={program.id}>
+      <React.Fragment key={module.id}>
         <Flex align='center' gap={mantineTheme.spacing.sm}>
           <Text
             css={{ padding: mantineTheme.spacing.sm, flexGrow: 1, cursor: 'pointer' }}
-            onClick={() => navigate(`/program/${program.id}`)}
+            onClick={() => navigate(`/module/${module.id}`)}
           >
-            {program.name}
+            {module.name}
           </Text>
           <Group spacing='xs' css={{ padding: mantineTheme.spacing.sm }}>
-            <ActionIcon color='danger' onClick={() => openDeleteConfirmation(program.id)}>
+            <ActionIcon color='danger' onClick={() => openDeleteConfirmation(module.id)}>
               <IconTrash />
             </ActionIcon>
-            <ActionIcon color='neutral' onClick={() => navigate(`/program/${program.id}`)}>
+            <ActionIcon color='neutral' onClick={() => navigate(`/module/${module.id}`)}>
               <IconChevronRight />
             </ActionIcon>
           </Group>
         </Flex>
-        {index < programs.length - 1 && (
+        {index < modules.length - 1 && (
           <Divider color={colorScheme === 'dark' ? theme.colors.neutral[90] : theme.colors.neutral[30]} />
         )}
       </React.Fragment>
@@ -133,9 +133,9 @@ export const ProgramsBlock = () => {
   return (
     <>
       <Flex justify='space-between'>
-        <Title order={2}>Programs</Title>
-        <Button leftIcon={<IconPlus />} onClick={openProgramModal}>
-          Create Program
+        <Title order={2}>Modules</Title>
+        <Button leftIcon={<IconPlus />} onClick={openModuleModal}>
+          Create Module
         </Button>
       </Flex>
       <Paper
@@ -146,34 +146,34 @@ export const ProgramsBlock = () => {
         radius='md'
         shadow='lg'
       >
-        {(!programModalOpen && isLoading && (
+        {(!moduleModalOpen && isLoading && (
           <Center>
             <Loader color='neutral' />
           </Center>
         )) ||
-          (programRows && programRows.length > 0 && <Stack spacing={0}>{programRows}</Stack>) || (
+          (moduleRows && moduleRows.length > 0 && <Stack spacing={0}>{moduleRows}</Stack>) || (
             <Center css={{ padding: mantineTheme.spacing.sm }}>
-              <Text>No Programs created</Text>
+              <Text>No Modules created</Text>
             </Center>
           )}
       </Paper>
 
       {/* Creation/Edit Modal */}
-      <Modal opened={programModalOpen} onClose={closeProgramModal} title='Create a new program' centered>
+      <Modal opened={moduleModalOpen} onClose={closeModuleModal} title='Create a new module' centered>
         <form
-          onSubmit={programForm.onSubmit((values) => {
+          onSubmit={moduleForm.onSubmit((values) => {
             if (user) {
               setIsLoading(true);
-              createUserProgram({
+              createUserModule({
                 supabaseClient,
                 userId: user?.id,
-                name: values.programName,
-              }).then((newProgram) => {
-                if (newProgram) {
-                  navigate(`/program/${newProgram.id}`);
+                name: values.moduleName,
+              }).then((newModule) => {
+                if (newModule) {
+                  navigate(`/module/${newModule.id}`);
                 }
                 setIsLoading(false);
-                closeProgramModal();
+                closeModuleModal();
               });
             }
           })}
@@ -184,17 +184,17 @@ export const ProgramsBlock = () => {
           }}
         >
           <TextInput
-            {...programForm.getInputProps('programName')}
+            {...moduleForm.getInputProps('moduleName')}
             data-autofocus
-            placeholder='Program name'
-            label='Program name'
+            placeholder='Module name'
+            label='Module name'
           />
-          {programForm.isDirty() ? (
+          {moduleForm.isDirty() ? (
             <Button type='submit' loading={isLoading || formSubmitted} color='primary'>
-              Create Program
+              Create Module
             </Button>
           ) : (
-            <Button onClick={closeProgramModal} color='neutral'>
+            <Button onClick={closeModuleModal} color='neutral'>
               Cancel
             </Button>
           )}
@@ -205,22 +205,20 @@ export const ProgramsBlock = () => {
       <Modal
         opened={deleteConfirmationOpen}
         onClose={() => setDeleteConfirmationOpen(false)}
-        title='Delete a program'
+        title='Delete a module'
         centered
       >
         <Stack>
           <Center>
             <Text>
-              {selectedProgram
-                ? `Are you sure you want to delete "${selectedProgram.name}"?`
-                : `Could not find program`}
+              {selectedModule ? `Are you sure you want to delete "${selectedModule.name}"?` : `Could not find module`}
             </Text>
           </Center>
           <Group grow>
             <Button color='neutral' onClick={closeDeleteConfirmation}>
               Cancel
             </Button>
-            <Button loading={isLoading || formSubmitted} color='danger' onClick={removeProgram}>
+            <Button loading={isLoading || formSubmitted} color='danger' onClick={removeModule}>
               Delete
             </Button>
           </Group>

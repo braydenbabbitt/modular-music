@@ -1,10 +1,10 @@
 import React from 'react';
-import { ProgramsBlock } from './components/programs-block.component';
+import { ModulesBlock } from './components/modules-block.component';
 
 export const DashboardPage = () => {
   return (
     <>
-      <ProgramsBlock />
+      <ModulesBlock />
     </>
   );
 };

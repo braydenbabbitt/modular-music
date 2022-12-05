@@ -3,68 +3,68 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '../types/database.types';
 import { supabaseResponseHandler, supabaseSingleResponseHandler } from '../utils';
 
-type GetUserProgramsRequest = {
+type GetUserModulesRequest = {
   supabaseClient: SupabaseClient<Database>;
   userId: string;
 };
 
-export const getUserPrograms = async ({ supabaseClient, userId }: GetUserProgramsRequest) => {
+export const getUserModules = async ({ supabaseClient, userId }: GetUserModulesRequest) => {
   return await supabaseClient
-    .from('programs')
+    .from('modules')
     .select()
     .eq('user_id', userId)
     .order('created_at')
-    .then((response) => supabaseResponseHandler(response, 'There was an issue loading your programs.'));
+    .then((response) => supabaseResponseHandler(response, 'There was an issue loading your modules.'));
 };
 
-type CreateUserProgramRequest = {
+type CreateUserModuleRequest = {
   supabaseClient: SupabaseClient<Database>;
   userId: string;
   name: string;
 };
 
-export const createUserProgram = async ({ supabaseClient, userId, name }: CreateUserProgramRequest) => {
+export const createUserModule = async ({ supabaseClient, userId, name }: CreateUserModuleRequest) => {
   return await supabaseClient
-    .from('programs')
+    .from('modules')
     .insert({
       name,
       user_id: userId,
     })
     .select()
     .single()
-    .then((response) => supabaseSingleResponseHandler(response, 'There was an issue creating your program.'));
+    .then((response) => supabaseSingleResponseHandler(response, 'There was an issue creating your module.'));
 };
 
-type GetProgramRequest = {
+type GetModuleRequest = {
   supabaseClient: SupabaseClient<Database>;
-  programId: string;
+  moduleId: string;
 };
 
-export const getProgram = async ({ supabaseClient, programId }: GetProgramRequest) => {
+export const getModule = async ({ supabaseClient, moduleId }: GetModuleRequest) => {
   return await supabaseClient
-    .from('programs')
+    .from('modules')
     .select()
-    .eq('id', programId)
+    .eq('id', moduleId)
     .single()
-    .then((response) => supabaseSingleResponseHandler(response, 'There was an issue fetching your program.'));
+    .then((response) => supabaseSingleResponseHandler(response, 'There was an issue fetching your module.'));
 };
 
-type EditProgramRequest = {
+type EditModuleRequest = {
   supabaseClient: SupabaseClient<Database>;
-  programId: string;
+  moduleId: string;
   name: string;
   refetch?: boolean;
 };
 
-export const editProgram = async ({ supabaseClient, programId, name, refetch = true }: EditProgramRequest) => {
+export const editModule = async ({ supabaseClient, moduleId, name, refetch = true }: EditModuleRequest) => {
   if (refetch) {
     return await supabaseClient
-      .from('programs')
+      .from('modules')
       .update({
         name,
         edited_at: new Date().toISOString(),
       })
-      .eq('id', programId)
+      .eq('id', moduleId)
       .select()
       .single()
       .then((response) => {
@@ -75,32 +75,32 @@ export const editProgram = async ({ supabaseClient, programId, name, refetch = t
           showNotification({
             color: 'danger',
             title: 'Error',
-            message: 'There was an issue editing your program.',
+            message: 'There was an issue editing your module.',
           });
         }
       });
   } else {
     await supabaseClient
-      .from('programs')
+      .from('modules')
       .update({
         name,
         edited_at: new Date().toISOString(),
       })
-      .eq('id', programId);
+      .eq('id', moduleId);
   }
 };
 
-type DeleteProgramRequest = {
+type DeleteModuleRequest = {
   supabaseClient: SupabaseClient<Database>;
   userId: string;
-  programId: string;
+  moduleId: string;
   refetch?: boolean;
 };
 
-export const deleteProgram = async ({ supabaseClient, userId, programId, refetch = false }: DeleteProgramRequest) => {
-  await supabaseClient.from('programs').delete().eq('id', programId);
+export const deleteModule = async ({ supabaseClient, userId, moduleId, refetch = false }: DeleteModuleRequest) => {
+  await supabaseClient.from('modules').delete().eq('id', moduleId);
 
   if (refetch) {
-    return await getUserPrograms({ supabaseClient, userId });
+    return await getUserModules({ supabaseClient, userId });
   }
 };

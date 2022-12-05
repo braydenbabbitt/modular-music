@@ -1,8 +1,10 @@
-import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import React, { createContext, ReactNode, useContext, useEffect, useLayoutEffect, useState } from 'react';
 import { showNotification } from '@mantine/notifications';
 import { useNavigate } from 'react-router-dom';
 import { useSupabase } from '../supabase/client/client';
-import { User, UserMetadata, UserResponse } from '@supabase/supabase-js';
+import { Session, User, UserMetadata, UserResponse } from '@supabase/supabase-js';
+import { Loader } from '@mantine/core';
+import { PageContainer } from '../../components/containers/page-container.component';
 
 type AuthProviderProps = {
   children: ReactNode;
@@ -10,6 +12,7 @@ type AuthProviderProps = {
 
 type AuthProviderContextValue = {
   user?: User;
+  session?: Session;
   spotifyUser?: UserMetadata;
   login: () => void;
   logout: () => void;
@@ -33,19 +36,21 @@ const AuthContext = createContext<AuthProviderContextValue | undefined>(undefine
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const supabaseClient = useSupabase();
   const [user, setUser] = useState<User>();
+  const [session, setSession] = useState<Session>();
   const [spotifyUser, setSpotifyUser] = useState<UserMetadata>();
   const navigate = useNavigate();
+  const [attemptedLogin, setAttemptedLogin] = useState(false);
 
   useEffect(() => {
     supabaseClient.auth.getSession().then((session) => {
-      console.log({ session });
-      if (session) {
+      if (session.data.session) {
+        setSession(session.data.session);
         supabaseClient.auth.getUser().then((user: UserResponse) => {
           if (user.data.user) {
             setUser(user.data.user);
           }
         });
-        if (session.data.session?.provider_token) {
+        if (session.data.session.provider_token) {
           const userMetadata = session.data.session.user.user_metadata;
           setSpotifyUser(userMetadata);
         } else {
@@ -57,6 +62,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             },
           });
         }
+        setAttemptedLogin(true);
+      } else {
+        setAttemptedLogin(true);
       }
     });
   }, [supabaseClient.auth]);
@@ -86,21 +94,30 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const logout = () => {
     supabaseClient.auth.signOut().then(() => {
+      if (user) setUser(undefined);
       if (spotifyUser) setSpotifyUser(undefined);
+      if (session) setSession(undefined);
       navigate('/');
     });
   };
+
+  console.log({ attemptedLogin });
 
   return (
     <AuthContext.Provider
       value={{
         user,
+        session,
         spotifyUser,
         login,
         logout,
       }}
     >
-      {children}
+      {(attemptedLogin && children) || (
+        <PageContainer>
+          <Loader />
+        </PageContainer>
+      )}
     </AuthContext.Provider>
   );
 };
@@ -113,4 +130,14 @@ export const useAuth = () => {
   }
 
   return { ...auth };
+};
+
+export const useSpotifyToken = () => {
+  const auth = useContext(AuthContext);
+
+  if (auth === undefined) {
+    throw Error('useSpotifyToken must be used within AuthProvider');
+  }
+
+  return auth.session?.provider_token;
 };

@@ -1,4 +1,4 @@
-import { supabaseResponseHandler } from './../utils';
+import { supabaseResponseHandler } from '../utils';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '../types/database.types';
 
@@ -11,5 +11,5 @@ export const getBaseSources = async ({ supabaseClient }: GetBaseSourcesRequest) 
     .from('sources')
     .select()
     .order('label')
-    .then((response) => supabaseResponseHandler(response, 'There was an issue fetching program sources'));
+    .then((response) => supabaseResponseHandler(response, 'There was an issue fetching module sources'));
 };

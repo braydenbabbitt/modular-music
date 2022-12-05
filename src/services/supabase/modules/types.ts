@@ -1,4 +1,4 @@
-export type Program = {
+export type Module = {
   id: string;
   user_id: string;
   name: string;
