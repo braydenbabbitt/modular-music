@@ -12,7 +12,12 @@ type SupabaseClientProviderProps = {
 };
 
 export const SupabaseClientProvider = ({ children }: SupabaseClientProviderProps) => {
-  const supabaseClient = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const supabaseClient = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+    },
+  });
 
   return <SupabaseContext.Provider value={supabaseClient}>{children}</SupabaseContext.Provider>;
 };

@@ -3,6 +3,41 @@ export type Json = string | number | boolean | null | { [key: string]: Json } | 
 export interface Database {
   public: {
     Tables: {
+      module_sources: {
+        Row: {
+          id: string;
+          type_id: string;
+          playlist_id: string | null;
+          href: string | null;
+          created_at: string;
+          module_id: string;
+          image_href: string | null;
+          label: string | null;
+          deleted_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          type_id: string;
+          playlist_id?: string | null;
+          href?: string | null;
+          created_at?: string;
+          module_id: string;
+          image_href?: string | null;
+          label?: string | null;
+          deleted_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          type_id?: string;
+          playlist_id?: string | null;
+          href?: string | null;
+          created_at?: string;
+          module_id?: string;
+          image_href?: string | null;
+          label?: string | null;
+          deleted_at?: string | null;
+        };
+      };
       modules: {
         Row: {
           id: string;
@@ -10,6 +45,7 @@ export interface Database {
           edited_at: string | null;
           name: string;
           user_id: string;
+          deleted_at: string | null;
         };
         Insert: {
           id?: string;
@@ -17,6 +53,7 @@ export interface Database {
           edited_at?: string | null;
           name: string;
           user_id: string;
+          deleted_at?: string | null;
         };
         Update: {
           id?: string;
@@ -24,23 +61,27 @@ export interface Database {
           edited_at?: string | null;
           name?: string;
           user_id?: string;
+          deleted_at?: string | null;
         };
       };
-      sources: {
+      source_types: {
         Row: {
           id: string;
           created_at: string | null;
           label: string;
+          deleted_at: string | null;
         };
         Insert: {
           id?: string;
           created_at?: string | null;
           label?: string;
+          deleted_at?: string | null;
         };
         Update: {
           id?: string;
           created_at?: string | null;
           label?: string;
+          deleted_at?: string | null;
         };
       };
     };

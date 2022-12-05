@@ -1,40 +1,40 @@
-import { forwardRef, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ActionIcon,
-  Avatar,
   Button,
+  Card,
   Center,
   Flex,
-  Group,
   Loader,
-  Select,
-  SelectItem,
-  Text,
   TextInput,
   Title,
   useMantineTheme,
+  Stack,
 } from '@mantine/core';
 import { useNavigate, useParams } from 'react-router-dom';
 import { IconArrowLeft, IconPencil } from '@tabler/icons';
-import { DatabaseModule } from './types';
-import { editModule, getModule } from '../../services/supabase/modules/modules.api';
+import {
+  editModule,
+  getModuleData,
+  GetModuleDataResponse,
+  addSourceToModule,
+  deleteSourceFromModule,
+} from '../../services/supabase/modules/modules.api';
 import { useSupabase } from '../../services/supabase/client/client';
 import { useForm } from '@mantine/form';
-import { useAuth, useSpotifyToken } from '../../services/auth/auth.provider';
-import { getBaseSources } from '../../services/supabase/modules/sources.api';
-import { getUserPlaylists } from '../../services/spotify/spotify.api';
-
-const USER_PLAYLIST_SOURCE_ID = 'e6273f47-8dfc-485c-b594-0bb4dc80a1d3';
+import { useAuth } from '../../services/auth/auth.provider';
+import { SourceSelectorModal } from './components/source-selector-modal.component';
+import { SourceRow } from './components/source-row.component';
 
 export const ModulePage = () => {
   const mantineTheme = useMantineTheme();
   const { moduleId } = useParams();
   const supabaseClient = useSupabase();
-  const { user, session } = useAuth();
-  const spotifyToken = useSpotifyToken();
+  const { user } = useAuth();
   const navigate = useNavigate();
+  const [sourceSelectorModalIsOpen, setSourceSelectorModalIsOpen] = useState(false);
   const [moduleQuery, setModuleQuery] = useState<{
-    module?: DatabaseModule;
+    module?: GetModuleDataResponse;
     isLoading: boolean;
   }>({
     isLoading: true,
@@ -50,21 +50,22 @@ export const ModulePage = () => {
       name: values.name ? null : 'Module name is required',
     }),
   });
-  const [baseSource, setBaseSource] = useState<string | null>(null);
-  const [sourceOptions, setSourceOptions] = useState<SelectItem[]>([]);
-  const [userPlaylists, setUserPlaylists] = useState<any[]>([]);
-  const [userPlaylistOptions, setUserPlaylistOptions] = useState<
-    {
-      image: string;
-      label: string;
-      value: string;
-    }[]
-  >([]);
-  const [userPlaylistSelection, setUserPlaylistSelection] = useState<string | null>(null);
+
+  const refetchQuery = () => {
+    if (moduleId) {
+      getModuleData({ supabaseClient, moduleId }).then((newModule) => {
+        setModuleQuery({
+          module: newModule,
+          isLoading: false,
+        });
+        setEditState((prev) => ({ ...prev, name: false }));
+      });
+    }
+  };
 
   useEffect(() => {
     if (moduleId) {
-      getModule({ supabaseClient, moduleId }).then((module) => {
+      getModuleData({ supabaseClient, moduleId }).then((module) => {
         if (module) {
           setModuleQuery({
             module,
@@ -76,36 +77,8 @@ export const ModulePage = () => {
         }
       });
     }
-
-    getBaseSources({ supabaseClient }).then((sources) => {
-      const options = sources?.map((source) => ({
-        value: source.id,
-        label: source.label,
-      }));
-      setSourceOptions(options ?? []);
-    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nameForm.setValues, moduleId, supabaseClient, setSourceOptions]);
-
-  useEffect(() => {
-    if (baseSource === USER_PLAYLIST_SOURCE_ID && userPlaylists.length < 1) {
-      if (spotifyToken) {
-        getUserPlaylists(spotifyToken).then((playlists) => {
-          console.log({ playlists });
-          setUserPlaylists(playlists);
-        });
-      }
-    }
-  }, [baseSource, spotifyToken, userPlaylists.length]);
-
-  useEffect(() => {
-    const newOptions = userPlaylists.map((playlist) => ({
-      image: playlist.images[0]?.url ?? 'playlist-icon@512.png',
-      label: playlist.name,
-      value: playlist.id,
-    }));
-    setUserPlaylistOptions(newOptions);
-  }, [userPlaylists]);
+  }, [nameForm.setValues, moduleId, supabaseClient]);
 
   if (moduleQuery.isLoading && !moduleQuery.module) {
     return (
@@ -128,14 +101,14 @@ export const ModulePage = () => {
               isLoading: true,
             }));
             if (user && moduleId) {
-              editModule({ supabaseClient, moduleId, name: values.name ?? '' }).then((newModule) => {
-                if (newModule) {
+              editModule({ supabaseClient, moduleId, name: values.name ?? '', refetch: false }).then(() => {
+                getModuleData({ supabaseClient, moduleId }).then((newModule) => {
                   setModuleQuery({
                     module: newModule,
                     isLoading: false,
                   });
                   setEditState((prev) => ({ ...prev, name: false }));
-                }
+                });
               });
             } else {
               setEditState((prev) => ({ ...prev, name: false }));
@@ -158,55 +131,37 @@ export const ModulePage = () => {
         </Flex>
       )}
       <Title order={3}>Sources:</Title>
-      <Group>
-        {sourceOptions && sourceOptions.length > 0 && (
-          <Select
-            placeholder='Select a source'
-            data={sourceOptions}
-            nothingFound='No sources found'
-            value={baseSource}
-            onChange={setBaseSource}
-            searchable
-            clearable
-            filter={(value, item) => {
-              if (value.length === 0) {
-                return true;
+      <Button onClick={() => setSourceSelectorModalIsOpen(true)}>Add Source</Button>
+      <Stack spacing='xs'>
+        {moduleQuery.module?.sources.map((source) => (
+          <Card key={source.id} shadow='sm' p='sm'>
+            <SourceRow
+              imageHref={source.image_href || undefined}
+              label={source.label ?? ''}
+              handleDelete={() =>
+                deleteSourceFromModule({ supabaseClient, moduleId: source.id }).then(() => refetchQuery())
               }
-              return item.label?.toLowerCase().includes(value.toLowerCase().trim()) ?? false;
-            }}
-          />
-        )}
-        {baseSource === USER_PLAYLIST_SOURCE_ID && userPlaylistOptions.length > 0 && (
-          <Select
-            placeholder='Select a playlist'
-            data={userPlaylistOptions}
-            itemComponent={CustomSelectItem}
-            nothingFound='No playlist found'
-            value={userPlaylistSelection}
-            onChange={setUserPlaylistSelection}
-            searchable
-            clearable
-            filter={(value, item) => {
-              if (value.length === 0) {
-                return true;
-              }
-              return item.label?.toLowerCase().includes(value.toLowerCase().trim()) ?? false;
-            }}
-          />
-        )}
-      </Group>
+            />
+          </Card>
+        ))}
+      </Stack>
+      <SourceSelectorModal
+        open={sourceSelectorModalIsOpen}
+        onClose={() => {
+          setSourceSelectorModalIsOpen(false);
+        }}
+        onConfirm={(payload: { type_id: string; playlist_uri?: string }) => {
+          if (moduleId) {
+            addSourceToModule({
+              supabaseClient,
+              module_id: moduleId,
+              ...payload,
+            }).then(() => {
+              refetchQuery();
+            });
+          }
+        }}
+      />
     </>
   );
 };
-
-const CustomSelectItem = forwardRef<HTMLDivElement, { image: string; label: string; value: string }>(
-  ({ image, label, value, ...others }: { image: string; label: string; value: string }, ref) => (
-    <div ref={ref} {...others}>
-      <Group noWrap>
-        <Avatar src={image} />
-        <Text size='sm'>{label}</Text>
-      </Group>
-    </div>
-  ),
-);
-CustomSelectItem.displayName = 'SelectItem';

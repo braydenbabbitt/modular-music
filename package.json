@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "prepare": "husky install",
     "prettier": "prettier --write \"{src,tests,example/src}/**/*.{js,ts,jsx,tsx}\"",
-    "supabase:gen-types": "npx supabase gen types typescript --linked > src/services/supabase/types/database.types.ts"
+    "supabase:gen-types": "npx supabase gen types typescript --linked > src/services/supabase/types/database.types.ts && prettier --write \"src/services/supabase/types/database.types.ts\""
   },
   "dependencies": {
     "@emotion/babel-plugin": "^11.10.0",

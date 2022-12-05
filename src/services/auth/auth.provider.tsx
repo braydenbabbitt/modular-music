@@ -101,8 +101,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     });
   };
 
-  console.log({ attemptedLogin });
-
   return (
     <AuthContext.Provider
       value={{
@@ -139,5 +137,5 @@ export const useSpotifyToken = () => {
     throw Error('useSpotifyToken must be used within AuthProvider');
   }
 
-  return auth.session?.provider_token;
+  return auth.session?.provider_token ?? null;
 };
