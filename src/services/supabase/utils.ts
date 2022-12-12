@@ -1,5 +1,6 @@
 import { showNotification } from '@mantine/notifications';
 import { PostgrestMaybeSingleResponse, PostgrestResponse, PostgrestSingleResponse } from '@supabase/supabase-js';
+import { Json } from './types/database.types';
 
 export const supabaseResponseHandler = <T>(response: PostgrestResponse<T>, errorMessage?: string) => {
   if (response.data) {
@@ -33,3 +34,8 @@ export const supabaseSingleResponseHandler = <T>(
     }
   }
 };
+
+// export const convertJsonToObject = (value: Json): Record<string, any> => {
+//   if (Object.)
+//   return JSON.parse(value);
+// };

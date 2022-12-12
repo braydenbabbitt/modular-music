@@ -5,7 +5,7 @@ import { Database } from '../types/database.types';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-const SupabaseContext = createContext<SupabaseClient | undefined>(undefined);
+const SupabaseContext = createContext<SupabaseClient<Database> | undefined>(undefined);
 
 type SupabaseClientProviderProps = {
   children: ReactNode;

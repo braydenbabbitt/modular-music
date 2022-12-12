@@ -18,6 +18,13 @@ export const mantineTheme = {
   primaryColor: 'primary',
   primaryShade: { light: 5, dark: 7 },
   fontFamily: 'inter',
+  breakpoints: {
+    xl: 1200,
+    lg: 980,
+    md: 720,
+    sm: 560,
+    xs: 350,
+  },
 } as MantineThemeOverride;
 
 export type themeType = typeof theme;

@@ -7,35 +7,26 @@ export interface Database {
         Row: {
           id: string;
           type_id: string;
-          playlist_id: string | null;
-          href: string | null;
           created_at: string;
           module_id: string;
-          image_href: string | null;
-          label: string | null;
           deleted_at: string | null;
+          options: Json | null;
         };
         Insert: {
           id?: string;
           type_id: string;
-          playlist_id?: string | null;
-          href?: string | null;
           created_at?: string;
           module_id: string;
-          image_href?: string | null;
-          label?: string | null;
           deleted_at?: string | null;
+          options?: Json | null;
         };
         Update: {
           id?: string;
           type_id?: string;
-          playlist_id?: string | null;
-          href?: string | null;
           created_at?: string;
           module_id?: string;
-          image_href?: string | null;
-          label?: string | null;
           deleted_at?: string | null;
+          options?: Json | null;
         };
       };
       modules: {
@@ -70,18 +61,21 @@ export interface Database {
           created_at: string | null;
           label: string;
           deleted_at: string | null;
+          image_href: string | null;
         };
         Insert: {
           id?: string;
           created_at?: string | null;
           label?: string;
           deleted_at?: string | null;
+          image_href?: string | null;
         };
         Update: {
           id?: string;
           created_at?: string | null;
           label?: string;
           deleted_at?: string | null;
+          image_href?: string | null;
         };
       };
     };

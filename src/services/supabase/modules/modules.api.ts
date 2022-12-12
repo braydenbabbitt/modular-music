@@ -1,8 +1,9 @@
 import { showNotification } from '@mantine/notifications';
 import { SupabaseClient } from '@supabase/supabase-js';
-import { CreateDatabaseModuleSource, DatabaseModule, DatabaseModuleSources } from '../../../pages/module/types';
+import { DatabaseModule } from '../../../pages/module/types';
 import { Database } from '../types/database.types';
 import { supabaseResponseHandler, supabaseSingleResponseHandler } from '../utils';
+import { ModuleSourceOptions } from './sources.api';
 
 type GetUserModulesRequest = {
   supabaseClient: SupabaseClient<Database>;
@@ -119,6 +120,7 @@ export const getModuleSources = async ({ supabaseClient, moduleId }: GetModuleSo
     .select()
     .eq('module_id', moduleId)
     .is('deleted_at', null)
+    .order('created_at')
     .then((response) => supabaseResponseHandler(response, "There was an issue fetching your module's sources"));
 };
 
@@ -127,7 +129,11 @@ type GetModuleDataRequest = {
   moduleId: string;
 };
 
-export type GetModuleDataResponse = DatabaseModule & { sources: DatabaseModuleSources };
+type FetchedModuleSource = Omit<Database['public']['Tables']['module_sources']['Row'], 'options'> & {
+  options: ModuleSourceOptions;
+};
+
+export type GetModuleDataResponse = DatabaseModule & { sources: FetchedModuleSource[] };
 
 export const getModuleData = async ({ supabaseClient, moduleId }: GetModuleDataRequest) => {
   const module = await getModule({ supabaseClient, moduleId });
@@ -138,36 +144,4 @@ export const getModuleData = async ({ supabaseClient, moduleId }: GetModuleDataR
     ...module,
     sources,
   } as GetModuleDataResponse;
-};
-
-type AddSourceToModuleRequest = {
-  supabaseClient: SupabaseClient<Database>;
-} & CreateDatabaseModuleSource;
-
-export const addSourceToModule = async ({
-  supabaseClient,
-  type_id,
-  playlist_id,
-  href,
-  module_id,
-  image_href,
-  label,
-}: AddSourceToModuleRequest) => {
-  await supabaseClient.from('module_sources').insert({
-    type_id,
-    playlist_id,
-    href,
-    module_id,
-    image_href,
-    label,
-  });
-};
-
-type DeleteSourceFromModuleRequest = {
-  supabaseClient: SupabaseClient<Database>;
-  moduleId: string;
-};
-
-export const deleteSourceFromModule = async ({ supabaseClient, moduleId }: DeleteSourceFromModuleRequest) => {
-  await supabaseClient.from('module_sources').update({ deleted_at: new Date().toISOString() }).eq('id', moduleId);
 };
