@@ -18,6 +18,11 @@ type AuthProviderContextValue = {
   logout: () => void;
 };
 
+export type SpotifyTokenData = {
+  token: string;
+  expires_at: number;
+};
+
 const spotifyScopes = [
   'ugc-image-upload',
   'user-read-recently-played',
@@ -131,11 +136,30 @@ export const useAuth = () => {
 };
 
 export const useSpotifyToken = () => {
+  const supabaseClient = useSupabase();
   const auth = useContext(AuthContext);
 
   if (auth === undefined) {
     throw Error('useSpotifyToken must be used within AuthProvider');
   }
 
-  return auth.session?.provider_token ?? null;
+  let token = auth.session?.provider_token;
+  let expires_at = auth.session?.expires_at;
+
+  if (token === undefined || expires_at === undefined) {
+    supabaseClient.auth.refreshSession().then((response) => {
+      const session = response.data.session;
+      if (session?.provider_token !== undefined && session.expires_at !== undefined) {
+        token = session.provider_token;
+        expires_at = session.expires_at;
+      } else {
+        supabaseClient.auth.signOut();
+      }
+    });
+  }
+
+  return {
+    token,
+    expires_at,
+  } as SpotifyTokenData;
 };

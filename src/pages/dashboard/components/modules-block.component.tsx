@@ -114,7 +114,7 @@ export const ModulesBlock = () => {
           >
             {module.name}
           </Text>
-          <Group spacing='xs' css={{ padding: mantineTheme.spacing.sm }}>
+          <Group spacing='xs' css={{ padding: mantineTheme.spacing.sm }} noWrap>
             <ActionIcon color='danger' onClick={() => openDeleteConfirmation(module.id)}>
               <IconTrash />
             </ActionIcon>

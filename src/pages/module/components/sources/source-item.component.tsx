@@ -1,7 +1,7 @@
 import { ActionIcon, Avatar, Card, Flex, Group, Text, useMantineTheme } from '@mantine/core';
 import { IconX } from '@tabler/icons';
-import { PlaylistIcon } from '../../../assets/icons/playlist-icon.component';
-import { theme } from '../../../theme';
+import { PlaylistIcon } from '../../../../assets/icons/playlist-icon.component';
+import { theme } from '../../../../theme';
 
 type SourceItemProps = {
   imageHref?: string;
@@ -13,7 +13,7 @@ export const SourceItem = ({ imageHref, label, handleDelete }: SourceItemProps) 
   const mantineTheme = useMantineTheme();
 
   return (
-    <Card shadow='sm' p='sm'>
+    <Card shadow='sm' p='sm' css={{ flexGrow: 1 }}>
       <Flex gap={mantineTheme.spacing.sm} align='center' justify='space-between'>
         <Group noWrap>
           <Avatar src={imageHref} size='lg' radius='md'>

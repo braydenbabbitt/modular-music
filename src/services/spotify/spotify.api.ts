@@ -1,7 +1,15 @@
-import axios from 'axios';
+import { useSupabase } from './../supabase/client/client';
+import axios, { AxiosInstance } from 'axios';
 import { SpotifyUser } from './types';
 
-export const getUser = (access_token: string) => {
+axios.interceptors.response.use(undefined, (error) => {
+  if (error.status === 401) {
+    const supabaseClient = useSupabase();
+    return supabaseClient.auth.refreshSession();
+  }
+});
+
+export const getUser = (axiosClient: AxiosInstance, access_token: string) => {
   return axios
     .get<SpotifyUser>('https://api.spotify.com/v1/me', {
       headers: {
@@ -26,6 +34,7 @@ export const getUserPlaylists = async (access_token: string) => {
         headers: {
           Authorization: 'Bearer ' + access_token,
         },
+        baseURL: '',
       })
       .then((response) => {
         if (response.status === 200) {

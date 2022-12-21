@@ -5,6 +5,7 @@ import { ModularMusicLogo } from '../images/modular-music-logo';
 import { IconChevronDown, IconLogout, IconSettings } from '@tabler/icons';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../services/auth/auth.provider';
+import { useLayoutSize } from '../../hooks/use-layout-size';
 
 type NavbarItem = {
   label: string;
@@ -159,6 +160,7 @@ const UserDropdown = ({ imageSource, displayName, logout }: UserDropdownProps) =
       cursor: 'pointer',
     }),
   };
+  const layoutSize = useLayoutSize();
 
   const actions = [
     {
@@ -177,7 +179,7 @@ const UserDropdown = ({ imageSource, displayName, logout }: UserDropdownProps) =
     displayName.split(' ')[0].charAt(0).toUpperCase() + displayName.split(' ')[1].charAt(0).toUpperCase();
 
   return (
-    <Menu position='top-end' trigger='hover' exitTransitionDuration={150}>
+    <Menu position='top-end' trigger={layoutSize === 'desktop' ? 'hover' : undefined} exitTransitionDuration={150}>
       <Menu.Target>
         <Avatar css={styles.avatar} src={imageSource}>
           {userInitials}

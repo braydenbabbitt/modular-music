@@ -13,7 +13,7 @@ export const getSourceTypes = async ({ supabaseClient }: GetBaseSourcesRequest) 
     .from('source_types')
     .select()
     .order('label')
-    .then((response) => supabaseResponseHandler(response, 'There was an issue fetching module sources'));
+    .then((response) => supabaseResponseHandler(response, 'There was an issue fetching source types'));
   return result;
 };
 
@@ -72,8 +72,7 @@ export const addRecentlyPlayedSourceToModule = (
   });
 };
 
-export type ModuleSourceOptions = ModuleSourceBaseOptions &
-  (UsersLikedTracksOptions | UserPlaylistOptions | RecentlyPlayedOptions);
+export type ModuleSourceOptions = UsersLikedTracksOptions | UserPlaylistOptions | RecentlyPlayedOptions;
 
 type AddSourceToModuleRequest = {
   supabaseClient: SupabaseClient<Database>;
@@ -87,9 +86,9 @@ const addSourceToModule = async ({ supabaseClient, ...payload }: AddSourceToModu
 
 type DeleteSourceFromModuleRequest = {
   supabaseClient: SupabaseClient<Database>;
-  moduleId: string;
+  sourceId: string;
 };
 
-export const deleteSourceFromModule = async ({ supabaseClient, moduleId }: DeleteSourceFromModuleRequest) => {
-  await supabaseClient.from('module_sources').update({ deleted_at: new Date().toISOString() }).eq('id', moduleId);
+export const deleteSourceFromModule = async ({ supabaseClient, sourceId }: DeleteSourceFromModuleRequest) => {
+  await supabaseClient.from('module_sources').update({ deleted_at: new Date().toISOString() }).eq('id', sourceId);
 };
