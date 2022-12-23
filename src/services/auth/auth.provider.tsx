@@ -19,7 +19,7 @@ type AuthProviderContextValue = {
 };
 
 export type SpotifyTokenData = {
-  token: string;
+  getSpotifyToken: () => string;
   expires_at: number;
 };
 
@@ -146,20 +146,31 @@ export const useSpotifyToken = () => {
   let token = auth.session?.provider_token;
   let expires_at = auth.session?.expires_at;
 
-  if (token === undefined || expires_at === undefined) {
-    supabaseClient.auth.refreshSession().then((response) => {
-      const session = response.data.session;
-      if (session?.provider_token !== undefined && session.expires_at !== undefined) {
-        token = session.provider_token;
-        expires_at = session.expires_at;
-      } else {
-        supabaseClient.auth.signOut();
+  const getSpotifyToken = () => {
+    if (token === undefined || expires_at === undefined) {
+      supabaseClient.auth.refreshSession().then((response) => {
+        const session = response.data.session;
+        if (session?.provider_token !== undefined && session.expires_at !== undefined) {
+          token = session.provider_token;
+          expires_at = session.expires_at;
+        } else {
+          supabaseClient.auth.signOut();
+          return;
+        }
+      });
+    } else {
+      if (expires_at < new Date().getSeconds()) {
+        supabaseClient.auth.refreshSession().then((response) => {
+          token = response.data.session?.provider_token;
+          expires_at = response.data.session?.expires_at;
+        });
       }
-    });
-  }
+    }
+    return token;
+  };
 
   return {
-    token,
+    getSpotifyToken,
     expires_at,
   } as SpotifyTokenData;
 };

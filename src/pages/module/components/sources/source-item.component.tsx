@@ -1,4 +1,4 @@
-import { ActionIcon, Avatar, Card, Flex, Group, Text, useMantineTheme } from '@mantine/core';
+import { ActionIcon, Avatar, Card, Flex, Group, Stack, Text, useMantineTheme } from '@mantine/core';
 import { IconX } from '@tabler/icons';
 import { PlaylistIcon } from '../../../../assets/icons/playlist-icon.component';
 import { theme } from '../../../../theme';
@@ -6,10 +6,11 @@ import { theme } from '../../../../theme';
 type SourceItemProps = {
   imageHref?: string;
   label: string;
+  description?: string;
   handleDelete: () => void;
 };
 
-export const SourceItem = ({ imageHref, label, handleDelete }: SourceItemProps) => {
+export const SourceItem = ({ imageHref, label, description, handleDelete }: SourceItemProps) => {
   const mantineTheme = useMantineTheme();
 
   return (
@@ -21,7 +22,14 @@ export const SourceItem = ({ imageHref, label, handleDelete }: SourceItemProps) 
               fill={mantineTheme.colorScheme === 'dark' ? theme.colors.neutral[20] : theme.colors.neutral[80]}
             />
           </Avatar>
-          <Text>{label}</Text>
+          <Stack spacing={0}>
+            <Text>{label}</Text>
+            {description && (
+              <Text size='sm' opacity={0.7}>
+                {description}
+              </Text>
+            )}
+          </Stack>
         </Group>
         <ActionIcon color='danger' onClick={handleDelete}>
           <IconX />

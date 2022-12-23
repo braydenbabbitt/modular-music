@@ -4,91 +4,85 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '../types/database.types';
 import { CreateDatabaseModuleSource } from '../../../pages/module/types';
 
-type GetBaseSourcesRequest = {
+type GetSourceTypesRequest = {
   supabaseClient: SupabaseClient<Database>;
 };
 
-export const getSourceTypes = async ({ supabaseClient }: GetBaseSourcesRequest) => {
+export type SourceType = Database['public']['Tables']['source_types']['Row'];
+
+export const getSourceTypes = async ({ supabaseClient }: GetSourceTypesRequest): Promise<SourceType[]> => {
   const result = await supabaseClient
     .from('source_types')
     .select()
+    .is('deleted_at', null)
     .order('label')
     .then((response) => supabaseResponseHandler(response, 'There was an issue fetching source types'));
-  return result;
+  return result ?? Promise.resolve([]);
 };
 
-type CustomAddSourceToModuleRequest = { supabaseClient: SupabaseClient<Database> } & Omit<
+type CustomAddSourceRequest = { supabaseClient: SupabaseClient<Database> } & Omit<
   CreateDatabaseModuleSource,
-  'options' | 'created_at' | 'id' | 'deleted_at' | 'type_id'
+  'options' | 'type_id'
 >;
 
-type ModuleSourceBaseOptions = {
-  label: string;
-  image_href?: string;
-};
+export type UserLikedTracksOptions = undefined;
 
-export type UsersLikedTracksOptions = ModuleSourceBaseOptions;
-
-export const addLikedTracksSourceToModule = (
-  payload: CustomAddSourceToModuleRequest & {
-    options: UsersLikedTracksOptions;
-  },
-) => {
-  return addSourceToModule({
+export const addLikedTracksSource = (payload: CustomAddSourceRequest) => {
+  return addSource({
     type_id: SOURCE_TYPE_IDS.USER_LIKED_TRACKS,
     ...payload,
   });
 };
 
-export type UserPlaylistOptions = ModuleSourceBaseOptions & {
+export type UserPlaylistOptions = {
   playlist_id: string;
   playlist_href: string;
 };
 
-export const addUserPlaylistSourceToModule = (
-  payload: CustomAddSourceToModuleRequest & {
+export const addUserPlaylistSource = (
+  payload: CustomAddSourceRequest & {
     options: UserPlaylistOptions;
   },
 ) => {
-  return addSourceToModule({
+  return addSource({
     type_id: SOURCE_TYPE_IDS.USER_PLAYLIST,
     ...payload,
   });
 };
 
-export type RecentlyPlayedOptions = ModuleSourceBaseOptions & {
+export type RecentlyListenedOptions = {
   quantity: number;
   interval: number;
 };
 
-export const addRecentlyPlayedSourceToModule = (
-  payload: CustomAddSourceToModuleRequest & {
-    options: RecentlyPlayedOptions;
+export const addRecentlyListenedSource = (
+  payload: CustomAddSourceRequest & {
+    options: RecentlyListenedOptions;
   },
 ) => {
-  return addSourceToModule({
+  return addSource({
     type_id: SOURCE_TYPE_IDS.USER_RECENTLY_LISTENED,
     ...payload,
   });
 };
 
-export type ModuleSourceOptions = UsersLikedTracksOptions | UserPlaylistOptions | RecentlyPlayedOptions;
+export type ModuleSourceOptions = Partial<UserPlaylistOptions & RecentlyListenedOptions>;
 
-type AddSourceToModuleRequest = {
+type AddSourceRequest = {
   supabaseClient: SupabaseClient<Database>;
 } & CreateDatabaseModuleSource;
 
-const addSourceToModule = async ({ supabaseClient, ...payload }: AddSourceToModuleRequest) => {
+const addSource = async ({ supabaseClient, ...payload }: AddSourceRequest) => {
   await supabaseClient.from('module_sources').insert({
     ...payload,
   });
 };
 
-type DeleteSourceFromModuleRequest = {
+type DeleteSourceRequest = {
   supabaseClient: SupabaseClient<Database>;
   sourceId: string;
 };
 
-export const deleteSourceFromModule = async ({ supabaseClient, sourceId }: DeleteSourceFromModuleRequest) => {
+export const deleteSourceFromModule = async ({ supabaseClient, sourceId }: DeleteSourceRequest) => {
   await supabaseClient.from('module_sources').update({ deleted_at: new Date().toISOString() }).eq('id', sourceId);
 };

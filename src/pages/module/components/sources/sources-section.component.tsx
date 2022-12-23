@@ -1,15 +1,17 @@
-import { Button, SimpleGrid, Title, useMantineTheme } from '@mantine/core';
+import { Button, Flex, SimpleGrid, Title, useMantineTheme } from '@mantine/core';
 import { useState } from 'react';
 import { useSupabase } from '../../../../services/supabase/client/client';
-import { SOURCE_TYPE_IDS } from '../../../../services/supabase/constants';
+import { INTERVAL_MAP, SOURCE_TYPE_IDS } from '../../../../services/supabase/constants';
 import { FetchedModuleSource } from '../../../../services/supabase/modules/modules.api';
 import {
-  addLikedTracksSourceToModule,
-  addRecentlyPlayedSourceToModule,
-  addUserPlaylistSourceToModule,
+  addLikedTracksSource,
+  addRecentlyListenedSource,
+  addUserPlaylistSource,
   deleteSourceFromModule,
+  RecentlyListenedOptions,
+  UserPlaylistOptions,
 } from '../../../../services/supabase/modules/sources.api';
-import { AddSourceToModuleConfirmation } from '../../module.page';
+import { CustomCreateDatabaseModuleSource } from '../../types';
 import { SourceItem } from './source-item.component';
 import { SourceSelectorModal } from './source-selector-modal.component';
 
@@ -26,9 +28,14 @@ export const SourceSection = ({ sources, refetchSources, moduleId }: SourceSecti
 
   return (
     <section css={{ marginTop: mantineTheme.spacing?.md }}>
-      <Title order={3} css={{ marginTop: mantineTheme.spacing.md }}>
-        Sources:
-      </Title>
+      <Flex align='center' justify='space-between'>
+        <Title order={3} css={{ marginTop: mantineTheme.spacing.md }}>
+          Sources:
+        </Title>
+        <Button css={{ marginTop: mantineTheme.spacing.sm }} onClick={() => setSourceSelectorModalIsOpen(true)}>
+          Add Source
+        </Button>
+      </Flex>
       <SimpleGrid
         css={{ marginTop: mantineTheme.spacing.md }}
         cols={4}
@@ -39,54 +46,59 @@ export const SourceSection = ({ sources, refetchSources, moduleId }: SourceSecti
           { maxWidth: 'sm', cols: 1, spacing: 'sm' },
         ]}
       >
-        {sources.map((source) => (
-          <SourceItem
-            key={source.id}
-            imageHref={source.options['image_href'] || undefined}
-            label={source.options.label ?? ''}
-            handleDelete={() =>
-              deleteSourceFromModule({ supabaseClient, sourceId: source.id }).then(() => refetchSources())
-            }
-          />
-        ))}
+        {sources.map((source) => {
+          const description =
+            source.type_id === SOURCE_TYPE_IDS.USER_RECENTLY_LISTENED
+              ? source.options.quantity === 1
+                ? `Last ${INTERVAL_MAP[source.options.interval!].slice(0, -1)}`
+                : `Last ${source.options.quantity} ${INTERVAL_MAP[source.options.interval!]}`
+              : undefined;
+          return (
+            <SourceItem
+              key={source.id}
+              imageHref={source.image_href || undefined}
+              label={source.label ?? ''}
+              handleDelete={() =>
+                deleteSourceFromModule({ supabaseClient, sourceId: source.id }).then(() => refetchSources())
+              }
+              description={description}
+            />
+          );
+        })}
       </SimpleGrid>
-      <Button css={{ marginTop: mantineTheme.spacing.sm }} onClick={() => setSourceSelectorModalIsOpen(true)}>
-        Add Source
-      </Button>
       <SourceSelectorModal
         open={sourceSelectorModalIsOpen}
         onClose={() => {
           setSourceSelectorModalIsOpen(false);
         }}
-        onConfirm={({ type_id, options }: AddSourceToModuleConfirmation) => {
+        onConfirm={({ type_id, label, image_href, options }: CustomCreateDatabaseModuleSource) => {
           if (moduleId) {
             switch (type_id) {
               case SOURCE_TYPE_IDS.USER_LIKED_TRACKS:
-                if (options.userLikedTracks) {
-                  addLikedTracksSourceToModule({
-                    supabaseClient,
-                    module_id: moduleId,
-                    options: options.userLikedTracks,
-                  }).then(() => refetchSources());
-                }
+                addLikedTracksSource({
+                  supabaseClient,
+                  module_id: moduleId,
+                  label,
+                  image_href,
+                }).then(() => refetchSources());
                 break;
               case SOURCE_TYPE_IDS.USER_PLAYLIST:
-                if (options.userPlaylist) {
-                  addUserPlaylistSourceToModule({
-                    supabaseClient,
-                    module_id: moduleId,
-                    options: options.userPlaylist,
-                  }).then(() => refetchSources());
-                }
+                addUserPlaylistSource({
+                  supabaseClient,
+                  module_id: moduleId,
+                  label,
+                  image_href,
+                  options: options as UserPlaylistOptions,
+                }).then(() => refetchSources());
                 break;
               case SOURCE_TYPE_IDS.USER_RECENTLY_LISTENED:
-                if (options.userRecentlyPlayed) {
-                  addRecentlyPlayedSourceToModule({
-                    supabaseClient,
-                    module_id: moduleId,
-                    options: options.userRecentlyPlayed,
-                  }).then(() => refetchSources());
-                }
+                addRecentlyListenedSource({
+                  supabaseClient,
+                  module_id: moduleId,
+                  label,
+                  image_href,
+                  options: options as RecentlyListenedOptions,
+                }).then(() => refetchSources());
                 break;
             }
           }

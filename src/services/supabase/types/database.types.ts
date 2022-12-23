@@ -9,21 +9,21 @@ export interface Database {
           created_at: string | null;
           label: string;
           deleted_at: string | null;
-          image_href: string | null;
+          image_href: string;
         };
         Insert: {
           id?: string;
           created_at?: string | null;
           label?: string;
           deleted_at?: string | null;
-          image_href?: string | null;
+          image_href: string;
         };
         Update: {
           id?: string;
           created_at?: string | null;
           label?: string;
           deleted_at?: string | null;
-          image_href?: string | null;
+          image_href?: string;
         };
       };
       module_actions: {
@@ -33,7 +33,7 @@ export interface Database {
           created_at: string;
           module_id: string;
           deleted_at: string | null;
-          options: Json | null;
+          label: string;
           image_href: string;
         };
         Insert: {
@@ -42,7 +42,7 @@ export interface Database {
           created_at?: string;
           module_id: string;
           deleted_at?: string | null;
-          options?: Json | null;
+          label: string;
           image_href: string;
         };
         Update: {
@@ -51,7 +51,7 @@ export interface Database {
           created_at?: string;
           module_id?: string;
           deleted_at?: string | null;
-          options?: Json | null;
+          label?: string;
           image_href?: string;
         };
       };
@@ -60,25 +60,34 @@ export interface Database {
           id: string;
           type_id: string;
           created_at: string;
-          module_id: string;
+          module_id: string | null;
           deleted_at: string | null;
           options: Json | null;
+          action_id: string | null;
+          label: string;
+          image_href: string;
         };
         Insert: {
           id?: string;
           type_id: string;
           created_at?: string;
-          module_id: string;
+          module_id?: string | null;
           deleted_at?: string | null;
           options?: Json | null;
+          action_id?: string | null;
+          label: string;
+          image_href: string;
         };
         Update: {
           id?: string;
           type_id?: string;
           created_at?: string;
-          module_id?: string;
+          module_id?: string | null;
           deleted_at?: string | null;
           options?: Json | null;
+          action_id?: string | null;
+          label?: string;
+          image_href?: string;
         };
       };
       modules: {

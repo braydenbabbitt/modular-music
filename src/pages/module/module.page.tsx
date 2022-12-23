@@ -1,45 +1,15 @@
-import { useEffect, useState } from 'react';
-import {
-  ActionIcon,
-  Button,
-  Center,
-  Flex,
-  Loader,
-  TextInput,
-  Title,
-  useMantineTheme,
-  SimpleGrid,
-  Stack,
-} from '@mantine/core';
-import { useNavigate, useParams } from 'react-router-dom';
-import { IconArrowLeft, IconPencil } from '@tabler/icons';
-import {
-  editModule,
-  EditModuleRequest,
-  getModuleData,
-  GetModuleDataResponse,
-} from '../../services/supabase/modules/modules.api';
+import { useState } from 'react';
+import { ActionIcon, Button, Center, Divider, Flex, Loader, TextInput, Title, useMantineTheme } from '@mantine/core';
+import { useParams } from 'react-router-dom';
+import { IconPencil } from '@tabler/icons';
+import { editModule, EditModuleRequest, getModuleData } from '../../services/supabase/modules/modules.api';
 import { useSupabase } from '../../services/supabase/client/client';
 import { useForm } from '@mantine/form';
 import { useAuth } from '../../services/auth/auth.provider';
-import {
-  RecentlyPlayedOptions,
-  UserPlaylistOptions,
-  UsersLikedTracksOptions,
-} from '../../services/supabase/modules/sources.api';
 import { SourceSection } from './components/sources/sources-section.component';
 import { BackButton } from '../../components/buttons/back-button.component';
 import { ActionsSection } from './components/actions/actions-section.component';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
-
-export type AddSourceToModuleConfirmation = {
-  type_id: string;
-  options: {
-    userLikedTracks?: UsersLikedTracksOptions;
-    userPlaylist?: UserPlaylistOptions;
-    userRecentlyPlayed?: RecentlyPlayedOptions;
-  };
-};
 
 export const ModulePage = () => {
   const mantineTheme = useMantineTheme();
@@ -107,7 +77,8 @@ export const ModulePage = () => {
         </Flex>
       )}
       <SourceSection sources={data?.sources ?? []} refetchSources={refetch} moduleId={moduleId!} />
-      <ActionsSection actions={data?.actions ?? []} refetchActions={refetch} />
+      <Divider my='md' />
+      <ActionsSection actions={data?.actions ?? []} refetchActions={refetch} moduleId={moduleId!} />
     </>
   );
 };

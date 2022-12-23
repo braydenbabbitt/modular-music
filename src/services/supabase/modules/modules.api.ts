@@ -3,7 +3,6 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import { DatabaseModule } from '../../../pages/module/types';
 import { Database } from '../types/database.types';
 import { supabaseResponseHandler, supabaseSingleResponseHandler } from '../utils';
-import { ModuleActionOptions } from './actions.api';
 import { ModuleSourceOptions } from './sources.api';
 
 type GetUserModulesRequest = {
@@ -116,13 +115,15 @@ type GetModuleSourcesRequest = {
 };
 
 export const getModuleSources = async ({ supabaseClient, moduleId }: GetModuleSourcesRequest) => {
-  return await supabaseClient
+  return (await supabaseClient
     .from('module_sources')
     .select()
     .eq('module_id', moduleId)
     .is('deleted_at', null)
     .order('created_at')
-    .then((response) => supabaseResponseHandler(response, "There was an issue fetching your module's sources"));
+    .then((response) =>
+      supabaseResponseHandler(response, "There was an issue fetching your module's sources"),
+    )) as FetchedModuleSource[];
 };
 
 type GetModuleActionsRequest = {
@@ -131,13 +132,15 @@ type GetModuleActionsRequest = {
 };
 
 export const getModuleActions = async ({ supabaseClient, moduleId }: GetModuleActionsRequest) => {
-  return await supabaseClient
+  return (await supabaseClient
     .from('module_actions')
     .select()
     .eq('module_id', moduleId)
     .is('deleted_at', null)
     .order('created_at')
-    .then((response) => supabaseResponseHandler(response, "There was an issue fetching your module's actions"));
+    .then((response) =>
+      supabaseResponseHandler(response, "There was an issue fetching your module's actions"),
+    )) as FetchedModuleAction[];
 };
 
 type GetModuleDataRequest = {
@@ -149,9 +152,7 @@ export type FetchedModuleSource = Omit<Database['public']['Tables']['module_sour
   options: ModuleSourceOptions;
 };
 
-export type FetchedModuleAction = Omit<Database['public']['Tables']['module_actions']['Row'], 'options'> & {
-  options: ModuleActionOptions;
-};
+export type FetchedModuleAction = Database['public']['Tables']['module_actions']['Row'];
 
 export type GetModuleDataResponse = DatabaseModule & { sources: FetchedModuleSource[]; actions: FetchedModuleAction[] };
 

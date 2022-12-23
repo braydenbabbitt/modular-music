@@ -1,0 +1,348 @@
+import {
+  Button,
+  Center,
+  Group,
+  Loader,
+  Select,
+  Stack,
+  useMantineTheme,
+  Text,
+  Avatar,
+  NumberInput,
+  ButtonProps,
+  Divider,
+} from '@mantine/core';
+import { useForm } from '@mantine/form';
+import { showNotification } from '@mantine/notifications';
+import { forwardRef, ReactNode, useEffect } from 'react';
+import { useQuery } from 'react-query';
+import { useSpotifyToken } from '../../../../services/auth/auth.provider';
+import { getUserPlaylists } from '../../../../services/spotify/spotify.api';
+import { useSupabase } from '../../../../services/supabase/client/client';
+import { SOURCE_TYPE_IDS } from '../../../../services/supabase/constants';
+import { getSourceTypes, ModuleSourceOptions, SourceType } from '../../../../services/supabase/modules/sources.api';
+import { jsonParseWithType } from '../../../../utils/custom-json-encoder';
+
+type RecentlyListenedValues = {
+  quantity?: number;
+  interval: string;
+};
+
+export type SourceSelectionFormValues = {
+  sourceType: string;
+  userPlaylist: string;
+  recentlyListened: RecentlyListenedValues;
+};
+
+export type SourceSelectionOnSubmitArgs = {
+  values: SourceSelectionFormValues;
+  label: string;
+  image_href: string;
+  options: ModuleSourceOptions;
+};
+
+type SourceSelectionFormProps = {
+  onSubmit: (payload: SourceSelectionOnSubmitArgs) => void;
+  horizontal?: boolean;
+  buttonLabel?: string;
+  buttonVariant?: ButtonProps['variant'];
+  cancelButtonLabel?: string;
+  onCancel?: () => void;
+  hideLabels?: boolean;
+};
+
+export const SourceSelectionForm = ({
+  onSubmit,
+  horizontal = false,
+  buttonLabel = 'Add Source',
+  buttonVariant,
+  cancelButtonLabel,
+  onCancel,
+  hideLabels,
+}: SourceSelectionFormProps) => {
+  const supabaseClient = useSupabase();
+  const mantineTheme = useMantineTheme();
+  const { getSpotifyToken } = useSpotifyToken();
+  const sourceTypesQuery = useQuery('source-types', () => getSourceTypes({ supabaseClient }));
+  const userPlaylistsQuery = useQuery('user-playlists', () => {
+    if (jsonParseWithType<SourceType>(form.values.sourceType)?.id === SOURCE_TYPE_IDS.USER_PLAYLIST) {
+      return getUserPlaylists(getSpotifyToken());
+    }
+  });
+
+  const form = useForm<SourceSelectionFormValues>({
+    initialValues: {
+      sourceType: '',
+      userPlaylist: '',
+      recentlyListened: {
+        quantity: undefined,
+        interval: '1',
+      },
+    },
+    validate: {
+      sourceType: (value) => (value ? null : 'Please select a source type'),
+      userPlaylist: (value, values) =>
+        jsonParseWithType<SourceType>(values.sourceType)?.id === SOURCE_TYPE_IDS.USER_PLAYLIST
+          ? value
+            ? null
+            : 'Please select a playlist'
+          : null,
+      recentlyListened: {
+        quantity: (value: number, values: any) => {
+          const typedValues = values as SourceSelectionFormValues;
+          const isRequired =
+            jsonParseWithType<SourceType>(typedValues.sourceType)?.id === SOURCE_TYPE_IDS.USER_RECENTLY_LISTENED;
+          const daysCalc = value * parseInt(typedValues.recentlyListened.interval);
+          const isOutOfRange = daysCalc > 365 || daysCalc < 1;
+          if (isRequired) {
+            if (isOutOfRange) {
+              return 'Enter a time less than 1 year';
+            } else if (value === undefined) {
+              return 'Enter a time';
+            }
+          }
+          return null;
+        },
+        interval: (value, values: any) => {
+          const typedValues = values as SourceSelectionFormValues;
+          return jsonParseWithType<SourceType>(typedValues.sourceType)?.id === SOURCE_TYPE_IDS.USER_RECENTLY_LISTENED
+            ? value
+              ? null
+              : 'Please select an interval'
+            : null;
+        },
+      },
+    },
+    validateInputOnChange: true,
+  });
+
+  const renderAdditionalSelections = () => {
+    const showTimeLimitError = !form.isValid('recentlyListened.quantity') && form.isDirty('recentlyListened.quantity');
+    const showTimeRequiredError =
+      (!form.isValid('recentlyListened.quantity') || !form.isValid('recentlyListened.interval')) &&
+      form.isDirty('recentlyListened.quantity');
+    switch (jsonParseWithType<SourceType>(form.values.sourceType)?.id) {
+      case SOURCE_TYPE_IDS.USER_PLAYLIST:
+        return (
+          ((userPlaylistsQuery.isLoading || !userPlaylistsQuery.data) && (
+            <Center>
+              <Loader />
+            </Center>
+          )) ||
+          (userPlaylistsQuery.data && userPlaylistsQuery.data.length > 0 && (
+            <Select
+              {...form.getInputProps('userPlaylist')}
+              css={{ width: horizontal ? '50%' : 'auto' }}
+              placeholder='Select a playlist'
+              data={userPlaylistsQuery.data.map((playlist) => ({
+                image: playlist.images[0]?.url ?? 'playlist-icon@512.png',
+                label: playlist.name,
+                value: JSON.stringify(playlist),
+              }))}
+              itemComponent={UserPlaylistSelectItem}
+              nothingFound='No playlist found'
+              searchable
+              clearable
+              filter={(value, item) => {
+                if (value.length === 0) {
+                  return true;
+                }
+                return item.label?.toLowerCase().includes(value.toLowerCase().trim()) ?? false;
+              }}
+            />
+          )) || <></>
+        );
+      case SOURCE_TYPE_IDS.USER_RECENTLY_LISTENED:
+        return (
+          <>
+            <Group noWrap spacing={horizontal ? 'md' : 'xs'} css={{ width: horizontal ? '50%' : 'auto' }}>
+              <NumberInput
+                hideControls
+                {...form.getInputProps('recentlyListened.quantity', { withError: false })}
+                css={{ lineHeight: 2 }}
+                label={hideLabels ? undefined : 'Quantity'}
+                withAsterisk={!hideLabels}
+                min={1}
+                max={Math.floor(365 / parseInt(form.values.recentlyListened.interval))}
+                error={
+                  showTimeLimitError ||
+                  (!form.isValid('recentlyListened.quantity') && form.isDirty('recentlyListened.quantity'))
+                }
+                placeholder='Quantity'
+              />
+              <Select
+                {...form.getInputProps('recentlyListened.interval')}
+                css={{ lineHeight: 2 }}
+                placeholder='Select an interval'
+                label={hideLabels ? undefined : 'Interval'}
+                withAsterisk={!hideLabels}
+                error={
+                  showTimeLimitError ||
+                  (!form.isValid('recentlyListened.interval') && form.isDirty('recentlyListened.interval'))
+                }
+                data={[
+                  { value: '1', label: 'days' },
+                  { value: '7', label: 'weeks' },
+                  { value: '30', label: 'months' },
+                  { value: '365', label: 'years' },
+                ]}
+              />
+            </Group>
+            {(showTimeLimitError || showTimeRequiredError) && (
+              <Text size='xs' color='red' css={{ marginTop: `-${mantineTheme.spacing.sm}px` }}>
+                {showTimeLimitError ? 'Enter a time between 1 day and 1 year' : 'Enter a quantity'}
+              </Text>
+            )}
+          </>
+        );
+      default:
+        return <></>;
+    }
+  };
+
+  const getSourceOptions = (): ModuleSourceOptions => {
+    switch (jsonParseWithType<SourceType>(form.values.sourceType)?.id) {
+      case SOURCE_TYPE_IDS.USER_PLAYLIST:
+        return {
+          playlist_id: JSON.parse(form.values.userPlaylist).id,
+          playlist_href: JSON.parse(form.values.userPlaylist).href,
+        };
+      case SOURCE_TYPE_IDS.USER_RECENTLY_LISTENED:
+        return {
+          quantity: form.values.recentlyListened.quantity!,
+          interval: parseInt(form.values.recentlyListened.interval),
+        };
+      default:
+        return {};
+    }
+  };
+
+  useEffect(() => {
+    userPlaylistsQuery.refetch();
+  }, [form.values.sourceType]);
+
+  return (
+    <>
+      {(sourceTypesQuery.isLoading && (
+        <Center>
+          <Loader />
+        </Center>
+      )) || (
+        <>
+          <StackGroupConverter horizontal={horizontal}>
+            {sourceTypesQuery.data && sourceTypesQuery.data.length > 0 && (
+              <Select
+                {...form.getInputProps('sourceType')}
+                css={{
+                  lineHeight: 2,
+                  width: horizontal
+                    ? jsonParseWithType<SourceType>(form.values.sourceType) &&
+                      jsonParseWithType<SourceType>(form.values.sourceType)?.id !== SOURCE_TYPE_IDS.USER_LIKED_TRACKS
+                      ? '50%'
+                      : '100%'
+                    : 'auto',
+                }}
+                label={hideLabels ? undefined : 'Source Type'}
+                withAsterisk={!hideLabels}
+                placeholder='Select a source type'
+                data={sourceTypesQuery.data.map((source) => ({
+                  value: JSON.stringify(source),
+                  label: source.label,
+                }))}
+                nothingFound='No sources found'
+                searchable
+                clearable
+                filter={(value, item) => {
+                  if (value.length === 0) {
+                    return true;
+                  }
+                  return item.label?.toLowerCase().includes(value.toLowerCase().trim()) ?? false;
+                }}
+              />
+            )}
+            {renderAdditionalSelections()}
+            {!horizontal && <Divider />}
+          </StackGroupConverter>
+          <Group
+            // css={{
+            //   width: '100%',
+            //   paddingTop: mantineTheme.spacing?.sm,
+            //   borderTop: `1px solid ${mantineTheme.colors['neutral'][7]}`,
+            // }}
+            position='center'
+            noWrap
+          >
+            {onCancel && (
+              <Button
+                variant='outline'
+                color='neutral'
+                fullWidth
+                onClick={() => {
+                  form.reset();
+                  onCancel();
+                }}
+              >
+                {cancelButtonLabel || 'Cancel'}
+              </Button>
+            )}
+            <Button
+              variant={buttonVariant}
+              onClick={() => {
+                if (form.values.sourceType) {
+                  onSubmit({
+                    values: form.values,
+                    label:
+                      jsonParseWithType(form.values.userPlaylist)?.name ||
+                      jsonParseWithType<SourceType>(form.values.sourceType)?.label,
+                    image_href:
+                      jsonParseWithType(form.values.userPlaylist)?.images[0]?.url ||
+                      jsonParseWithType<SourceType>(form.values.sourceType)?.image_href,
+                    options: getSourceOptions(),
+                  });
+                  return;
+                }
+                showNotification({
+                  color: 'danger',
+                  title: 'Error',
+                  message: 'Could not find selected source type from fetched source types',
+                });
+              }}
+              fullWidth
+              disabled={!form.isValid()}
+            >
+              {buttonLabel}
+            </Button>
+          </Group>
+        </>
+      )}
+    </>
+  );
+};
+
+const UserPlaylistSelectItem = forwardRef<HTMLDivElement, { image: string; label: string; value: string }>(
+  ({ image, label, ...others }: { image: string; label: string; value: string }, ref) => (
+    <div ref={ref} {...others}>
+      <Group noWrap>
+        <Avatar src={image} />
+        <Text size='sm'>{label}</Text>
+      </Group>
+    </div>
+  ),
+);
+UserPlaylistSelectItem.displayName = 'SelectItem';
+
+type StackGroupConverterProps = {
+  children: ReactNode;
+  horizontal?: boolean;
+};
+
+const StackGroupConverter = ({ children, horizontal = false }: StackGroupConverterProps) => {
+  if (horizontal) {
+    return (
+      <Group noWrap align='end'>
+        {children}
+      </Group>
+    );
+  }
+  return <Stack spacing='md'>{children}</Stack>;
+};
