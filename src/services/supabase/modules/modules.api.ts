@@ -103,6 +103,14 @@ type DeleteModuleRequest = {
 
 export const deleteModule = async ({ supabaseClient, userId, moduleId, refetch = false }: DeleteModuleRequest) => {
   await supabaseClient.from('modules').update({ deleted_at: new Date().toISOString() }).eq('id', moduleId);
+  await supabaseClient
+    .from('module_actions')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('module_id', moduleId);
+  await supabaseClient
+    .from('module_sources')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('module_id', moduleId);
 
   if (refetch) {
     return await getUserModules({ supabaseClient, userId });
@@ -137,7 +145,7 @@ export const getModuleActions = async ({ supabaseClient, moduleId }: GetModuleAc
     .select()
     .eq('module_id', moduleId)
     .is('deleted_at', null)
-    .order('created_at')
+    .order('order')
     .then((response) =>
       supabaseResponseHandler(response, "There was an issue fetching your module's actions"),
     )) as FetchedModuleAction[];

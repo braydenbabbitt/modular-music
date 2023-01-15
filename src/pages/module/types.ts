@@ -7,6 +7,7 @@ export type CreateDatabaseModuleSource = Database['public']['Tables']['module_so
 export type CustomCreateDatabaseModuleSource = Omit<CreateDatabaseModuleSource, 'options'> & {
   options: ModuleSourceOptions;
 };
+
 export type CreateDatabaseModuleAction = Database['public']['Tables']['module_actions']['Insert'] & {
   sources?: CustomCreateDatabaseModuleSource[];
 };

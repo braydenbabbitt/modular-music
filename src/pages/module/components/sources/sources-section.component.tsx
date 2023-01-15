@@ -1,4 +1,5 @@
-import { Button, Flex, SimpleGrid, Title, useMantineTheme } from '@mantine/core';
+import { SimpleGrid, Title, useMantineTheme } from '@mantine/core';
+import { DeepPartial } from 'den-ui';
 import { useState } from 'react';
 import { useSupabase } from '../../../../services/supabase/client/client';
 import { INTERVAL_MAP, SOURCE_TYPE_IDS } from '../../../../services/supabase/constants';
@@ -13,6 +14,7 @@ import {
 } from '../../../../services/supabase/modules/sources.api';
 import { CustomCreateDatabaseModuleSource } from '../../types';
 import { SourceItem } from './source-item.component';
+import { SourceSelectionFormValues } from './source-selection-form.component';
 import { SourceSelectorModal } from './source-selector-modal.component';
 
 type SourceSectionProps = {
@@ -24,18 +26,15 @@ type SourceSectionProps = {
 export const SourceSection = ({ sources, refetchSources, moduleId }: SourceSectionProps) => {
   const supabaseClient = useSupabase();
   const mantineTheme = useMantineTheme();
+  const [sourceSelectorModalValues, setSourceSelectorModalValues] = useState<DeepPartial<SourceSelectionFormValues>>();
+  const [selectedSourceId, setSelectedSourceId] = useState<string>();
   const [sourceSelectorModalIsOpen, setSourceSelectorModalIsOpen] = useState(false);
 
   return (
     <section css={{ marginTop: mantineTheme.spacing?.md }}>
-      <Flex align='center' justify='space-between'>
-        <Title order={3} css={{ marginTop: mantineTheme.spacing.md }}>
-          Sources:
-        </Title>
-        <Button css={{ marginTop: mantineTheme.spacing.sm }} onClick={() => setSourceSelectorModalIsOpen(true)}>
-          Add Source
-        </Button>
-      </Flex>
+      <Title order={3} css={{ marginTop: mantineTheme.spacing.md }}>
+        Sources:
+      </Title>
       <SimpleGrid
         css={{ marginTop: mantineTheme.spacing.md }}
         cols={4}
@@ -62,13 +61,31 @@ export const SourceSection = ({ sources, refetchSources, moduleId }: SourceSecti
                 deleteSourceFromModule({ supabaseClient, sourceId: source.id }).then(() => refetchSources())
               }
               description={description}
+              handleEdit={() => {
+                setSelectedSourceId(source.id);
+                setSourceSelectorModalValues({
+                  sourceType: sources.find((item) => item.id === source.id)?.type_id,
+                  userPlaylist: source.options?.playlist_id,
+                  recentlyListened: {
+                    quantity: source.options?.quantity,
+                    interval: source.options?.interval?.toString(),
+                  },
+                });
+                setSourceSelectorModalIsOpen(true);
+              }}
             />
           );
         })}
+        <SourceItem label='Add Source' onClick={() => setSourceSelectorModalIsOpen(true)} />
       </SimpleGrid>
       <SourceSelectorModal
+        initValues={sourceSelectorModalValues}
+        sourceId={selectedSourceId}
         open={sourceSelectorModalIsOpen}
+        refetchSources={refetchSources}
         onClose={() => {
+          setSelectedSourceId(undefined);
+          setSourceSelectorModalValues(undefined);
           setSourceSelectorModalIsOpen(false);
         }}
         onConfirm={({ type_id, label, image_href, options }: CustomCreateDatabaseModuleSource) => {

@@ -14,14 +14,27 @@ import {
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { IconPlus, IconX } from '@tabler/icons';
-import { useState } from 'react';
+import { useTypedJSONEncoding } from 'den-ui';
+import { useEffect, useState } from 'react';
 import { useQuery } from 'react-query';
 import { useLayoutSize } from '../../../../hooks/use-layout-size';
 import { useSupabase } from '../../../../services/supabase/client/client';
-import { ACTION_TYPE_IDS } from '../../../../services/supabase/constants';
-import { ActionType, getActionTypes } from '../../../../services/supabase/modules/actions.api';
-import { SourceType } from '../../../../services/supabase/modules/sources.api';
-import { jsonParseWithType } from '../../../../utils/custom-json-encoder';
+import { ACTION_TYPE_IDS, SOURCE_TYPE_IDS } from '../../../../services/supabase/constants';
+import {
+  ActionType,
+  addActionToModule,
+  editAction,
+  getActionTypes,
+} from '../../../../services/supabase/modules/actions.api';
+import {
+  addLikedTracksSource,
+  addRecentlyListenedSource,
+  addUserPlaylistSource,
+  deleteSourceFromModule,
+  RecentlyListenedOptions,
+  SourceType,
+  UserPlaylistOptions,
+} from '../../../../services/supabase/modules/sources.api';
 import { convertRecentlyPlayedToDescription } from '../../../../utils/description-converters';
 import { CustomCreateDatabaseModuleSource } from '../../types';
 import { SourceSelectionForm, SourceSelectionOnSubmitArgs } from '../sources/source-selection-form.component';
@@ -34,19 +47,32 @@ export type ActionSelectionOnSubmitArgs = {
 };
 
 type ActionSelectorModalProps = {
+  initValues?: Partial<ActionFormValues>;
   open: boolean;
+  actionId?: string;
+  refetchActions: () => void;
   onClose: () => void;
   onConfirm: (payload: ActionSelectionOnSubmitArgs) => void;
 };
 
-type ActionFormValues = {
+export type ActionFormValues = {
   actionType: string;
   filterSources: CustomCreateDatabaseModuleSource[];
 };
 
-export const ActionSelectorModal = ({ open, onClose, onConfirm }: ActionSelectorModalProps) => {
+export const ActionSelectorModal = ({
+  initValues,
+  open,
+  actionId,
+  refetchActions,
+  onClose,
+  onConfirm,
+}: ActionSelectorModalProps) => {
   const supabaseClient = useSupabase();
   const layoutSize = useLayoutSize();
+  const { parseTypedJSON: parseActionType, stringifyTypedJSON: stringifyActionType } =
+    useTypedJSONEncoding<ActionType>();
+  const { parseTypedJSON: parseSourceType } = useTypedJSONEncoding<SourceType>();
   const { data: actionTypes, isLoading: actionTypesIsLoading } = useQuery(['action-types'], () =>
     getActionTypes({ supabaseClient }),
   );
@@ -54,12 +80,12 @@ export const ActionSelectorModal = ({ open, onClose, onConfirm }: ActionSelector
   const form = useForm<ActionFormValues>({
     initialValues: {
       actionType: '',
-      filterSources: [],
+      filterSources: initValues?.filterSources ?? [],
     },
     validate: {
       actionType: (value) => (value ? null : 'Please select an action type'),
       filterSources: (value: CustomCreateDatabaseModuleSource[], values: ActionFormValues) =>
-        jsonParseWithType<ActionType>(values.actionType)?.id === ACTION_TYPE_IDS.FILTER
+        parseActionType(values.actionType)?.id === ACTION_TYPE_IDS.FILTER
           ? value.length > 0
             ? null
             : 'Add at least one source'
@@ -75,19 +101,64 @@ export const ActionSelectorModal = ({ open, onClose, onConfirm }: ActionSelector
   };
 
   const handleConfirm = () => {
-    console.log('handleConfirm', { form });
-    onConfirm({
-      values: form.values,
-      label: jsonParseWithType<ActionType>(form.values.actionType)!.label,
-      image_href: jsonParseWithType<ActionType>(form.values.actionType)!.image_href,
-      sources: form.values.filterSources,
-    });
-    handleClose();
+    const parsedActionType = parseActionType(form.values.actionType)!;
+    if (actionId) {
+      editAction({
+        supabaseClient,
+        actionId,
+        payload: {
+          type_id: parsedActionType.id,
+          label: parsedActionType.label,
+          image_href: parsedActionType.image_href,
+        },
+      }).then(() => {
+        refetchActions();
+        handleClose();
+      });
+    } else {
+      onConfirm({
+        values: form.values,
+        label: parsedActionType.label,
+        image_href: parsedActionType.image_href,
+        sources: form.values.filterSources,
+      });
+      handleClose();
+    }
   };
 
   const handleAddFilterSource = ({ values, label, image_href, options }: SourceSelectionOnSubmitArgs) => {
-    const sourceType = jsonParseWithType<SourceType>(values.sourceType);
+    const sourceType = parseSourceType(values.sourceType);
     if (sourceType) {
+      if (actionId) {
+        switch (sourceType.id) {
+          case SOURCE_TYPE_IDS.USER_LIKED_TRACKS:
+            addLikedTracksSource({
+              supabaseClient,
+              action_id: actionId,
+              label,
+              image_href,
+            });
+            break;
+          case SOURCE_TYPE_IDS.USER_PLAYLIST:
+            addUserPlaylistSource({
+              supabaseClient,
+              action_id: actionId,
+              label,
+              image_href,
+              options: options as UserPlaylistOptions,
+            });
+            break;
+          case SOURCE_TYPE_IDS.USER_RECENTLY_LISTENED:
+            addRecentlyListenedSource({
+              supabaseClient,
+              action_id: actionId,
+              label,
+              image_href,
+              options: options as RecentlyListenedOptions,
+            });
+            break;
+        }
+      }
       form.setFieldValue('filterSources', [
         ...form.values.filterSources,
         {
@@ -102,12 +173,12 @@ export const ActionSelectorModal = ({ open, onClose, onConfirm }: ActionSelector
   };
 
   const renderAdditionalSelections = () => {
-    switch (jsonParseWithType<ActionType>(form.values.actionType)?.id) {
+    switch (parseActionType(form.values.actionType)?.id) {
       case ACTION_TYPE_IDS.FILTER:
         return (
           <>
             <Text>
-              {form.values.filterSources.length === 0 ? 'Select sources for your filter:' : 'Filter sources:'}
+              {form.values.filterSources.length === 0 ? 'Select what you want excluded:' : 'Filter exclusions:'}
             </Text>
             {form.values.filterSources.length > 0 && (
               <Stack spacing='xs'>
@@ -116,12 +187,16 @@ export const ActionSelectorModal = ({ open, onClose, onConfirm }: ActionSelector
                     <SourceRow
                       key={index}
                       source={source}
-                      handleDelete={() =>
+                      handleDelete={() => {
+                        if (source.id) {
+                          deleteSourceFromModule({ supabaseClient, sourceId: source.id });
+                        }
                         form.setFieldValue(
                           'filterSources',
                           form.values.filterSources.filter((item, itemIndex) => itemIndex !== index),
-                        )
-                      }
+                        );
+                        refetchActions();
+                      }}
                     />
                     {index !== form.values.filterSources.length - 1 && <Divider my={0} size='xs' />}
                   </>
@@ -133,13 +208,13 @@ export const ActionSelectorModal = ({ open, onClose, onConfirm }: ActionSelector
               <SourceSelectionForm
                 onSubmit={handleAddFilterSource}
                 horizontal={true}
-                buttonLabel='Save source'
+                buttonLabel='Save exclusion'
                 onCancel={() => setIsAddingSource(false)}
                 hideLabels
               />
             )) || (
               <Button onClick={() => setIsAddingSource(true)} leftIcon={<IconPlus />} variant='subtle'>
-                {`Add${form.values.filterSources.length > 0 ? ' Another' : ''} Source`}
+                {`Add${form.values.filterSources.length > 0 ? ' Another' : ''} Exclusion`}
               </Button>
             )}
           </>
@@ -148,6 +223,15 @@ export const ActionSelectorModal = ({ open, onClose, onConfirm }: ActionSelector
         return <></>;
     }
   };
+
+  useEffect(() => {
+    if (initValues?.actionType) {
+      form.setFieldValue('actionType', initValues.actionType);
+    }
+    if (initValues?.filterSources) {
+      form.setFieldValue('filterSources', initValues.filterSources);
+    }
+  }, [initValues]);
 
   return (
     <Modal opened={open} onClose={handleClose} fullScreen={layoutSize === 'mobile'} centered title='Add a new action:'>
@@ -166,7 +250,7 @@ export const ActionSelectorModal = ({ open, onClose, onConfirm }: ActionSelector
                 withAsterisk
                 placeholder='Select an action type'
                 data={actionTypes.map((action) => ({
-                  value: JSON.stringify(action),
+                  value: stringifyActionType(action),
                   label: action.label,
                 }))}
                 nothingFound='No actions found'
@@ -182,8 +266,19 @@ export const ActionSelectorModal = ({ open, onClose, onConfirm }: ActionSelector
             )}
             <Divider />
             {renderAdditionalSelections()}
-            {isAddingSource || (
-              <Button type='submit' fullWidth disabled={!form.isValid()}>
+            {(parseActionType(form.values.actionType)?.id === ACTION_TYPE_IDS.FILTER && isAddingSource) || (
+              <Button
+                type='submit'
+                fullWidth
+                disabled={
+                  initValues
+                    ? !(
+                        form.values.actionType !== initValues.actionType ||
+                        form.values.filterSources !== initValues.filterSources
+                      ) || form.values.filterSources.length === 0
+                    : !form.isValid()
+                }
+              >
                 Save Action
               </Button>
             )}
@@ -201,7 +296,7 @@ type SourceRowProps = {
 
 const SourceRow = ({ source, handleDelete }: SourceRowProps) => {
   const description =
-    source.options.quantity && source.options.interval
+    source.options?.quantity && source.options?.interval
       ? convertRecentlyPlayedToDescription(source.options.quantity, source.options.interval)
       : undefined;
   return (

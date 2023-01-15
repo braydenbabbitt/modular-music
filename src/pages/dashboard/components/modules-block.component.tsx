@@ -16,34 +16,34 @@ import {
   useMantineColorScheme,
   useMantineTheme,
 } from '@mantine/core';
-import { IconChevronRight, IconPencil, IconPlus, IconTrash } from '@tabler/icons';
+import { IconChevronRight, IconPlus, IconTrash } from '@tabler/icons';
 import { theme } from '../../../theme';
 import { useForm } from '@mantine/form';
 import { createUserModule, deleteModule, getUserModules } from '../../../services/supabase/modules/modules.api';
-import { useSupabase } from '../../../services/supabase/client/client';
-import { useAuth } from '../../../services/auth/auth.provider';
 import { useNavigate } from 'react-router-dom';
 import { DatabaseModule } from '../../module/types';
+import { useSession } from '@supabase/auth-helpers-react';
+import { useSupabase } from '../../../services/supabase/client/client';
 
 export const ModulesBlock = () => {
   // Theme
   const { colorScheme } = useMantineColorScheme();
   const supabaseClient = useSupabase();
-  const { user } = useAuth();
+  const session = useSession();
   const mantineTheme = useMantineTheme();
   const [modules, setModules] = useState<DatabaseModule[]>();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (user?.id) {
-      getUserModules({ supabaseClient, userId: user.id }).then((res) => {
+    if (session?.user?.id) {
+      getUserModules({ supabaseClient, userId: session.user.id }).then((res) => {
         if (res) {
           setModules(res ?? undefined);
         }
         setIsLoading(false);
       });
     }
-  }, [supabaseClient, user]);
+  }, [supabaseClient, session?.user]);
 
   // State
   const [moduleModalOpen, setModuleModalOpen] = useState(false);
@@ -90,8 +90,8 @@ export const ModulesBlock = () => {
   };
   const removeModule = () => {
     setFormSubmitted(true);
-    if (selectedModule && user) {
-      deleteModule({ supabaseClient, userId: user.id, moduleId: selectedModule.id, refetch: true }).then(
+    if (selectedModule && session?.user) {
+      deleteModule({ supabaseClient, userId: session?.user?.id, moduleId: selectedModule.id, refetch: true }).then(
         (newModules) => {
           if (newModules) {
             setModules(newModules);
@@ -162,15 +162,15 @@ export const ModulesBlock = () => {
       <Modal opened={moduleModalOpen} onClose={closeModuleModal} title='Create a new module' centered>
         <form
           onSubmit={moduleForm.onSubmit((values) => {
-            if (user) {
+            if (session?.user) {
               setIsLoading(true);
               createUserModule({
                 supabaseClient,
-                userId: user?.id,
+                userId: session.user.id,
                 name: values.moduleName,
               }).then((newModule) => {
                 if (newModule) {
-                  navigate(`/module/${newModule.id}`);
+                  navigate(`/module/${newModule.id}?create=true`);
                 }
                 setIsLoading(false);
                 closeModuleModal();

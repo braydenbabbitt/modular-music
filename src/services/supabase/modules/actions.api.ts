@@ -1,6 +1,7 @@
+import { FetchedModuleSource } from './modules.api';
 import { CreateDatabaseModuleAction } from './../../../pages/module/types';
 import { ACTION_TYPE_IDS, SOURCE_TYPE_IDS } from './../constants';
-import { supabaseResponseHandler } from './../utils';
+import { supabaseResponseHandler, supabaseSingleResponseHandler } from './../utils';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '../types/database.types';
 import {
@@ -27,12 +28,32 @@ export const getActionTypes = async ({ supabaseClient }: GetActionTypesRequest) 
     .then((response) => supabaseResponseHandler(response, 'There was an issue fetching action types'));
 };
 
+type GetActionTypeRequest = {
+  supabaseClient: SupabaseClient<Database>;
+  typeId: string;
+};
+
+export const getActionType = async ({ supabaseClient, typeId }: GetActionTypeRequest) => {
+  return await supabaseClient
+    .from('action_types')
+    .select()
+    .eq('id', typeId)
+    .single()
+    .then((response) =>
+      supabaseSingleResponseHandler(response, `There was an issue fetching action type with id: ${typeId}`),
+    );
+};
+
 type DeleteActionFromModuleRequest = {
   supabaseClient: SupabaseClient<Database>;
   actionId: string;
 };
 
 export const deleteActionFromModule = async ({ supabaseClient, actionId }: DeleteActionFromModuleRequest) => {
+  await supabaseClient
+    .from('module_sources')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('action_id', actionId);
   await supabaseClient.from('module_actions').update({ deleted_at: new Date().toISOString() }).eq('id', actionId);
 };
 
@@ -87,4 +108,43 @@ export const addActionToModule = async ({ supabaseClient, sources, ...payload }:
       });
     }
   }
+};
+
+type GetActionSourcesRequest = {
+  supabaseClient: SupabaseClient<Database>;
+  actionId: string;
+};
+
+export const getActionSources = async ({ supabaseClient, actionId }: GetActionSourcesRequest) => {
+  return (await supabaseClient
+    .from('module_sources')
+    .select()
+    .eq('action_id', actionId)
+    .is('deleted_at', null)
+    .then((response) => supabaseResponseHandler(response, ''))) as FetchedModuleSource[];
+};
+
+type UpdateActionOrderRequest = {
+  supabaseClient: SupabaseClient<Database>;
+  actionId: string;
+  order: number;
+};
+
+export const updateActionOrder = async ({ supabaseClient, actionId, order }: UpdateActionOrderRequest) => {
+  return await supabaseClient
+    .from('module_actions')
+    .update({ order })
+    .eq('id', actionId)
+    .single()
+    .then((response) => supabaseSingleResponseHandler(response, 'There was a problem updating your order actions'));
+};
+
+type EditActionRequest = {
+  supabaseClient: SupabaseClient<Database>;
+  actionId: string;
+  payload: Omit<Database['public']['Tables']['module_actions']['Update'], 'id'>;
+};
+
+export const editAction = async ({ supabaseClient, actionId, payload }: EditActionRequest) => {
+  await supabaseClient.from('module_actions').update(payload).eq('id', actionId);
 };

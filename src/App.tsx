@@ -14,8 +14,9 @@ import { DashboardPage } from './pages/dashboard/dashboard.page';
 import { HomePage } from './pages/home/home.page';
 import { HotKeys } from 'react-hotkeys';
 import { QueryClient, QueryClientProvider } from 'react-query';
-import { SupabaseClientProvider } from './services/supabase/client/client';
 import { ModulePage } from './pages/module/module.page';
+import { BasicFooter } from './components/footers/basic-footer.component';
+import { UnsubscribePage } from './pages/newsletter/unsubscribe.page';
 
 const queryClient = new QueryClient();
 
@@ -31,16 +32,21 @@ function App() {
   const hotkeys = {
     keyMap: {
       TOGGLE_COLOR_SCHEME: ['ctrl+alt+c', 'meta+alt+c'],
+      TOGGLE_DEV_MODE: ['ctrl+alt+d', 'meta+alt+d'],
     },
     handlers: {
       TOGGLE_COLOR_SCHEME: () => {
         setColorScheme((prev) => {
-          if (colorSchemeIsStored) {
+          if (colorSchemeIsStored()) {
             return prev === 'dark' ? 'light' : 'dark';
           } else {
             return browserColorSchemeSetting === 'dark' ? 'light' : 'dark';
           }
         });
+      },
+      TOGGLE_DEV_MODE: () => {
+        localStorage.setItem('dev', localStorage.getItem('dev') === 'true' ? 'false' : 'true');
+        location.reload();
       },
     },
   };
@@ -56,22 +62,22 @@ function App() {
         >
           <HotKeys {...hotkeys}>
             <NotificationsProvider>
-              <SupabaseClientProvider>
-                <AuthProvider>
-                  <HeaderNavbar />
-                  <PageContainer>
-                    <Routes>
-                      <Route path='/' element={<HomePage />} />
-                      <Route path='/dashboard' element={<DashboardPage />} />
-                      <Route path='/module'>
-                        <Route path=':moduleId' element={<ModulePage />} />
-                      </Route>
-                      <Route path='/spotify-login' element={<SpotifyLoginPage />} />
-                      <Route path='/settings' element={<SettingsPage />} />
-                    </Routes>
-                  </PageContainer>
-                </AuthProvider>
-              </SupabaseClientProvider>
+              <AuthProvider>
+                <HeaderNavbar />
+                <PageContainer>
+                  <Routes>
+                    <Route path='/' element={<HomePage />} />
+                    <Route path='/dashboard' element={<DashboardPage />} />
+                    <Route path='/module'>
+                      <Route path=':moduleId' element={<ModulePage />} />
+                    </Route>
+                    <Route path='/spotify-login' element={<SpotifyLoginPage />} />
+                    <Route path='/settings' element={<SettingsPage />} />
+                    <Route path='/unsubscribe' element={<UnsubscribePage />} />
+                  </Routes>
+                </PageContainer>
+                <BasicFooter />
+              </AuthProvider>
             </NotificationsProvider>
           </HotKeys>
         </MantineProvider>

@@ -1,3 +1,5 @@
+import { DefaultMantineColor, Tuple } from '@mantine/core';
+
 const primaryColors = [
   '#E9FCEF',
   '#D3F8E0',
@@ -99,3 +101,11 @@ type MantineDeepPartial = [
   (string | undefined)?,
   (string | undefined)?,
 ];
+
+type ExtendedCustomColors = keyof typeof colors.mantineDeepPartials | DefaultMantineColor;
+
+declare module '@mantine/core' {
+  export interface MantineThemeColorsOverride {
+    colors: Record<ExtendedCustomColors, Tuple<string, 10>>;
+  }
+}

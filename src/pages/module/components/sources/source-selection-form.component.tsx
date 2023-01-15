@@ -21,7 +21,8 @@ import { getUserPlaylists } from '../../../../services/spotify/spotify.api';
 import { useSupabase } from '../../../../services/supabase/client/client';
 import { SOURCE_TYPE_IDS } from '../../../../services/supabase/constants';
 import { getSourceTypes, ModuleSourceOptions, SourceType } from '../../../../services/supabase/modules/sources.api';
-import { jsonParseWithType } from '../../../../utils/custom-json-encoder';
+import { DeepPartial, useTypedJSONEncoding } from 'den-ui';
+import { useSession } from '@supabase/auth-helpers-react';
 
 type RecentlyListenedValues = {
   quantity?: number;
@@ -42,6 +43,7 @@ export type SourceSelectionOnSubmitArgs = {
 };
 
 type SourceSelectionFormProps = {
+  initValues?: DeepPartial<SourceSelectionFormValues>;
   onSubmit: (payload: SourceSelectionOnSubmitArgs) => void;
   horizontal?: boolean;
   buttonLabel?: string;
@@ -52,6 +54,7 @@ type SourceSelectionFormProps = {
 };
 
 export const SourceSelectionForm = ({
+  initValues,
   onSubmit,
   horizontal = false,
   buttonLabel = 'Add Source',
@@ -62,27 +65,31 @@ export const SourceSelectionForm = ({
 }: SourceSelectionFormProps) => {
   const supabaseClient = useSupabase();
   const mantineTheme = useMantineTheme();
-  const { getSpotifyToken } = useSpotifyToken();
+  const spotifyToken = useSpotifyToken();
+  const { parseTypedJSON: parseSourceType, stringifyTypedJSON: stringifySourceType } =
+    useTypedJSONEncoding<SourceType>();
+  const { parseTypedJSON: parseObject, stringifyTypedJSON: stringifyObject } =
+    useTypedJSONEncoding<Record<string, any>>();
   const sourceTypesQuery = useQuery('source-types', () => getSourceTypes({ supabaseClient }));
   const userPlaylistsQuery = useQuery('user-playlists', () => {
-    if (jsonParseWithType<SourceType>(form.values.sourceType)?.id === SOURCE_TYPE_IDS.USER_PLAYLIST) {
-      return getUserPlaylists(getSpotifyToken());
+    if (parseSourceType(form.values.sourceType)?.id === SOURCE_TYPE_IDS.USER_PLAYLIST && spotifyToken) {
+      return getUserPlaylists(spotifyToken);
     }
   });
 
   const form = useForm<SourceSelectionFormValues>({
     initialValues: {
-      sourceType: '',
-      userPlaylist: '',
+      sourceType: initValues?.sourceType ?? '',
+      userPlaylist: initValues?.userPlaylist ?? '',
       recentlyListened: {
-        quantity: undefined,
-        interval: '1',
+        quantity: initValues?.recentlyListened?.quantity,
+        interval: initValues?.recentlyListened?.interval ?? '1',
       },
     },
     validate: {
       sourceType: (value) => (value ? null : 'Please select a source type'),
       userPlaylist: (value, values) =>
-        jsonParseWithType<SourceType>(values.sourceType)?.id === SOURCE_TYPE_IDS.USER_PLAYLIST
+        parseSourceType(values.sourceType)?.id === SOURCE_TYPE_IDS.USER_PLAYLIST
           ? value
             ? null
             : 'Please select a playlist'
@@ -90,8 +97,7 @@ export const SourceSelectionForm = ({
       recentlyListened: {
         quantity: (value: number, values: any) => {
           const typedValues = values as SourceSelectionFormValues;
-          const isRequired =
-            jsonParseWithType<SourceType>(typedValues.sourceType)?.id === SOURCE_TYPE_IDS.USER_RECENTLY_LISTENED;
+          const isRequired = parseSourceType(typedValues.sourceType)?.id === SOURCE_TYPE_IDS.USER_RECENTLY_LISTENED;
           const daysCalc = value * parseInt(typedValues.recentlyListened.interval);
           const isOutOfRange = daysCalc > 365 || daysCalc < 1;
           if (isRequired) {
@@ -105,7 +111,7 @@ export const SourceSelectionForm = ({
         },
         interval: (value, values: any) => {
           const typedValues = values as SourceSelectionFormValues;
-          return jsonParseWithType<SourceType>(typedValues.sourceType)?.id === SOURCE_TYPE_IDS.USER_RECENTLY_LISTENED
+          return parseSourceType(typedValues.sourceType)?.id === SOURCE_TYPE_IDS.USER_RECENTLY_LISTENED
             ? value
               ? null
               : 'Please select an interval'
@@ -121,7 +127,7 @@ export const SourceSelectionForm = ({
     const showTimeRequiredError =
       (!form.isValid('recentlyListened.quantity') || !form.isValid('recentlyListened.interval')) &&
       form.isDirty('recentlyListened.quantity');
-    switch (jsonParseWithType<SourceType>(form.values.sourceType)?.id) {
+    switch (parseSourceType(form.values.sourceType)?.id) {
       case SOURCE_TYPE_IDS.USER_PLAYLIST:
         return (
           ((userPlaylistsQuery.isLoading || !userPlaylistsQuery.data) && (
@@ -137,7 +143,7 @@ export const SourceSelectionForm = ({
               data={userPlaylistsQuery.data.map((playlist) => ({
                 image: playlist.images[0]?.url ?? 'playlist-icon@512.png',
                 label: playlist.name,
-                value: JSON.stringify(playlist),
+                value: stringifyObject(playlist),
               }))}
               itemComponent={UserPlaylistSelectItem}
               nothingFound='No playlist found'
@@ -201,7 +207,7 @@ export const SourceSelectionForm = ({
   };
 
   const getSourceOptions = (): ModuleSourceOptions => {
-    switch (jsonParseWithType<SourceType>(form.values.sourceType)?.id) {
+    switch (parseSourceType(form.values.sourceType)?.id) {
       case SOURCE_TYPE_IDS.USER_PLAYLIST:
         return {
           playlist_id: JSON.parse(form.values.userPlaylist).id,
@@ -221,6 +227,24 @@ export const SourceSelectionForm = ({
     userPlaylistsQuery.refetch();
   }, [form.values.sourceType]);
 
+  useEffect(() => {
+    if (initValues && sourceTypesQuery.isFetched && userPlaylistsQuery.isFetched) {
+      const newSourceType = sourceTypesQuery.data?.find((item) => item.id === initValues?.sourceType);
+      const newPlaylist = userPlaylistsQuery.data?.find((item) => item.id === initValues?.userPlaylist);
+      if (newSourceType) {
+        const newValues = {
+          sourceType: stringifySourceType(newSourceType),
+          userPlaylist: newPlaylist ? stringifyObject(newPlaylist) : undefined,
+          recentlyListened: {
+            interval: initValues?.recentlyListened?.interval ?? '',
+            quantity: initValues?.recentlyListened?.quantity,
+          },
+        };
+        form.setValues(newValues);
+      }
+    }
+  }, [initValues, sourceTypesQuery.isFetched, userPlaylistsQuery.isFetched]);
+
   return (
     <>
       {(sourceTypesQuery.isLoading && (
@@ -236,8 +260,8 @@ export const SourceSelectionForm = ({
                 css={{
                   lineHeight: 2,
                   width: horizontal
-                    ? jsonParseWithType<SourceType>(form.values.sourceType) &&
-                      jsonParseWithType<SourceType>(form.values.sourceType)?.id !== SOURCE_TYPE_IDS.USER_LIKED_TRACKS
+                    ? parseSourceType(form.values.sourceType) &&
+                      parseSourceType(form.values.sourceType)?.id !== SOURCE_TYPE_IDS.USER_LIKED_TRACKS
                       ? '50%'
                       : '100%'
                     : 'auto',
@@ -246,7 +270,7 @@ export const SourceSelectionForm = ({
                 withAsterisk={!hideLabels}
                 placeholder='Select a source type'
                 data={sourceTypesQuery.data.map((source) => ({
-                  value: JSON.stringify(source),
+                  value: stringifySourceType(source),
                   label: source.label,
                 }))}
                 nothingFound='No sources found'
@@ -263,15 +287,7 @@ export const SourceSelectionForm = ({
             {renderAdditionalSelections()}
             {!horizontal && <Divider />}
           </StackGroupConverter>
-          <Group
-            // css={{
-            //   width: '100%',
-            //   paddingTop: mantineTheme.spacing?.sm,
-            //   borderTop: `1px solid ${mantineTheme.colors['neutral'][7]}`,
-            // }}
-            position='center'
-            noWrap
-          >
+          <Group position='center' noWrap>
             {onCancel && (
               <Button
                 variant='outline'
@@ -292,11 +308,10 @@ export const SourceSelectionForm = ({
                   onSubmit({
                     values: form.values,
                     label:
-                      jsonParseWithType(form.values.userPlaylist)?.name ||
-                      jsonParseWithType<SourceType>(form.values.sourceType)?.label,
+                      parseObject(form.values.userPlaylist)?.name || parseSourceType(form.values.sourceType)?.label,
                     image_href:
-                      jsonParseWithType(form.values.userPlaylist)?.images[0]?.url ||
-                      jsonParseWithType<SourceType>(form.values.sourceType)?.image_href,
+                      parseObject(form.values.userPlaylist)?.images[0]?.url ||
+                      parseSourceType(form.values.sourceType)?.image_href,
                     options: getSourceOptions(),
                   });
                   return;
@@ -308,7 +323,7 @@ export const SourceSelectionForm = ({
                 });
               }}
               fullWidth
-              disabled={!form.isValid()}
+              disabled={initValues ? !form.isDirty() : !form.isValid()}
             >
               {buttonLabel}
             </Button>

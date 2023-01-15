@@ -4,8 +4,10 @@ import { theme } from '../../theme';
 import { ModularMusicLogo } from '../images/modular-music-logo';
 import { IconChevronDown, IconLogout, IconSettings } from '@tabler/icons';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../../services/auth/auth.provider';
 import { useLayoutSize } from '../../hooks/use-layout-size';
+import { useSession } from '@supabase/auth-helpers-react';
+import { useAuth } from '../../services/auth/auth.provider';
+import { useFeatureFlag } from '../../services/supabase/modules/feature-flags.api';
 
 type NavbarItem = {
   label: string;
@@ -22,7 +24,9 @@ type HeaderNavbarProps = {
 
 export const HeaderNavbar = ({ links }: HeaderNavbarProps) => {
   const { colorScheme } = useMantineColorScheme();
-  const { spotifyUser, login, logout } = useAuth();
+  const session = useSession();
+  const { login, logout } = useAuth();
+  const loginFF = useFeatureFlag('login');
   const styles = {
     header: css({
       backgroundColor: colorScheme === 'light' ? theme.colors.neutral[5] : theme.colors.neutral[90],
@@ -128,7 +132,7 @@ export const HeaderNavbar = ({ links }: HeaderNavbarProps) => {
   return (
     <Header height={theme.sizes.headerHeight} css={styles.header}>
       <Container css={styles.inner} fluid>
-        <Link css={css({ height: '100%' })} to={spotifyUser ? '/dashboard' : '/'}>
+        <Link css={css({ height: '100%' })} to={session?.user ? '/dashboard' : '/'}>
           <ModularMusicLogo colorScheme={colorScheme} />
         </Link>
         {linkItems && (
@@ -136,13 +140,19 @@ export const HeaderNavbar = ({ links }: HeaderNavbarProps) => {
             {linkItems}
           </Group>
         )}
-        {(spotifyUser && (
-          <UserDropdown imageSource={spotifyUser.picture} displayName={spotifyUser.name} logout={logout} />
-        )) || (
-          <Button color={theme.colors.primary[50]} onClick={login}>
-            Login
-          </Button>
-        )}
+        {(session?.user && (
+          <UserDropdown
+            imageSource={session.user.user_metadata.picture}
+            displayName={session.user.user_metadata.name}
+            logout={logout}
+          />
+        )) ||
+          (loginFF && (
+            <Button color={theme.colors.primary[50]} onClick={login}>
+              Login
+            </Button>
+          )) ||
+          null}
       </Container>
     </Header>
   );

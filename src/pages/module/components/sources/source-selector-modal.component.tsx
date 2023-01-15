@@ -1,33 +1,63 @@
-import { forwardRef } from 'react';
+import { forwardRef, useEffect } from 'react';
 import { Avatar, Group, Modal, Stack, Text } from '@mantine/core';
 import { useLayoutSize } from '../../../../hooks/use-layout-size';
-import { SourceSelectionForm, SourceSelectionOnSubmitArgs } from './source-selection-form.component';
+import {
+  SourceSelectionForm,
+  SourceSelectionFormValues,
+  SourceSelectionOnSubmitArgs,
+} from './source-selection-form.component';
 import { CustomCreateDatabaseModuleSource } from '../../types';
-import { SourceType } from '../../../../services/supabase/modules/sources.api';
-import { jsonParseWithType } from '../../../../utils/custom-json-encoder';
+import { editSource, SourceType } from '../../../../services/supabase/modules/sources.api';
+import { useTypedJSONEncoding, DeepPartial } from 'den-ui';
+import { useSupabase } from '../../../../services/supabase/client/client';
 
 type SourceSelectorModalProps = {
   open: boolean;
+  initValues?: DeepPartial<SourceSelectionFormValues>;
+  sourceId?: string;
+  refetchSources: () => void;
   onClose: () => void;
   onConfirm: (payload: CustomCreateDatabaseModuleSource) => void;
 };
 
-export const SourceSelectorModal = ({ open, onClose, onConfirm }: SourceSelectorModalProps) => {
+export const SourceSelectorModal = ({
+  open,
+  initValues,
+  sourceId,
+  refetchSources,
+  onClose,
+  onConfirm,
+}: SourceSelectorModalProps) => {
   const layoutSize = useLayoutSize();
+  const supabaseClient = useSupabase();
+  const { parseTypedJSON } = useTypedJSONEncoding<SourceType>();
 
   const handleClose = () => {
     onClose();
   };
 
   const handleConfirm = ({ values, label, image_href, options }: SourceSelectionOnSubmitArgs) => {
-    const sourceType = jsonParseWithType<SourceType>(values.sourceType);
+    const sourceType = parseTypedJSON(values.sourceType);
     if (sourceType) {
-      onConfirm({
-        type_id: sourceType.id,
-        label,
-        image_href,
-        options,
-      });
+      if (sourceId) {
+        editSource({
+          supabaseClient,
+          sourceId,
+          payload: {
+            type_id: sourceType.id,
+            label,
+            image_href,
+            options,
+          },
+        }).then(() => refetchSources());
+      } else {
+        onConfirm({
+          type_id: sourceType.id,
+          label,
+          image_href,
+          options,
+        });
+      }
     }
     handleClose();
   };
@@ -38,7 +68,7 @@ export const SourceSelectorModal = ({ open, onClose, onConfirm }: SourceSelector
       onClose={handleClose}
       fullScreen={layoutSize === 'mobile'}
       centered
-      title='Add Source to Module'
+      title={initValues ? 'Edit Source' : 'Add Source to Module'}
       css={{
         label: {
           opacity: 0.7,
@@ -46,7 +76,11 @@ export const SourceSelectorModal = ({ open, onClose, onConfirm }: SourceSelector
       }}
     >
       <Stack>
-        <SourceSelectionForm onSubmit={handleConfirm} />
+        <SourceSelectionForm
+          initValues={initValues}
+          onSubmit={handleConfirm}
+          buttonLabel={initValues ? 'Save Source' : undefined}
+        />
       </Stack>
     </Modal>
   );

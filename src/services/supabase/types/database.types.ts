@@ -26,6 +26,32 @@ export interface Database {
           image_href?: string;
         };
       };
+      feature_flags: {
+        Row: {
+          id: string;
+          user_id: string | null;
+          name: string;
+          created_at: string | null;
+          deleted_at: string | null;
+          enabled: boolean;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string | null;
+          name?: string;
+          created_at?: string | null;
+          deleted_at?: string | null;
+          enabled: boolean;
+        };
+        Update: {
+          id?: string;
+          user_id?: string | null;
+          name?: string;
+          created_at?: string | null;
+          deleted_at?: string | null;
+          enabled?: boolean;
+        };
+      };
       module_actions: {
         Row: {
           id: string;
@@ -35,6 +61,7 @@ export interface Database {
           deleted_at: string | null;
           label: string;
           image_href: string;
+          order: number;
         };
         Insert: {
           id?: string;
@@ -44,6 +71,7 @@ export interface Database {
           deleted_at?: string | null;
           label: string;
           image_href: string;
+          order?: number;
         };
         Update: {
           id?: string;
@@ -53,6 +81,7 @@ export interface Database {
           deleted_at?: string | null;
           label?: string;
           image_href?: string;
+          order?: number;
         };
       };
       module_sources: {
@@ -114,6 +143,26 @@ export interface Database {
           name?: string;
           user_id?: string;
           deleted_at?: string | null;
+        };
+      };
+      newsletter_signups: {
+        Row: {
+          id: string;
+          created_at: string | null;
+          email: string;
+          unsubscribed_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          created_at?: string | null;
+          email: string;
+          unsubscribed_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          created_at?: string | null;
+          email?: string;
+          unsubscribed_at?: string | null;
         };
       };
       source_types: {

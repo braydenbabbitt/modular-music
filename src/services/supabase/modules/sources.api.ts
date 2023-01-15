@@ -86,3 +86,13 @@ type DeleteSourceRequest = {
 export const deleteSourceFromModule = async ({ supabaseClient, sourceId }: DeleteSourceRequest) => {
   await supabaseClient.from('module_sources').update({ deleted_at: new Date().toISOString() }).eq('id', sourceId);
 };
+
+type EditSourceRequest = {
+  supabaseClient: SupabaseClient<Database>;
+  sourceId: string;
+  payload: Omit<Database['public']['Tables']['module_sources']['Update'], 'id'>;
+};
+
+export const editSource = async ({ supabaseClient, sourceId, payload }: EditSourceRequest) => {
+  await supabaseClient.from('module_sources').update(payload).eq('id', sourceId);
+};
