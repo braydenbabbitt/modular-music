@@ -19,7 +19,12 @@ import {
 import { IconChevronRight, IconPlus, IconTrash } from '@tabler/icons';
 import { theme } from '../../../theme';
 import { useForm } from '@mantine/form';
-import { createUserModule, deleteModule, getUserModules } from '../../../services/supabase/modules/modules.api';
+import {
+  createUserModule,
+  deleteModule,
+  getUserModules,
+  getModuleOutput,
+} from '../../../services/supabase/modules/modules.api';
 import { useNavigate } from 'react-router-dom';
 import { DatabaseModule } from '../../module/types';
 import { useSession } from '@supabase/auth-helpers-react';
@@ -170,7 +175,7 @@ export const ModulesBlock = () => {
                 name: values.moduleName,
               }).then((newModule) => {
                 if (newModule) {
-                  navigate(`/module/${newModule.id}?create=true`);
+                  navigate(`/module/${newModule.id}`);
                 }
                 setIsLoading(false);
                 closeModuleModal();

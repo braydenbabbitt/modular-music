@@ -14,9 +14,10 @@ import { DashboardPage } from './pages/dashboard/dashboard.page';
 import { HomePage } from './pages/home/home.page';
 import { HotKeys } from 'react-hotkeys';
 import { QueryClient, QueryClientProvider } from 'react-query';
-import { ModulePage } from './pages/module/module.page';
 import { BasicFooter } from './components/footers/basic-footer.component';
 import { UnsubscribePage } from './pages/newsletter/unsubscribe.page';
+import { CreateModuleModal } from './pages/module/views/create.component';
+import { ModulePage } from './pages/module/module.page';
 
 const queryClient = new QueryClient();
 
@@ -69,7 +70,7 @@ function App() {
                     <Route path='/' element={<HomePage />} />
                     <Route path='/dashboard' element={<DashboardPage />} />
                     <Route path='/module'>
-                      <Route path=':moduleId' element={<ModulePage />} />
+                      <Route path='/module/:moduleId' element={<ModulePage />} />
                     </Route>
                     <Route path='/spotify-login' element={<SpotifyLoginPage />} />
                     <Route path='/settings' element={<SettingsPage />} />

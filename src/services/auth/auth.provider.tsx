@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext } from 'react';
+import { createContext, ReactNode, useContext, useEffect } from 'react';
 import { showNotification } from '@mantine/notifications';
 import { useNavigate } from 'react-router-dom';
 import { createClient } from '@supabase/supabase-js';
@@ -6,6 +6,7 @@ import { SessionContextProvider, useSession } from '@supabase/auth-helpers-react
 import { Database } from '../supabase/types/database.types';
 import { Center, Loader } from '@mantine/core';
 import { PageContainer } from '../../components/containers/page-container.component';
+import { useSupabase } from '../supabase/client/client';
 
 type AuthProviderProps = {
   children: ReactNode;
@@ -79,6 +80,20 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const logout = () => {
     supabaseClient.auth.signOut();
   };
+
+  useEffect(() => {
+    supabaseClient.auth.getSession().then((session) => {
+      if (!session.data.session?.provider_token) {
+        supabaseClient.auth.signInWithOAuth({
+          provider: 'spotify',
+          options: {
+            scopes: spotifyScopes.join(' '),
+            redirectTo: '/dashboard',
+          },
+        });
+      }
+    });
+  }, []);
 
   return (
     <AuthContext.Provider

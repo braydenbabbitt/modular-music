@@ -20,9 +20,17 @@ type ActionsSectionsProps = {
   actions: FetchedModuleAction[];
   refetchActions: () => void;
   moduleId: string;
+  hideTitle?: boolean;
+  disableEditing?: boolean;
 };
 
-export const ActionsSection = ({ actions, refetchActions, moduleId }: ActionsSectionsProps) => {
+export const ActionsSection = ({
+  actions,
+  refetchActions,
+  moduleId,
+  hideTitle,
+  disableEditing,
+}: ActionsSectionsProps) => {
   const supabaseClient = useSupabase();
   const mantineTheme = useMantineTheme();
   const { parseTypedJSON: parseActionType, stringifyTypedJSON: stringifyActionType } =
@@ -53,7 +61,7 @@ export const ActionsSection = ({ actions, refetchActions, moduleId }: ActionsSec
 
   return (
     <section css={{ marginTop: mantineTheme.spacing.md }}>
-      <Title order={3}>Actions:</Title>
+      {!hideTitle && <Title order={3}>Actions:</Title>}
       <Stack spacing={0}>
         <DragDropContext
           onDragStart={() => {
@@ -70,7 +78,7 @@ export const ActionsSection = ({ actions, refetchActions, moduleId }: ActionsSec
               >
                 {actionsList.map((action, index) => (
                   <React.Fragment key={action.id}>
-                    <Draggable key={action.id} draggableId={action.id} index={index}>
+                    <Draggable key={action.id} draggableId={action.id} index={index} isDragDisabled={disableEditing}>
                       {(provided) => (
                         <ActionItem
                           key={action.id}
@@ -97,6 +105,7 @@ export const ActionsSection = ({ actions, refetchActions, moduleId }: ActionsSec
                             deleteActionFromModule({ supabaseClient, actionId: action.id }).then(() => refetchActions())
                           }
                           typeId={action.type_id}
+                          disabled={disableEditing}
                         />
                       )}
                     </Draggable>
@@ -112,8 +121,11 @@ export const ActionsSection = ({ actions, refetchActions, moduleId }: ActionsSec
             variant='subtle'
             leftIcon={<IconPlus />}
             size='md'
-            css={{ margin: `${mantineTheme.spacing.sm}px 0` }}
-            onClick={() => setActionSelectorModalIsOpen(true)}
+            css={[
+              { margin: `${mantineTheme.spacing.sm}px 0` },
+              disableEditing ? { opacity: 0.5, cursor: 'default', ':hover': { backgroundColor: 'transparent' } } : {},
+            ]}
+            onClick={disableEditing ? undefined : () => setActionSelectorModalIsOpen(true)}
           >
             Add Action
           </Button>

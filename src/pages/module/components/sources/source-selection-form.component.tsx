@@ -334,7 +334,7 @@ export const SourceSelectionForm = ({
   );
 };
 
-const UserPlaylistSelectItem = forwardRef<HTMLDivElement, { image: string; label: string; value: string }>(
+export const UserPlaylistSelectItem = forwardRef<HTMLDivElement, { image: string; label: string; value: string }>(
   ({ image, label, ...others }: { image: string; label: string; value: string }, ref) => (
     <div ref={ref} {...others}>
       <Group noWrap>

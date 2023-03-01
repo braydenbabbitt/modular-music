@@ -16,6 +16,7 @@ type ActionItemProps = {
   provided: DraggableProvided;
   handleEdit: () => void;
   handleDelete: () => void;
+  disabled?: boolean;
 };
 
 export const ActionItem = ({
@@ -26,15 +27,18 @@ export const ActionItem = ({
   provided,
   handleEdit,
   handleDelete,
+  disabled,
 }: ActionItemProps) => {
   const supabaseClient = useSupabase();
   const mantineTheme = useMantineTheme();
   const isFilter = typeId === ACTION_TYPE_IDS.FILTER;
-  const { data, isLoading } = useQuery([actionId, 'action-sources'], () => {
-    if (typeId === ACTION_TYPE_IDS.FILTER) {
-      return getActionSources({ supabaseClient, actionId });
-    }
-  });
+  const { data, isLoading } = useQuery(
+    [actionId, 'action-sources'],
+    () => getActionSources({ supabaseClient, actionId }),
+    {
+      enabled: typeId === ACTION_TYPE_IDS.FILTER,
+    },
+  );
 
   const rowItemStyles: Interpolation<Theme> = {
     padding: `${mantineTheme.spacing.sm}px 0`,
@@ -45,7 +49,10 @@ export const ActionItem = ({
       ref={provided.innerRef}
       {...provided.draggableProps}
       {...provided.dragHandleProps}
-      css={{ listStyle: 'none', borderBottom: `1px solid ${mantineTheme.fn.themeColor('neutral')}` }}
+      css={[
+        { listStyle: 'none', borderBottom: `1px solid ${mantineTheme.fn.themeColor('neutral')}` },
+        disabled ? { opacity: 0.5 } : {},
+      ]}
     >
       <Flex align='center'>
         <IconGripVertical size={mantineTheme.spacing.md} />
@@ -80,14 +87,16 @@ export const ActionItem = ({
                   ))}
               </Stack>
             </Group>
-            <Group css={{ flexShrink: 1 }} noWrap>
-              <ActionIcon css={rowItemStyles} onClick={handleEdit}>
-                <IconPencil />
-              </ActionIcon>
-              <ActionIcon css={rowItemStyles} color='danger' onClick={handleDelete}>
-                <IconX />
-              </ActionIcon>
-            </Group>
+            {!disabled && (
+              <Group css={{ flexShrink: 1 }} noWrap>
+                <ActionIcon css={rowItemStyles} onClick={handleEdit}>
+                  <IconPencil />
+                </ActionIcon>
+                <ActionIcon css={rowItemStyles} color='danger' onClick={handleDelete}>
+                  <IconX />
+                </ActionIcon>
+              </Group>
+            )}
           </Flex>
         </Stack>
       </Flex>

@@ -13,6 +13,19 @@ const primaryColors = [
   '#072C14',
 ] as MantineDeepPartial;
 
+const secondaryColors = [
+  '#e9f4ff',
+  '#d2e9ff',
+  '#a5d3ff',
+  '#78bcff',
+  '#4ba6ff',
+  '#1e90ff',
+  '#1873cc',
+  '#125699',
+  '#0c3a66',
+  '#061d33',
+] as MantineDeepPartial;
+
 const neutralColors = [
   '#F1F2F4',
   '#E3E5E8',
@@ -52,6 +65,19 @@ const primary = {
   5: primaryColors[0],
 } as const;
 
+const secondary = {
+  90: secondaryColors[9],
+  80: secondaryColors[8],
+  70: secondaryColors[7],
+  60: secondaryColors[6],
+  50: secondaryColors[5],
+  40: secondaryColors[4],
+  30: secondaryColors[3],
+  20: secondaryColors[2],
+  10: secondaryColors[1],
+  5: secondaryColors[0],
+} as const;
+
 const neutral = {
   90: neutralColors[9],
   80: neutralColors[8],
@@ -80,10 +106,12 @@ const danger = {
 
 export const colors = {
   primary,
+  secondary,
   neutral,
   danger,
   mantineDeepPartials: {
     primary: primaryColors,
+    secondary: secondaryColors,
     neutral: neutralColors,
     danger: dangerColors,
   },

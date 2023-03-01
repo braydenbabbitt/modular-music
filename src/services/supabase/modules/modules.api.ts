@@ -151,6 +151,64 @@ export const getModuleActions = async ({ supabaseClient, moduleId }: GetModuleAc
     )) as FetchedModuleAction[];
 };
 
+type GetModuleOutputRequest = {
+  supabaseClient: SupabaseClient<Database>;
+  moduleId: string;
+};
+
+export const getModuleOutput = async ({ supabaseClient, moduleId }: GetModuleOutputRequest) => {
+  return await supabaseClient
+    .from('module_outputs')
+    .select()
+    .eq('module_id', moduleId)
+    .is('deleted_at', null)
+    .maybeSingle()
+    .then((response) => supabaseSingleResponseHandler(response, "There was an issue fetching your module's output"));
+};
+
+export type SaveModuleOutputRequest = {
+  supabaseClient: SupabaseClient<Database>;
+  moduleId: string;
+  label: string;
+  image_href: string;
+  playlistId: string;
+  playlist_href: string;
+};
+
+export const saveModuleOutput = async ({
+  supabaseClient,
+  moduleId,
+  label,
+  image_href,
+  playlistId,
+  playlist_href,
+}: SaveModuleOutputRequest) => {
+  return await supabaseClient.from('module_outputs').upsert(
+    {
+      module_id: moduleId,
+      label,
+      image_href,
+      playlist_id: playlistId,
+      playlist_href: playlist_href,
+    },
+    {
+      onConflict: 'module_id',
+      ignoreDuplicates: false,
+    },
+  );
+};
+
+export const setModuleComplete = async (
+  supabaseClient: SupabaseClient<Database>,
+  moduleId: string,
+  isComplete?: boolean,
+) => {
+  return await supabaseClient
+    .from('modules')
+    .update({ complete: isComplete || true })
+    .eq('id', moduleId);
+};
+
 type GetModuleDataRequest = {
   supabaseClient: SupabaseClient<Database>;
   moduleId: string;
@@ -162,17 +220,25 @@ export type FetchedModuleSource = Omit<Database['public']['Tables']['module_sour
 
 export type FetchedModuleAction = Database['public']['Tables']['module_actions']['Row'];
 
-export type GetModuleDataResponse = DatabaseModule & { sources: FetchedModuleSource[]; actions: FetchedModuleAction[] };
+export type FetchedModuleOutput = Database['public']['Tables']['module_outputs']['Row'];
+
+export type GetModuleDataResponse = DatabaseModule & {
+  sources: FetchedModuleSource[];
+  actions: FetchedModuleAction[];
+  output: FetchedModuleOutput | undefined;
+};
 
 export const getModuleData = async ({ supabaseClient, moduleId }: GetModuleDataRequest) => {
   const module = await getModule({ supabaseClient, moduleId });
 
   const sources = await getModuleSources({ supabaseClient, moduleId });
   const actions = await getModuleActions({ supabaseClient, moduleId });
+  const output = await getModuleOutput({ supabaseClient, moduleId });
 
   return {
     ...module,
     sources,
     actions,
+    output,
   } as GetModuleDataResponse;
 };

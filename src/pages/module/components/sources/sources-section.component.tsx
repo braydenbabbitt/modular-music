@@ -21,9 +21,11 @@ type SourceSectionProps = {
   sources: FetchedModuleSource[];
   refetchSources: () => void;
   moduleId: string;
+  hideTitle?: boolean;
+  disableEditing?: boolean;
 };
 
-export const SourceSection = ({ sources, refetchSources, moduleId }: SourceSectionProps) => {
+export const SourceSection = ({ sources, refetchSources, moduleId, hideTitle, disableEditing }: SourceSectionProps) => {
   const supabaseClient = useSupabase();
   const mantineTheme = useMantineTheme();
   const [sourceSelectorModalValues, setSourceSelectorModalValues] = useState<DeepPartial<SourceSelectionFormValues>>();
@@ -32,9 +34,7 @@ export const SourceSection = ({ sources, refetchSources, moduleId }: SourceSecti
 
   return (
     <section css={{ marginTop: mantineTheme.spacing?.md }}>
-      <Title order={3} css={{ marginTop: mantineTheme.spacing.md }}>
-        Sources:
-      </Title>
+      {!hideTitle && <Title order={3}>Sources:</Title>}
       <SimpleGrid
         css={{ marginTop: mantineTheme.spacing.md }}
         cols={4}
@@ -73,10 +73,15 @@ export const SourceSection = ({ sources, refetchSources, moduleId }: SourceSecti
                 });
                 setSourceSelectorModalIsOpen(true);
               }}
+              disabled={disableEditing}
             />
           );
         })}
-        <SourceItem label='Add Source' onClick={() => setSourceSelectorModalIsOpen(true)} />
+        <SourceItem
+          label='Add Source'
+          onClick={disableEditing ? undefined : () => setSourceSelectorModalIsOpen(true)}
+          disabled={disableEditing}
+        />
       </SimpleGrid>
       <SourceSelectorModal
         initValues={sourceSelectorModalValues}

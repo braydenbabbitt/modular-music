@@ -12,6 +12,7 @@ export const theme = {
 export const mantineTheme = {
   colors: {
     primary: theme.colors.mantineDeepPartials.primary,
+    secondary: theme.colors.mantineDeepPartials.secondary,
     neutral: theme.colors.mantineDeepPartials.neutral,
     danger: theme.colors.mantineDeepPartials.danger,
   },

@@ -1,4 +1,4 @@
-import { ActionIcon, Avatar, Card, Flex, Group, Paper, Stack, Text, useMantineTheme } from '@mantine/core';
+import { ActionIcon, Avatar, Flex, Group, Paper, Stack, Text, useMantineTheme } from '@mantine/core';
 import { IconPencil, IconPlus, IconX } from '@tabler/icons';
 import { theme } from '../../../../theme';
 
@@ -9,9 +9,18 @@ type SourceItemProps = {
   handleDelete?: () => void;
   handleEdit?: () => void;
   onClick?: () => void;
+  disabled?: boolean;
 };
 
-export const SourceItem = ({ imageHref, label, description, handleDelete, handleEdit, onClick }: SourceItemProps) => {
+export const SourceItem = ({
+  imageHref,
+  label,
+  description,
+  handleDelete,
+  handleEdit,
+  onClick,
+  disabled,
+}: SourceItemProps) => {
   const mantineTheme = useMantineTheme();
 
   return (
@@ -32,6 +41,7 @@ export const SourceItem = ({ imageHref, label, description, handleDelete, handle
               },
             }
           : {},
+        disabled ? { opacity: 0.5 } : {},
       ]}
       onClick={onClick}
     >
@@ -48,12 +58,12 @@ export const SourceItem = ({ imageHref, label, description, handleDelete, handle
           </Stack>
         </Group>
         <Group spacing='sm' noWrap>
-          {handleEdit && (
+          {handleEdit && !disabled && (
             <ActionIcon color='neutral' onClick={handleEdit}>
               <IconPencil />
             </ActionIcon>
           )}
-          {handleDelete && (
+          {handleDelete && !disabled && (
             <ActionIcon color='danger' onClick={handleDelete}>
               <IconX />
             </ActionIcon>
