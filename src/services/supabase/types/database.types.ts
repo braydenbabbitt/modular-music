@@ -303,26 +303,6 @@ export interface Database {
           label?: string;
         };
       };
-      spotify_tokens: {
-        Row: {
-          id: string;
-          provider_refresh_token: string | null;
-          provider_token: string | null;
-          provider_token_expires_at: string | null;
-        };
-        Insert: {
-          id: string;
-          provider_refresh_token?: string | null;
-          provider_token?: string | null;
-          provider_token_expires_at?: string | null;
-        };
-        Update: {
-          id?: string;
-          provider_refresh_token?: string | null;
-          provider_token?: string | null;
-          provider_token_expires_at?: string | null;
-        };
-      };
     };
     Views: {
       [_ in never]: never;
