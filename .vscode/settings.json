@@ -1,5 +1,15 @@
 {
-  "conventionalCommits.scopes": ["theme", ".vscode", "app", "auth", "navbar", "package", "settings", "programs"],
+  "conventionalCommits.scopes": [
+    "theme",
+    ".vscode",
+    "app",
+    "auth",
+    "navbar",
+    "package",
+    "settings",
+    "programs",
+    "edge-functions"
+  ],
   "deno.enable": true,
   "deno.enablePaths": ["./supabase/functions"],
   "deno.lint": true,

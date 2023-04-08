@@ -29,9 +29,9 @@ export const HomePage = () => {
   const { login } = useAuth();
 
   useEffect(() => {
-    if (session?.user) {
-      navigate('/dashboard');
-    }
+    // if (session?.user) {
+    //   navigate('/dashboard');
+    // }
   }, []);
 
   return (

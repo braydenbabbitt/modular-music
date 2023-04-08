@@ -147,27 +147,53 @@ export interface Database {
           playlist_id?: string;
         };
       };
+      module_runs_log: {
+        Row: {
+          id: string;
+          manual: boolean;
+          module_id: string;
+          timestamp: string;
+        };
+        Insert: {
+          id?: string;
+          manual?: boolean;
+          module_id: string;
+          timestamp?: string;
+        };
+        Update: {
+          id?: string;
+          manual?: boolean;
+          module_id?: string;
+          timestamp?: string;
+        };
+      };
       module_schedules: {
         Row: {
+          deleted_at: string | null;
           edited_at: string;
           end_date: string | null;
           id: string;
           next_run: string;
-          repetition: Json | null;
+          repetition_config: Json | null;
+          times_to_repeat: number | null;
         };
         Insert: {
+          deleted_at?: string | null;
           edited_at?: string;
           end_date?: string | null;
           id: string;
           next_run: string;
-          repetition?: Json | null;
+          repetition_config?: Json | null;
+          times_to_repeat?: number | null;
         };
         Update: {
+          deleted_at?: string | null;
           edited_at?: string;
           end_date?: string | null;
           id?: string;
           next_run?: string;
-          repetition?: Json | null;
+          repetition_config?: Json | null;
+          times_to_repeat?: number | null;
         };
       };
       module_sources: {
@@ -277,6 +303,26 @@ export interface Database {
           label?: string;
         };
       };
+      spotify_tokens: {
+        Row: {
+          id: string;
+          provider_refresh_token: string | null;
+          provider_token: string | null;
+          provider_token_expires_at: string | null;
+        };
+        Insert: {
+          id: string;
+          provider_refresh_token?: string | null;
+          provider_token?: string | null;
+          provider_token_expires_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          provider_refresh_token?: string | null;
+          provider_token?: string | null;
+          provider_token_expires_at?: string | null;
+        };
+      };
     };
     Views: {
       [_ in never]: never;
@@ -298,7 +344,10 @@ export interface Database {
     Tables: {
       buckets: {
         Row: {
+          allowed_mime_types: string[] | null;
+          avif_autodetection: boolean | null;
           created_at: string | null;
+          file_size_limit: number | null;
           id: string;
           name: string;
           owner: string | null;
@@ -306,7 +355,10 @@ export interface Database {
           updated_at: string | null;
         };
         Insert: {
+          allowed_mime_types?: string[] | null;
+          avif_autodetection?: boolean | null;
           created_at?: string | null;
+          file_size_limit?: number | null;
           id: string;
           name: string;
           owner?: string | null;
@@ -314,7 +366,10 @@ export interface Database {
           updated_at?: string | null;
         };
         Update: {
+          allowed_mime_types?: string[] | null;
+          avif_autodetection?: boolean | null;
           created_at?: string | null;
+          file_size_limit?: number | null;
           id?: string;
           name?: string;
           owner?: string | null;
@@ -353,6 +408,7 @@ export interface Database {
           owner: string | null;
           path_tokens: string[] | null;
           updated_at: string | null;
+          version: string | null;
         };
         Insert: {
           bucket_id?: string | null;
@@ -364,6 +420,7 @@ export interface Database {
           owner?: string | null;
           path_tokens?: string[] | null;
           updated_at?: string | null;
+          version?: string | null;
         };
         Update: {
           bucket_id?: string | null;
@@ -375,6 +432,7 @@ export interface Database {
           owner?: string | null;
           path_tokens?: string[] | null;
           updated_at?: string | null;
+          version?: string | null;
         };
       };
     };
@@ -382,6 +440,15 @@ export interface Database {
       [_ in never]: never;
     };
     Functions: {
+      can_insert_object: {
+        Args: {
+          bucketid: string;
+          name: string;
+          owner: string;
+          metadata: Json;
+        };
+        Returns: undefined;
+      };
       extension: {
         Args: {
           name: string;
@@ -398,7 +465,7 @@ export interface Database {
         Args: {
           name: string;
         };
-        Returns: string[];
+        Returns: unknown;
       };
       get_size_by_bucket: {
         Args: Record<PropertyKey, never>;

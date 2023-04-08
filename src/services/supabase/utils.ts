@@ -20,7 +20,7 @@ export const supabaseSingleResponseHandler = <T>(
   response: PostgrestSingleResponse<T> | PostgrestMaybeSingleResponse<T>,
   errorMessage?: string,
 ) => {
-  if (response.data) {
+  if (response.data || (!response.data && !response.error)) {
     return response.data;
   } else if (response.error) {
     console.error(response.error);

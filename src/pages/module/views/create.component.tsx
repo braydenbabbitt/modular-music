@@ -13,6 +13,7 @@ import {
 } from '@mantine/core';
 import { IconCheck, IconChevronRight } from '@tabler/icons';
 import { ReactNode, useEffect, useState } from 'react';
+import { QueryObserverResult } from 'react-query';
 import { GetModuleDataResponse } from '../../../services/supabase/modules/modules.api';
 import { ActionsSection } from '../components/actions/actions-section.component';
 import { OutputSection } from '../components/output/output-section.component';
@@ -31,6 +32,8 @@ type CreateModuleModalProps = {
   initialValues?: {
     name?: string;
   };
+  userPlaylists: any[];
+  refetchUserPlaylists: () => Promise<QueryObserverResult<any[], unknown>>;
 };
 
 const getLastEnabledStep = (data: GetModuleDataResponse | undefined): CreateSteps => {
@@ -50,6 +53,8 @@ export const CreateModuleModal = ({
   refetch,
   moduleId,
   title = 'Create Module',
+  userPlaylists,
+  refetchUserPlaylists,
 }: CreateModuleModalProps) => {
   const mantineTheme = useMantineTheme();
   // const [enabledSteps, setEnabledSteps] = useState(new Set<CreateSteps>(['sources']));
@@ -144,7 +149,14 @@ export const CreateModuleModal = ({
           </Accordion.Control>
           <Accordion.Panel>
             <Stack>
-              <OutputSection output={data?.output} refetchOutput={refetch} moduleId={moduleId} hideTitle />
+              <OutputSection
+                output={data?.output}
+                refetchOutput={refetch}
+                moduleId={moduleId}
+                hideTitle
+                userPlaylists={userPlaylists}
+                refetchUserPlaylists={refetchUserPlaylists}
+              />
               <Button
                 onClick={() => {
                   setIsCompleting(true);

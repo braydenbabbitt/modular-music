@@ -6,7 +6,6 @@ import { SessionContextProvider, useSession } from '@supabase/auth-helpers-react
 import { Database } from '../supabase/types/database.types';
 import { Center, Loader } from '@mantine/core';
 import { PageContainer } from '../../components/containers/page-container.component';
-import { useSupabase } from '../supabase/client/client';
 
 type AuthProviderProps = {
   children: ReactNode;
@@ -44,12 +43,20 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const supabaseClient = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY);
   const navigate = useNavigate();
 
-  supabaseClient.auth.onAuthStateChange((event) => {
+  supabaseClient.auth.onAuthStateChange(async (event) => {
     if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
       location.replace('/');
     }
 
     if (event === 'SIGNED_IN' && location.pathname === '/') {
+      const session = await supabaseClient.auth.getSession();
+      supabaseClient.auth.updateUser({
+        data: {
+          provider_token: session.data.session?.provider_token,
+          provider_refresh_token: session.data.session?.provider_refresh_token,
+          provider_token_expires_at: session.data.session?.expires_at,
+        },
+      });
       navigate('/dashboard');
     }
   });
@@ -77,22 +84,32 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     return { error };
   };
 
-  const logout = () => {
-    supabaseClient.auth.signOut();
+  const logout = async () => {
+    await supabaseClient.auth.signOut();
   };
 
   useEffect(() => {
-    supabaseClient.auth.getSession().then((session) => {
-      if (!session.data.session?.provider_token) {
-        supabaseClient.auth.signInWithOAuth({
-          provider: 'spotify',
-          options: {
-            scopes: spotifyScopes.join(' '),
-            redirectTo: '/dashboard',
-          },
-        });
-      }
-    });
+    if (location.pathname !== '/' || localStorage.getItem('sb-acbwmfgbgckxsarvpuoc-auth-token')) {
+      supabaseClient.auth.getSession().then(async (session) => {
+        if (!session.data.session?.provider_token) {
+          await supabaseClient.auth.signInWithOAuth({
+            provider: 'spotify',
+            options: {
+              scopes: spotifyScopes.join(' '),
+              redirectTo: '/dashboard',
+            },
+          });
+          session = await supabaseClient.auth.getSession();
+          await supabaseClient.auth.updateUser({
+            data: {
+              provider_token: session.data.session?.provider_token,
+              provider_refresh_token: session.data.session?.provider_refresh_token,
+              provider_token_expires_at: session.data.session?.expires_at,
+            },
+          });
+        }
+      });
+    }
   }, []);
 
   return (

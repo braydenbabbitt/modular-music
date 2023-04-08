@@ -5,9 +5,10 @@ import { useState } from 'react';
 type ModuleNameFieldProps = {
   onSave: (newName: string) => Promise<void>;
   initialName?: string;
+  disabled?: boolean;
 };
 
-export const ModuleNameField = ({ onSave, initialName }: ModuleNameFieldProps) => {
+export const ModuleNameField = ({ onSave, initialName, disabled }: ModuleNameFieldProps) => {
   const mantineTheme = useMantineTheme();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -53,9 +54,11 @@ export const ModuleNameField = ({ onSave, initialName }: ModuleNameFieldProps) =
       <Title order={2} color={moduleName ? undefined : mantineTheme.fn.lighten('neutral', 0.4)}>
         {moduleName || 'Unnamed Module'}
       </Title>
-      <ActionIcon onClick={() => setIsEditing(true)}>
-        <IconPencil />
-      </ActionIcon>
+      {!disabled && (
+        <ActionIcon onClick={() => setIsEditing(true)}>
+          <IconPencil />
+        </ActionIcon>
+      )}
     </Group>
   );
 };
