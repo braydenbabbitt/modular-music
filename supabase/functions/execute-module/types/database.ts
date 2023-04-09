@@ -303,6 +303,29 @@ export interface Database {
           label?: string;
         };
       };
+      users_spotify_recently_listened: {
+        Row: {
+          cursor: number | null;
+          id: string;
+          last_fetched_at: string | null;
+          list: Json[];
+          oldest_item: string | null;
+        };
+        Insert: {
+          cursor?: number | null;
+          id: string;
+          last_fetched_at?: string | null;
+          list?: Json[];
+          oldest_item?: string | null;
+        };
+        Update: {
+          cursor?: number | null;
+          id?: string;
+          last_fetched_at?: string | null;
+          list?: Json[];
+          oldest_item?: string | null;
+        };
+      };
     };
     Views: {
       [_ in never]: never;
