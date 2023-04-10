@@ -3,7 +3,7 @@ import { validateRequest } from './../execute-module/validation/validate-request
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.13.1';
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { Database } from './types/database.ts';
-import { RecentlyListenedTracks, getRecentlyListened } from './spotify/get-recently-listened.ts';
+import { getRecentlyListened } from './spotify/get-recently-listened.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY');
@@ -11,6 +11,8 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+const MS_IN_DAY = 86400000;
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -48,31 +50,72 @@ serve(async (req) => {
     }
 
     const spotifyToken = await getSpotifyToken(supabaseClient);
-    const savedRecentlyPlayed = await supabaseClient
-      .from('users_spotify_recently_listened')
+    const currentCursorQuery = await supabaseClient
+      .from('users_spotify_recently_played_cursors')
       .select()
       .eq('id', supabaseUser.data.user.id)
       .maybeSingle();
 
     const recentlyListened = await getRecentlyListened(
-      supabaseClient,
       spotifyToken,
       async () => await refreshSpotifyToken(supabaseClient),
-      supabaseUser.data.user.id,
-      savedRecentlyPlayed,
+      currentCursorQuery,
     );
 
-    const newItems = savedRecentlyPlayed.data
-      ? [...recentlyListened.items, ...(savedRecentlyPlayed.data?.list as RecentlyListenedTracks[])]
-      : recentlyListened.items;
+    const oneMonthAgo = new Date(Date.now() - 31 * MS_IN_DAY).toISOString();
+    const newItems = recentlyListened.items;
+    const fetchTime = new Date().toISOString();
 
-    await supabaseClient.from('users_spotify_recently_listened').upsert(
+    await supabaseClient
+      .from('users_spotify_recently_played_items')
+      .delete()
+      .eq('user_id', supabaseUser.data.user.id)
+      .filter('played_at', 'not.gt', oneMonthAgo);
+
+    const oldestItem = await supabaseClient
+      .from('users_spotify_recently_played_items')
+      .select()
+      .order('played_at', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    console.log({ oldestItem });
+
+    const newCursorRow: Database['public']['Tables']['users_spotify_recently_played_cursors']['Insert'] = {
+      id: supabaseUser.data.user.id,
+      last_fetched_at: fetchTime,
+    };
+    if (oldestItem.data) {
+      newCursorRow.oldest_played_at = oldestItem.data.played_at;
+    }
+
+    if (!recentlyListened.items.length) {
+      if (newCursorRow.oldest_played_at) {
+        await supabaseClient.from('users_spotify_recently_played_cursors').upsert(newCursorRow, { onConflict: 'id' });
+      }
+      return new Response(JSON.stringify('No new items fetched'), {
+        status: 200,
+        headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const itemsRes = await supabaseClient.from('users_spotify_recently_played_items').insert(
+      newItems.map((item) => ({
+        user_id: supabaseUser.data.user.id,
+        track_id: item.id,
+        played_at: item.played_at,
+      })),
+    );
+
+    if (itemsRes.error) {
+      throw new Error(JSON.stringify({ message: 'Error inserting recently listened items', user: supabaseUser }));
+    }
+
+    await supabaseClient.from('users_spotify_recently_played_cursors').upsert(
       {
-        id: supabaseUser.data.user.id,
-        list: newItems,
-        cursor: recentlyListened.newCursor,
-        oldest_item: newItems.at(-1)?.played_at,
-        last_fetched_at: new Date().toISOString(),
+        oldest_played_at: recentlyListened.items.at(-1)?.played_at,
+        ...newCursorRow,
+        after: recentlyListened.newCursor ?? null,
       },
       { onConflict: 'id' },
     );

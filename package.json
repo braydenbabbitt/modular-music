@@ -12,7 +12,7 @@
     "prettier": "prettier --write \"{src,tests,example/src}/**/*.{js,ts,jsx,tsx}\"",
     "supabase:gen-types:edge-functions:fetch-recently-listened": "npx supabase gen types typescript --linked > supabase/functions/fetch-recently-listened/types/database.ts && prettier --write \"supabase/functions/fetch-recently-listened/types/database.ts\"",
     "supabase:gen-types:edge-functions:execute-module": "npx supabase gen types typescript --linked > supabase/functions/execute-module/types/database.ts && prettier --write \"supabase/functions/execute-module/types/database.ts\"",
-    "supabase:gen-types:edge-functions": "npm run supabase:gen-types:edge-functions:fetch-recently-listened && supabase:gen-types:edge-functions:execute-module",
+    "supabase:gen-types:edge-functions": "npm run supabase:gen-types:edge-functions:fetch-recently-listened && npm run supabase:gen-types:edge-functions:execute-module",
     "supabase:gen-types:client": "npx supabase gen types typescript --linked > src/services/supabase/types/database.types.ts && prettier --write \"src/services/supabase/types/database.types.ts\"",
     "supabase:gen-types": "npm run supabase:gen-types:client && npm run supabase:gen-types:edge-functions",
     "deploy:functions:execute-module": "npx supabase functions deploy execute-module",

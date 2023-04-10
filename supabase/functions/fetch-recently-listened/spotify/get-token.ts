@@ -4,6 +4,13 @@ import { Database } from '../types/database.ts';
 const SPOTIFY_CLIENT_ID = Deno.env.get('SPOTIFY_CLIENT_ID');
 const SPOTIFY_CLIENT_SECRET = Deno.env.get('SPOTIFY_CLIENT_SECRET');
 
+/**
+ * Retrieves the user's Spotify access token from their Supabase user metadata, refreshing it if it has expired.
+ *
+ * @param {SupabaseClient<Database>} supabaseClient - The Supabase client used to fetch the user's metadata.
+ * @returns {Promise<string>} - The user's Spotify access token.
+ * @throws {Error} - If Spotify client ID and secret are not provided or there are errors fetching user metadata.
+ */
 export const getSpotifyToken = async (supabaseClient: SupabaseClient<Database>): Promise<string> => {
   if (!SPOTIFY_CLIENT_ID || !SPOTIFY_CLIENT_SECRET) {
     throw new Error('Error getting spotify secrets');
@@ -24,6 +31,14 @@ export const getSpotifyToken = async (supabaseClient: SupabaseClient<Database>):
   return provider_token;
 };
 
+/**
+    Refreshes the Spotify access token for the currently authenticated user in Supabase.
+    @async
+    @param {SupabaseClient<Database>} supabaseClient - The Supabase client to use for querying the authenticated user's information.
+    @param {string} refreshToken - (Optional) The refresh token to use for refreshing the access token. If not provided, the refresh token will be fetched from the Supabase user metadata.
+    @returns {Promise<string>} - The new access token retrieved from Spotify.
+    @throws {Error} - If there is an error getting the Spotify secrets, fetching the Supabase user, finding the refresh token in the user metadata, refreshing the Spotify token, or parsing the response from Spotify.
+    */
 export const refreshSpotifyToken = async (supabaseClient: SupabaseClient<Database>, refreshToken?: string) => {
   if (!SPOTIFY_CLIENT_ID || !SPOTIFY_CLIENT_SECRET) {
     throw new Error('Error getting spotify secrets');

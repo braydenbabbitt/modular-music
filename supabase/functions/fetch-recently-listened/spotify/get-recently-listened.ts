@@ -1,25 +1,36 @@
-import { PostgrestSingleResponse, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.13.1';
+import { PostgrestSingleResponse } from 'https://esm.sh/@supabase/supabase-js@2.13.1';
 import { Database } from '../types/database.ts';
-import { SimpleTrack } from '../types/generics.ts';
 import { FetchJSONResponse, RecentlyListenedResponse } from './types.ts';
 
 const BAD_SPOTIFY_TOKEN_MESSAGE = 'Invalid spotify token';
 
+/**
+ * Retrieves the recently listened tracks of the authenticated Spotify user.
+ * If the request fails due to an expired token, it will try to refresh the token and retry the request.
+ * @param spotifyToken - The access token for the authenticated Spotify user.
+ * @param refreshSpotifyToken - A function that refreshes the access token for the authenticated Spotify user.
+ * @param cursorQuery - The cursor used to paginate the recently played tracks.
+ * @returns A Promise that resolves to an object with the recently played tracks and an optional new cursor for pagination.
+ */
+
 export const getRecentlyListened = async (
-  supabaseClient: SupabaseClient<Database>,
   spotifyToken: string,
   refreshSpotifyToken: () => Promise<string>,
-  userId: string,
-  savedRecentlyPlayed: PostgrestSingleResponse<
-    Database['public']['Tables']['users_spotify_recently_listened']['Row'] | null
+  cursorQuery: PostgrestSingleResponse<
+    Database['public']['Tables']['users_spotify_recently_played_cursors']['Row'] | null
   >,
 ) =>
   await attemptSourceFetch(
-    async (newToken?: string) =>
-      await getUserRecentlyListenedTracks(supabaseClient, newToken ?? spotifyToken, userId, savedRecentlyPlayed),
+    async (newToken?: string) => await getUserRecentlyListenedTracks(newToken ?? spotifyToken, cursorQuery),
     refreshSpotifyToken,
   );
 
+/**
+ * Attempts to fetch data from an external source using a specified fetch function. If the fetch fails due to an invalid access token, the function will attempt to refresh the access token using a provided function and try the fetch again with the new token. If the second fetch fails, the function throws an error.
+ * @param fetchFunction - A function that returns a promise representing the fetch operation. This function may optionally take a new access token as a string parameter.
+ * @param refreshSpotifyToken - A function that returns a promise representing the process of refreshing the Spotify access token.
+ * @returns The fetched data if the fetch operation is successful, or an error if both fetch attempts fail.
+ */
 const attemptSourceFetch = async <T>(
   fetchFunction: (newToken?: string) => Promise<T>,
   refreshSpotifyToken: () => Promise<string>,
@@ -44,30 +55,26 @@ const attemptSourceFetch = async <T>(
   }
 };
 
-export type RecentlyListenedTracks = SimpleTrack & {
+export type RecentlyListenedTracks = {
+  id: string;
   played_at: string;
 };
 
+/**
+ * Retrieves a list of the user's recently played tracks from the Spotify API.
+ * @param spotifyToken - A string representing the user's Spotify access token.
+ * @param cursorQuery - A cursor query object from a PostgreSQL database that stores the user's most recent cursor position in the Spotify API.
+ * @returns An object containing two properties: items - an array of RecentlyListenedTracks objects representing the user's recently played tracks, and newCursor - an optional number representing the new cursor position in the Spotify API. If there are no new items, this property is undefined.
+ */
 const getUserRecentlyListenedTracks = async (
-  supabaseClient: SupabaseClient<Database>,
   spotifyToken: string,
-  userId: string,
-  savedRecentlyPlayed: PostgrestSingleResponse<
-    Database['public']['Tables']['users_spotify_recently_listened']['Row'] | null
+  cursorQuery: PostgrestSingleResponse<
+    Database['public']['Tables']['users_spotify_recently_played_cursors']['Row'] | null
   >,
 ): Promise<{ items: RecentlyListenedTracks[]; newCursor?: number }> => {
-  if (!userId) {
-    const user = await supabaseClient.auth.getUser();
-    if (!user.data || user.error) {
-      throw new Error('Error fetching supabase user');
-    }
-    userId = user.data.user.id;
-  }
   const recentlyListenedTracks = [];
   const afterQuery =
-    savedRecentlyPlayed.data && !savedRecentlyPlayed.error && savedRecentlyPlayed.data.cursor
-      ? `&after=${savedRecentlyPlayed.data.cursor}`
-      : '';
+    cursorQuery.data && !cursorQuery.error && cursorQuery.data.after ? `&after=${cursorQuery.data.after}` : '';
   const nextPageQuery: Response = await fetch(
     `https://api.spotify.com/v1/me/player/recently-played?limit=50${afterQuery}`,
     {
@@ -87,7 +94,6 @@ const getUserRecentlyListenedTracks = async (
       : [
           {
             id: trackObj.track.id,
-            uri: trackObj.track.uri || `spotify:track:${trackObj.track.id}`,
             played_at: trackObj.played_at,
           },
         ],

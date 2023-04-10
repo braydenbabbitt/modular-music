@@ -1,3 +1,10 @@
+/**
+  Validates a request by parsing its JSON body and checking for an Authorization header.
+  @async
+  @param {Request} req - The request to validate.
+  @returns {Promise<{ authHeader: string; }>} - An object containing the Authorization header of the request.
+  @throws {Error} - If the request is invalid (no Authorization header provided or unknown parameters in the JSON body) or if there is an error parsing the request body.
+  */
 export const validateRequest = async (req: Request): Promise<{ authHeader: string }> => {
   try {
     const parsedRequest = await req.json();

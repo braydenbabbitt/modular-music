@@ -303,27 +303,44 @@ export interface Database {
           label?: string;
         };
       };
-      users_spotify_recently_listened: {
+      users_spotify_recently_played_cursors: {
         Row: {
-          cursor: number | null;
+          after: number | null;
           id: string;
           last_fetched_at: string | null;
-          list: Json[];
-          oldest_item: string | null;
+          oldest_played_at: string | null;
         };
         Insert: {
-          cursor?: number | null;
+          after?: number | null;
           id: string;
           last_fetched_at?: string | null;
-          list?: Json[];
-          oldest_item?: string | null;
+          oldest_played_at?: string | null;
         };
         Update: {
-          cursor?: number | null;
+          after?: number | null;
           id?: string;
           last_fetched_at?: string | null;
-          list?: Json[];
-          oldest_item?: string | null;
+          oldest_played_at?: string | null;
+        };
+      };
+      users_spotify_recently_played_items: {
+        Row: {
+          id: string;
+          played_at: string;
+          track_id: string;
+          user_id: string;
+        };
+        Insert: {
+          id?: string;
+          played_at: string;
+          track_id: string;
+          user_id: string;
+        };
+        Update: {
+          id?: string;
+          played_at?: string;
+          track_id?: string;
+          user_id?: string;
         };
       };
     };

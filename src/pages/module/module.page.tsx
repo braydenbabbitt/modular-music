@@ -84,11 +84,16 @@ export const ModulePage = () => {
               loading={isRunning}
               onClick={async () => {
                 setIsRunning(true);
-                console.time('execute-module');
-                const functionResponse = await supabaseClient.functions.invoke('execute-module', {
+                // console.time('execute-module');
+                // const functionResponse = await supabaseClient.functions.invoke('execute-module', {
+                //   body: `"${moduleId}"`,
+                // });
+                // console.timeEnd('execute-module');
+                console.time('fetch-recently-listened');
+                const functionResponse = await supabaseClient.functions.invoke('fetch-recently-listened', {
                   body: `"${moduleId}"`,
                 });
-                console.timeEnd('execute-module');
+                console.timeEnd('fetch-recently-listened');
                 console.log({ functionResponse });
                 setIsRunning(false);
               }}
