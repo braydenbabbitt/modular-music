@@ -79,8 +79,6 @@ serve(async (req) => {
       .limit(1)
       .maybeSingle();
 
-    console.log({ oldestItem });
-
     const newCursorRow: Database['public']['Tables']['users_spotify_recently_played_cursors']['Insert'] = {
       id: supabaseUser.data.user.id,
       last_fetched_at: fetchTime,
