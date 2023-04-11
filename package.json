@@ -17,7 +17,8 @@
     "supabase:gen-types": "npm run supabase:gen-types:client && npm run supabase:gen-types:edge-functions",
     "deploy:functions:execute-module": "npx supabase functions deploy execute-module",
     "deploy:functions:fetch-recently-listened": "npx supabase functions deploy fetch-recently-listened",
-    "deploy:functions": "npm run deploy:functions:execute-module && npm run deploy:functions:fetch-recently-listened"
+    "deploy:functions:set-up-user-recently-listened-cron-job": "npx supabase functions deploy set-up-user-recently-listened-cron-job",
+    "deploy:functions": "npm run deploy:functions:execute-module && npm run deploy:functions:fetch-recently-listened && npm run deploy:functions:set-up-user-recently-listened-cron-job"
   },
   "dependencies": {
     "@emotion/babel-plugin": "^11.10.0",

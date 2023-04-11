@@ -34,6 +34,7 @@ const spotifyScopes = [
   'user-library-read',
 ];
 
+const SUPABASE_REFERENCE_ID = import.meta.env.VITE_SUPABASE_REFERENCE_ID;
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
@@ -81,6 +82,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       console.error(error);
     }
 
+    const cronJobRes = await supabaseClient.functions.invoke('set-up-user-recently-listened-cron-job');
+    console.log({ cronJobRes });
+
     return { error };
   };
 
@@ -89,7 +93,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   useEffect(() => {
-    if (location.pathname !== '/' || localStorage.getItem('sb-acbwmfgbgckxsarvpuoc-auth-token')) {
+    if (location.pathname !== '/' || localStorage.getItem(`sb-${SUPABASE_REFERENCE_ID}-auth-token`)) {
       supabaseClient.auth.getSession().then(async (session) => {
         if (!session.data.session?.provider_token) {
           await supabaseClient.auth.signInWithOAuth({
