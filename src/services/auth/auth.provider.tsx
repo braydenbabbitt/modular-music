@@ -44,21 +44,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const supabaseClient = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY);
   const navigate = useNavigate();
 
-  supabaseClient.auth.onAuthStateChange(async (event) => {
+  supabaseClient.auth.onAuthStateChange(async (event, session) => {
     if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
       location.replace('/');
     }
 
     if (event === 'SIGNED_IN' && location.pathname === '/') {
-      const session = await supabaseClient.auth.getSession();
-      supabaseClient.auth.updateUser({
-        data: {
-          provider_token: session.data.session?.provider_token,
-          provider_refresh_token: session.data.session?.provider_refresh_token,
-          provider_token_expires_at: session.data.session?.expires_at,
-        },
-      });
-      navigate('/dashboard');
+      navigate('/spotify-login');
     }
   });
 
@@ -67,7 +59,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       provider: 'spotify',
       options: {
         scopes: spotifyScopes.join(' '),
-        redirectTo: '/dashboard',
+        redirectTo: '/spotify-login',
       },
     });
 
@@ -81,9 +73,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       }
       console.error(error);
     }
-
-    const cronJobRes = await supabaseClient.functions.invoke('set-up-user-recently-listened-cron-job');
-    console.log({ cronJobRes });
 
     return { error };
   };
@@ -100,15 +89,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             provider: 'spotify',
             options: {
               scopes: spotifyScopes.join(' '),
-              redirectTo: '/dashboard',
-            },
-          });
-          session = await supabaseClient.auth.getSession();
-          await supabaseClient.auth.updateUser({
-            data: {
-              provider_token: session.data.session?.provider_token,
-              provider_refresh_token: session.data.session?.provider_refresh_token,
-              provider_token_expires_at: session.data.session?.expires_at,
+              redirectTo: '/spotify-login',
             },
           });
         }

@@ -5,62 +5,53 @@ const SPOTIFY_CLIENT_ID = Deno.env.get('SPOTIFY_CLIENT_ID');
 const SPOTIFY_CLIENT_SECRET = Deno.env.get('SPOTIFY_CLIENT_SECRET');
 
 /**
- * Retrieves the user's Spotify access token from their Supabase user metadata, refreshing it if it has expired.
- *
- * @param {SupabaseClient<Database>} supabaseClient - The Supabase client used to fetch the user's metadata.
- * @returns {Promise<string>} - The user's Spotify access token.
- * @throws {Error} - If Spotify client ID and secret are not provided or there are errors fetching user metadata.
- */
-export const getSpotifyToken = async (supabaseClient: SupabaseClient<Database>): Promise<string> => {
+  Asynchronously retrieves the Spotify OAuth token for the given user from the user_tokens table in Supabase. If
+  the token has expired, it is refreshed using the refreshSpotifyToken function.
+  @param serviceRoleClient - The Supabase client to use for querying and updating the user_oauth_tokens table using a service role.
+  @param oauthTokenRow - An object representing a row from the user_oauth_tokens table in
+  Supabase, containing the user_id, provider_token, provider_refresh_token, and provider_token_expires_at
+  fields for the user.
+  @returns A Promise resolving to the current Spotify access token.
+  @throws {Error} If SPOTIFY_CLIENT_ID or SPOTIFY_CLIENT_SECRET are not defined, or if the Spotify token refresh
+  action fails or returns invalid data.
+  */
+export const getSpotifyToken = async (
+  serviceRoleClient: SupabaseClient<Database>,
+  oauthTokenRow: Database['public']['Tables']['user_oauth_tokens']['Row'],
+): Promise<string> => {
   if (!SPOTIFY_CLIENT_ID || !SPOTIFY_CLIENT_SECRET) {
     throw new Error('Error getting spotify secrets');
   }
 
-  const userQuery = await supabaseClient.auth.getUser();
-  if (userQuery.error || !userQuery.data.user) {
-    throw new Error('Error fetching supabase user');
+  if (Number(oauthTokenRow.provider_token_expires_at) < Date.now()) {
+    return await refreshSpotifyToken(serviceRoleClient, oauthTokenRow);
   }
 
-  let { provider_token } = userQuery.data.user.user_metadata;
-  const { provider_refresh_token, provider_token_expires_at } = userQuery.data.user.user_metadata;
-
-  if (Number(provider_token_expires_at) < Date.now()) {
-    provider_token = refreshSpotifyToken(supabaseClient, provider_refresh_token);
-  }
-
-  return provider_token;
+  return oauthTokenRow.provider_token;
 };
 
 /**
-    Refreshes the Spotify access token for the currently authenticated user in Supabase.
-    @async
-    @param {SupabaseClient<Database>} supabaseClient - The Supabase client to use for querying the authenticated user's information.
-    @param {string} refreshToken - (Optional) The refresh token to use for refreshing the access token. If not provided, the refresh token will be fetched from the Supabase user metadata.
-    @returns {Promise<string>} - The new access token retrieved from Spotify.
-    @throws {Error} - If there is an error getting the Spotify secrets, fetching the Supabase user, finding the refresh token in the user metadata, refreshing the Spotify token, or parsing the response from Spotify.
-    */
-export const refreshSpotifyToken = async (supabaseClient: SupabaseClient<Database>, refreshToken?: string) => {
+  Asynchronously refreshes the Spotify OAuth token for the given user by sending a POST request to
+  https://accounts.spotify.com/api/token with the provided refresh token. Updates the user_tokens table in
+  Supabase with the new token information.
+  @param serviceRoleClient - The Supabase client to use for querying and updating the user_oauth_tokens table using a service role.
+  @param userTokensRow - A row from the user_oauth_tokens table.
+  @returns A Promise resolving to the new Spotify access token.
+  @throws {Error} If SPOTIFY_CLIENT_ID or SPOTIFY_CLIENT_SECRET are not defined, or if the Spotify token refresh
+  action fails or returns invalid data.
+  */
+export const refreshSpotifyToken = async (
+  oauthTokensClient: SupabaseClient<Database>,
+  { user_id, provider_refresh_token }: Database['public']['Tables']['user_oauth_tokens']['Row'],
+) => {
   if (!SPOTIFY_CLIENT_ID || !SPOTIFY_CLIENT_SECRET) {
     throw new Error('Error getting spotify secrets');
   }
 
-  if (!refreshToken) {
-    const userQuery = await supabaseClient.auth.getUser();
-    if (userQuery.error || !userQuery.data.user) {
-      throw new Error('Error fetching supabase user');
-    }
-
-    if (
-      !userQuery.data.user.user_metadata.provider_refresh_token ||
-      typeof userQuery.data.user.user_metadata.provider_refresh_token !== 'string'
-    ) {
-      throw new Error('No refresh token in user_metadata');
-    }
-    refreshToken = userQuery.data.user.user_metadata.provider_refresh_token;
-  }
   const formData = [];
   formData.push(encodeURIComponent('grant_type') + '=' + encodeURIComponent('refresh_token'));
-  formData.push(encodeURIComponent('refresh_token') + '=' + encodeURIComponent(refreshToken));
+  formData.push(encodeURIComponent('refresh_token') + '=' + encodeURIComponent(provider_refresh_token));
+  const fetchTimestamp = Date.now();
   const newTokenRes = await fetch('https://accounts.spotify.com/api/token', {
     method: 'POST',
     headers: {
@@ -90,13 +81,15 @@ export const refreshSpotifyToken = async (supabaseClient: SupabaseClient<Databas
     );
   }
 
-  supabaseClient.auth.updateUser({
-    data: {
+  oauthTokensClient
+    .from('user_tokens')
+    .update({
       provider_token: parsedRes.access_token,
       provider_refresh_token: parsedRes.refresh_token,
-      provider_token_expires_at: Date.now() + Number(parsedRes.expires_in),
-    },
-  });
+      provider_token_expires_at: fetchTimestamp + Number(parsedRes.expires_in),
+      updated_at: new Date(fetchTimestamp).toISOString(),
+    })
+    .eq('user_id', user_id);
 
   return parsedRes.access_token;
 };

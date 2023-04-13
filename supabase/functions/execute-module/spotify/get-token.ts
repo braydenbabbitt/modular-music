@@ -1,51 +1,70 @@
+import { supabaseSingleResponseHandler } from '../database-helpers/supabase-response-handlers.ts';
 import { SupabaseClient } from 'https://esm.sh/v113/@supabase/supabase-js@2.13.1/dist/module/index.js';
 import { Database } from '../types/database.ts';
 
 const SPOTIFY_CLIENT_ID = Deno.env.get('SPOTIFY_CLIENT_ID');
 const SPOTIFY_CLIENT_SECRET = Deno.env.get('SPOTIFY_CLIENT_SECRET');
 
-export const getSpotifyToken = async (supabaseClient: SupabaseClient<Database>): Promise<string> => {
+type TokenRequest = {
+  serviceRoleClient: SupabaseClient<Database>;
+} & (
+  | {
+      oauthTokenRow: Database['public']['Tables']['user_oauth_tokens']['Row'];
+      userId?: never;
+    }
+  | {
+      oauthTokenRow?: never;
+      userId: string;
+    }
+);
+
+export const getSpotifyToken = async ({ serviceRoleClient, oauthTokenRow, userId }: TokenRequest): Promise<string> => {
   if (!SPOTIFY_CLIENT_ID || !SPOTIFY_CLIENT_SECRET) {
     throw new Error('Error getting spotify secrets');
   }
 
-  const userQuery = await supabaseClient.auth.getUser();
-  if (userQuery.error || !userQuery.data.user) {
-    throw new Error('Error fetching supabase user');
+  if (!oauthTokenRow) {
+    const oauthTokenRowQuery = await serviceRoleClient
+      .from('user_oauth_tokens')
+      .select()
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (oauthTokenRowQuery.error || oauthTokenRowQuery.data === null) {
+      throw new Error('Error fetching oauth token row');
+    }
+
+    oauthTokenRow = oauthTokenRowQuery.data;
   }
 
-  let { provider_token } = userQuery.data.user.user_metadata;
-  const { provider_refresh_token, provider_token_expires_at } = userQuery.data.user.user_metadata;
-
-  if (Number(provider_token_expires_at) < Date.now()) {
-    provider_token = refreshSpotifyToken(supabaseClient, provider_refresh_token);
+  if (Number(oauthTokenRow.provider_token_expires_at) < Date.now()) {
+    return await refreshSpotifyToken({ serviceRoleClient, oauthTokenRow });
   }
 
-  return provider_token;
+  return oauthTokenRow.provider_token;
 };
 
-export const refreshSpotifyToken = async (supabaseClient: SupabaseClient<Database>, refreshToken?: string) => {
+export const refreshSpotifyToken = async ({ serviceRoleClient, oauthTokenRow, userId }: TokenRequest) => {
   if (!SPOTIFY_CLIENT_ID || !SPOTIFY_CLIENT_SECRET) {
     throw new Error('Error getting spotify secrets');
   }
 
-  if (!refreshToken) {
-    const userQuery = await supabaseClient.auth.getUser();
-    if (userQuery.error || !userQuery.data.user) {
-      throw new Error('Error fetching supabase user');
-    }
+  if (!oauthTokenRow) {
+    const oauthTokenRowQuery = await serviceRoleClient
+      .from('user_oauth_tokens')
+      .select()
+      .eq('user_id', userId)
+      .maybeSingle();
 
-    if (
-      !userQuery.data.user.user_metadata.provider_refresh_token ||
-      typeof userQuery.data.user.user_metadata.provider_refresh_token !== 'string'
-    ) {
-      throw new Error('No refresh token in user_metadata');
-    }
-    refreshToken = userQuery.data.user.user_metadata.provider_refresh_token;
+    if (oauthTokenRowQuery.error || oauthTokenRowQuery.data === null) throw new Error('Error fetching oauth token row');
+
+    oauthTokenRow = oauthTokenRowQuery.data;
   }
+
   const formData = [];
   formData.push(encodeURIComponent('grant_type') + '=' + encodeURIComponent('refresh_token'));
-  formData.push(encodeURIComponent('refresh_token') + '=' + encodeURIComponent(refreshToken));
+  formData.push(encodeURIComponent('refresh_token') + '=' + encodeURIComponent(oauthTokenRow.provider_refresh_token));
+  const fetchTimestamp = Date.now();
   const newTokenRes = await fetch('https://accounts.spotify.com/api/token', {
     method: 'POST',
     headers: {
@@ -75,13 +94,15 @@ export const refreshSpotifyToken = async (supabaseClient: SupabaseClient<Databas
     );
   }
 
-  supabaseClient.auth.updateUser({
-    data: {
+  serviceRoleClient
+    .from('user_tokens')
+    .update({
       provider_token: parsedRes.access_token,
       provider_refresh_token: parsedRes.refresh_token,
-      provider_token_expires_at: Date.now() + Number(parsedRes.expires_in),
-    },
-  });
+      provider_token_expires_at: fetchTimestamp + Number(parsedRes.expires_in),
+      updated_at: new Date(fetchTimestamp).toISOString(),
+    })
+    .eq('user_id', oauthTokenRow.user_id);
 
   return parsedRes.access_token;
 };

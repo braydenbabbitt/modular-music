@@ -303,6 +303,35 @@ export interface Database {
           label?: string;
         };
       };
+      user_oauth_tokens: {
+        Row: {
+          created_at: string;
+          provider: string;
+          provider_refresh_token: string;
+          provider_token: string;
+          provider_token_expires_at: number;
+          updated_at: string | null;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          provider?: string;
+          provider_refresh_token: string;
+          provider_token: string;
+          provider_token_expires_at: number;
+          updated_at?: string | null;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          provider?: string;
+          provider_refresh_token?: string;
+          provider_token?: string;
+          provider_token_expires_at?: number;
+          updated_at?: string | null;
+          user_id?: string;
+        };
+      };
       users_spotify_recently_played_cursors: {
         Row: {
           after: number | null;
