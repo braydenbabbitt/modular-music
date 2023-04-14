@@ -8,7 +8,8 @@
     "package",
     "settings",
     "programs",
-    "edge-functions"
+    "edge-functions",
+    "functions:fetch-recently-listened"
   ],
   "deno.enable": true,
   "deno.enablePaths": ["./supabase/functions"],

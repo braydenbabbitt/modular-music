@@ -82,12 +82,11 @@ export const refreshSpotifyToken = async (
   }
 
   oauthTokensClient
-    .from('user_tokens')
+    .from('user_oauth_tokens')
     .update({
       provider_token: parsedRes.access_token,
       provider_refresh_token: parsedRes.refresh_token,
       provider_token_expires_at: fetchTimestamp + Number(parsedRes.expires_in),
-      updated_at: new Date(fetchTimestamp).toISOString(),
     })
     .eq('user_id', user_id);
 
