@@ -70,12 +70,18 @@ export const SourceSelectionForm = ({
     useTypedJSONEncoding<SourceType>();
   const { parseTypedJSON: parseObject, stringifyTypedJSON: stringifyObject } =
     useTypedJSONEncoding<Record<string, any>>();
-  const sourceTypesQuery = useQuery('source-types', () => getSourceTypes({ supabaseClient }));
-  const userPlaylistsQuery = useQuery('user-playlists', () => {
-    if (parseSourceType(form.values.sourceType)?.id === SOURCE_TYPE_IDS.USER_PLAYLIST && spotifyToken) {
-      return getUserPlaylists(spotifyToken);
-    }
+  const sourceTypesQuery = useQuery('source-types', () => getSourceTypes({ supabaseClient }), {
+    refetchOnWindowFocus: false,
   });
+  const userPlaylistsQuery = useQuery(
+    'user-playlists',
+    () => {
+      if (parseSourceType(form.values.sourceType)?.id === SOURCE_TYPE_IDS.USER_PLAYLIST && spotifyToken) {
+        return getUserPlaylists(spotifyToken);
+      }
+    },
+    { refetchOnWindowFocus: false },
+  );
 
   const form = useForm<SourceSelectionFormValues>({
     initialValues: {
@@ -95,7 +101,8 @@ export const SourceSelectionForm = ({
             : 'Please select a playlist'
           : null,
       recentlyListened: {
-        quantity: (value: number, values: any) => {
+        quantity: (value: number | undefined, values: any) => {
+          if (value === undefined) return null;
           const typedValues = values as SourceSelectionFormValues;
           const isRequired = parseSourceType(typedValues.sourceType)?.id === SOURCE_TYPE_IDS.USER_RECENTLY_LISTENED;
           const daysCalc = value * parseInt(typedValues.recentlyListened.interval);
@@ -143,7 +150,7 @@ export const SourceSelectionForm = ({
               data={userPlaylistsQuery.data.map((playlist) => ({
                 image: playlist.images[0]?.url ?? 'playlist-icon@512.png',
                 label: playlist.name,
-                value: stringifyObject(playlist),
+                value: stringifyObject(playlist) ?? '',
               }))}
               itemComponent={UserPlaylistSelectItem}
               nothingFound='No playlist found'
@@ -270,7 +277,7 @@ export const SourceSelectionForm = ({
                 withAsterisk={!hideLabels}
                 placeholder='Select a source type'
                 data={sourceTypesQuery.data.map((source) => ({
-                  value: stringifySourceType(source),
+                  value: stringifySourceType(source) ?? '',
                   label: source.label,
                 }))}
                 nothingFound='No sources found'

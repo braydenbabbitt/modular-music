@@ -29,6 +29,7 @@ export const ModulePage = () => {
       onSuccess: (data) => {
         setShowCreateModal(!data.complete);
       },
+      refetchOnWindowFocus: false,
     },
   );
   const { data: userPlaylists, refetch: refetchUserPlaylists } = useQuery(
@@ -36,6 +37,7 @@ export const ModulePage = () => {
     () => getUserPlaylists(spotifyToken!),
     {
       enabled: !!spotifyToken,
+      refetchOnWindowFocus: false,
     },
   );
 
@@ -84,16 +86,16 @@ export const ModulePage = () => {
               loading={isRunning}
               onClick={async () => {
                 setIsRunning(true);
-                // console.time('execute-module');
-                // const functionResponse = await supabaseClient.functions.invoke('execute-module', {
-                //   body: `"${moduleId}"`,
-                // });
-                // console.timeEnd('execute-module');
-                console.time('fetch-recently-listened');
-                const functionResponse = await supabaseClient.functions.invoke('fetch-recently-listened', {
-                  body: `"${moduleId}"`,
+                console.time('execute-module');
+                const functionResponse = await supabaseClient.functions.invoke('execute-module', {
+                  body: JSON.stringify({
+                    moduleId,
+                  }),
                 });
-                console.timeEnd('fetch-recently-listened');
+                console.timeEnd('execute-module');
+                // console.time('fetch-recently-listened');
+                // const functionResponse = await supabaseClient.functions.invoke('fetch-recently-listened');
+                // console.timeEnd('fetch-recently-listened');
                 console.log({ functionResponse });
                 setIsRunning(false);
               }}
@@ -122,7 +124,13 @@ export const ModulePage = () => {
         </Stack>
       </Group>
       <Divider />
-      <EditModule moduleData={data} refetchModuleData={refetch} disableEditing={isRunning} />
+      <EditModule
+        moduleData={data}
+        refetchModuleData={refetch}
+        disableEditing={isRunning}
+        userPlaylists={userPlaylists ?? []}
+        refetchUserPlaylists={refetchUserPlaylists}
+      />
       <CreateModuleModal
         open={showCreateModal}
         onClose={() => navigate(-1)}

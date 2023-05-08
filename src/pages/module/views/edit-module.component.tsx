@@ -1,3 +1,4 @@
+import { QueryObserverResult } from 'react-query';
 import { GetModuleDataResponse } from '../../../services/supabase/modules/modules.api';
 import { ActionsSection } from '../components/actions/actions-section.component';
 import { OutputSection } from '../components/output/output-section.component';
@@ -7,9 +8,17 @@ type EditModuleProps = {
   moduleData: GetModuleDataResponse;
   refetchModuleData: () => void;
   disableEditing?: boolean;
+  userPlaylists: any[];
+  refetchUserPlaylists: () => Promise<QueryObserverResult<any[], unknown>>;
 };
 
-export const EditModule = ({ moduleData, refetchModuleData, disableEditing }: EditModuleProps) => {
+export const EditModule = ({
+  moduleData,
+  refetchModuleData,
+  disableEditing,
+  userPlaylists,
+  refetchUserPlaylists,
+}: EditModuleProps) => {
   return (
     <>
       <SourceSection
@@ -29,6 +38,8 @@ export const EditModule = ({ moduleData, refetchModuleData, disableEditing }: Ed
         refetchOutput={refetchModuleData}
         moduleId={moduleData.id}
         disableEditing={disableEditing}
+        userPlaylists={userPlaylists}
+        refetchUserPlaylists={refetchUserPlaylists}
       />
     </>
   );

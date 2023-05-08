@@ -37,6 +37,7 @@ export const ActionItem = ({
     () => getActionSources({ supabaseClient, actionId }),
     {
       enabled: typeId === ACTION_TYPE_IDS.FILTER,
+      refetchOnWindowFocus: false,
     },
   );
 

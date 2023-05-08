@@ -1,3 +1,4 @@
+import { emptyPlaylist, writeTracksToPlaylist } from './spotify/playlist-writing.ts';
 import { getSpotifyToken, refreshSpotifyToken } from './spotify/get-token.ts';
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.13.1';
@@ -6,15 +7,22 @@ import { validateRequest } from './validation/validate-request.ts';
 import { Database } from './types/database.ts';
 import { getSourcesFromSpotify } from './spotify/get-sources.ts';
 import { getModuleActions } from './database-helpers/get-module-actions.ts';
-import { runAction } from './module-actions/run-module-action.ts';
+import { getModuleOutput } from './database-helpers/get-module-output.ts';
+import { ACTION_TYPE_IDS, SimpleTrack } from './types/generics.ts';
+import { getRandomNumber } from './utils/get-random-number.ts';
+import { filterSongList } from './module-actions/filter-song-list.ts';
+import * as postgres from 'https://deno.land/x/postgres@v0.17.0/mod.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
+const SUPABASE_DB_URL = Deno.env.get('SUPABASE_DB_URL');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+const dbPool = new postgres.Pool(SUPABASE_DB_URL, 3, true);
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -38,77 +46,108 @@ serve(async (req) => {
   }
 
   try {
-    const { moduleId, authHeader } = await validateRequest(req);
+    const invokationTimestamp = new Date().toISOString();
+    const { moduleId, scheduleId } = await validateRequest(req);
     const serviceRoleClient = createClient<Database>(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-      global: {
-        headers: { Authorization: authHeader },
-      },
       auth: {
         persistSession: false,
       },
     });
 
-    const moduleQuery = await serviceRoleClient.from('modules').select().eq('id', moduleId).single();
-    if (moduleQuery.error) {
-      return new Response(
-        JSON.stringify({
+    try {
+      const moduleQuery = await serviceRoleClient.from('modules').select().eq('id', moduleId).single();
+      if (moduleQuery.error) {
+        const errorBody = JSON.stringify({
           message: 'Error fetching module',
           error: moduleQuery.error,
-        }),
-        {
-          status: 400,
-          headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
-        },
+        });
+        throw new Error(errorBody);
+      }
+      const userId = moduleQuery.data.user_id;
+
+      const spotifyToken = await getSpotifyToken({ serviceRoleClient, userId });
+
+      const moduleSources = await getModuleSources(serviceRoleClient, moduleId);
+
+      const fetchedSources = await getSourcesFromSpotify(
+        userId,
+        spotifyToken,
+        serviceRoleClient,
+        async () => await refreshSpotifyToken({ serviceRoleClient, userId }),
+        moduleSources,
       );
-    }
-    const userId = moduleQuery.data.user_id;
 
-    const spotifyToken = await getSpotifyToken({ serviceRoleClient, userId });
+      const moduleActions = await getModuleActions(serviceRoleClient, moduleId);
 
-    const moduleSourcesQuery = await getModuleSources(serviceRoleClient, moduleId);
+      const moduleOutput = await getModuleOutput(serviceRoleClient, moduleId);
+      const outputLength = moduleOutput.limit;
+      const moduleActionsWithoutShuffle = moduleActions.filter((action) => action.type_id !== ACTION_TYPE_IDS.SHUFFLE);
+      const shouldShuffle = moduleActionsWithoutShuffle.length < moduleActions.length;
 
-    if (moduleSourcesQuery.error || !moduleSourcesQuery.data) {
-      return new Response(
-        JSON.stringify({
-          message: 'Error fetching module sources',
-          error: 'Error in supabase query',
+      let sourcesAfterActions: SimpleTrack[] = fetchedSources;
+      await Promise.all(
+        moduleActions.map(async (action) => {
+          switch (action.type_id) {
+            case ACTION_TYPE_IDS.FILTER:
+              sourcesAfterActions = await filterSongList(userId, serviceRoleClient, sourcesAfterActions, action.id);
+              break;
+            default:
+              break;
+          }
         }),
-        {
-          status: 500,
-          headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
-        },
       );
-    }
+      const result: SimpleTrack[] = [];
 
-    const fetchedSources = await getSourcesFromSpotify(
-      spotifyToken,
-      async () => await refreshSpotifyToken({ serviceRoleClient, userId }),
-      moduleSourcesQuery.data,
-    );
+      if (shouldShuffle) {
+        const maxLength = sourcesAfterActions.length;
+        while (result.length < outputLength && result.length < maxLength) {
+          const nextRandomIndex = getRandomNumber(sourcesAfterActions.length);
+          result.push(sourcesAfterActions.splice(nextRandomIndex, 1)[0]);
+        }
+      } else if (sourcesAfterActions.length < outputLength) {
+        result.push(...sourcesAfterActions);
+      } else {
+        result.push(...sourcesAfterActions.slice(0, outputLength));
+      }
 
-    const moduleActionsQuery = await getModuleActions(serviceRoleClient, moduleId);
+      if (moduleOutput.append === null) {
+        await emptyPlaylist(
+          spotifyToken,
+          moduleOutput.playlist_id,
+          async () => await refreshSpotifyToken({ serviceRoleClient, userId }),
+        );
+      }
 
-    if (moduleActionsQuery.error) {
-      return new Response(
-        JSON.stringify({
-          message: 'Error fetching module actions',
-          error: moduleActionsQuery.error,
-        }),
-        { status: 500, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } },
+      await writeTracksToPlaylist(
+        moduleOutput.playlist_id,
+        result,
+        moduleOutput.append === false,
+        spotifyToken,
+        async () => await refreshSpotifyToken({ serviceRoleClient, userId }),
       );
+
+      await serviceRoleClient
+        .from('module_runs_log')
+        .insert({ module_id: moduleId, timestamp: invokationTimestamp, scheduled: !!scheduleId, error: false });
+
+      return new Response(JSON.stringify(result), {
+        headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+      });
+    } catch (err) {
+      console.error(err);
+      await serviceRoleClient
+        .from('module_runs_log')
+        .insert({ module_id: moduleId, timestamp: invokationTimestamp, scheduled: !!scheduleId, error: true });
+      return new Response(String(err?.message ?? err), {
+        status: 500,
+        headers: { ...CORS_HEADERS },
+      });
     }
-
-    const moduleActions = moduleActionsQuery.data;
-
-    moduleActions.reduce((prev, current) => runAction(current.type_id, prev), fetchedSources);
-
-    return new Response(JSON.stringify(fetchedSources), {
-      headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
-    });
   } catch (err) {
-    return new Response(err, {
+    console.error(err);
+    return new Response(String(err?.message ?? err), {
       status: 400,
-      headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+      headers: { ...CORS_HEADERS },
     });
   }
 });

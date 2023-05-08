@@ -16,7 +16,7 @@ import { useForm } from '@mantine/form';
 import { IconPlus, IconX } from '@tabler/icons';
 import { useTypedJSONEncoding } from 'den-ui';
 import { useEffect, useState } from 'react';
-import { useQuery } from 'react-query';
+import { useQuery, useQueryClient } from 'react-query';
 import { useLayoutSize } from '../../../../hooks/use-layout-size';
 import { useSupabase } from '../../../../services/supabase/client/client';
 import { ACTION_TYPE_IDS, SOURCE_TYPE_IDS } from '../../../../services/supabase/constants';
@@ -69,12 +69,15 @@ export const ActionSelectorModal = ({
   onConfirm,
 }: ActionSelectorModalProps) => {
   const supabaseClient = useSupabase();
+  const queryClient = useQueryClient();
   const layoutSize = useLayoutSize();
   const { parseTypedJSON: parseActionType, stringifyTypedJSON: stringifyActionType } =
     useTypedJSONEncoding<ActionType>();
   const { parseTypedJSON: parseSourceType } = useTypedJSONEncoding<SourceType>();
-  const { data: actionTypes, isLoading: actionTypesIsLoading } = useQuery(['action-types'], () =>
-    getActionTypes({ supabaseClient }),
+  const { data: actionTypes, isLoading: actionTypesIsLoading } = useQuery(
+    ['action-types'],
+    () => getActionTypes({ supabaseClient }),
+    { refetchOnWindowFocus: false },
   );
   const [isAddingSource, setIsAddingSource] = useState(false);
   const form = useForm<ActionFormValues>({
@@ -112,6 +115,7 @@ export const ActionSelectorModal = ({
           image_href: parsedActionType.image_href,
         },
       }).then(() => {
+        queryClient.invalidateQueries({ queryKey: [actionId, 'action-sources'] });
         refetchActions();
         handleClose();
       });
@@ -250,7 +254,7 @@ export const ActionSelectorModal = ({
                 withAsterisk
                 placeholder='Select an action type'
                 data={actionTypes.map((action) => ({
-                  value: stringifyActionType(action),
+                  value: stringifyActionType(action) ?? '',
                   label: action.label,
                 }))}
                 nothingFound='No actions found'

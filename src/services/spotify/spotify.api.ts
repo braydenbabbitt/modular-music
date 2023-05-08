@@ -73,8 +73,6 @@ export const createPlaylist = async (
       },
     );
 
-    console.log({ newPlaylist, playlistImage });
-
     if (playlistImage && newPlaylist.data) {
       await putImageToPlaylist(access_token, newPlaylist.data.id, playlistImage);
     }

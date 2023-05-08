@@ -29,6 +29,7 @@ import {
 } from '../../../services/supabase/modules/modules.api';
 import { DAYS_OF_WEEK } from '../../../utils/constants';
 import { getOrdinal } from '../../../utils/ordinal-numbers';
+import { findDayOfWeekOfMonth } from '../../../utils/date-utils';
 
 type ModuleScheduleModalProps = {
   open: boolean;
@@ -230,14 +231,23 @@ export const ModuleScheduleModal = ({ open, moduleId, initSchedule, onClose }: M
                               {
                                 value: 'dayOfWeekOfMonth',
                                 label: `the ${getOrdinal(Math.floor((values.nextRun!.date() - 1) / 7) + 1)} ${
-                                  DAYS_OF_WEEK[values.nextRun!.day() + 1]
+                                  DAYS_OF_WEEK[values.nextRun!.day()]
                                 }`,
                               },
                             ]
                           : []
                       }
                       value={getInputProps('monthlyRepeat').value}
-                      onChange={(value: 'dayOfMonth' | 'dayOfWeekOfMonth') => setValues({ monthlyRepeat: value })}
+                      onChange={(value: 'dayOfMonth' | 'dayOfWeekOfMonth') => {
+                        if (values.nextRun)
+                          findDayOfWeekOfMonth(
+                            values.nextRun.day(),
+                            Math.floor((values.nextRun.date() - 1) / 7),
+                            values.nextRun.month() + (1 % 12),
+                            values.nextRun.year() + (values.nextRun.month() === 11 ? 1 : 0),
+                          );
+                        setValues({ monthlyRepeat: value });
+                      }}
                     />
                     {values.monthlyRepeat === 'dayOfMonth' && values.nextRun && values.nextRun.date() > 28 && (
                       <InfoHoverButton size={25}>
@@ -338,7 +348,7 @@ export const ModuleScheduleModal = ({ open, moduleId, initSchedule, onClose }: M
                       dayOfWeekOfMonth:
                         values.interval === 'months' && values.monthlyRepeat === 'dayOfWeekOfMonth'
                           ? {
-                              day: values.nextRun.day() + 1,
+                              day: values.nextRun.day(),
                               week: Math.floor((values.nextRun.date() - 1) / 7) + 1,
                             }
                           : undefined,

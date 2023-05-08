@@ -1,12 +1,8 @@
+import { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.13.1';
 import { Database } from '../types/database.ts';
 import { SimpleTrack } from '../types/generics.ts';
-import {
-  FetchJSONResponse,
-  PlaylistTracksResponse,
-  RecentlyListenedResponse,
-  SavedTrackObject,
-  UserTracksResponse,
-} from './types.ts';
+import { FetchJSONResponse, PlaylistTracksResponse, SavedTrackObject, UserTracksResponse } from './types.ts';
+import { BAD_SPOTIFY_TOKEN_MESSAGE, attemptSpotifyApiRequest } from './token-helpers.ts';
 
 enum SOURCE_TYPE_MAP {
   USER_PLAYLIST = 'e6273f47-8dfc-485c-b594-0bb4dc80a1d3',
@@ -14,12 +10,12 @@ enum SOURCE_TYPE_MAP {
   RECENTLY_LISTENED = 'f27db10a-fcb4-430f-aa24-88059e7aedd3',
 }
 
-const BAD_SPOTIFY_TOKEN_MESSAGE = 'Invalid spotify token';
-
 const MS_IN_DAY = 86400000;
 
 export const getSourcesFromSpotify = async (
+  userId: string,
   spotifyToken: string,
+  supabaseClient: SupabaseClient<Database>,
   refreshSpotifyToken: () => Promise<string>,
   sources: Database['public']['Tables']['module_sources']['Row'][],
 ) => {
@@ -30,7 +26,7 @@ export const getSourcesFromSpotify = async (
         switch (typeId) {
           case SOURCE_TYPE_MAP.LIKED_TRACKS:
             try {
-              return await attemptSourceFetch(
+              return await attemptSpotifyApiRequest(
                 async (newToken?: string) => await getUserLikedTracks(newToken ?? spotifyToken),
                 refreshSpotifyToken,
               );
@@ -40,8 +36,9 @@ export const getSourcesFromSpotify = async (
             break;
           case SOURCE_TYPE_MAP.USER_PLAYLIST:
             try {
-              return await attemptSourceFetch(
-                async (newToken?: string) => await getUserPlaylistTracks(newToken ?? spotifyToken, source),
+              return await attemptSpotifyApiRequest(
+                async (newToken?: string) =>
+                  await getUserPlaylistTracks({ spotifyToken: newToken ?? spotifyToken, source }),
                 refreshSpotifyToken,
               );
             } catch (error) {
@@ -50,10 +47,14 @@ export const getSourcesFromSpotify = async (
             break;
           case SOURCE_TYPE_MAP.RECENTLY_LISTENED:
             try {
-              return await attemptSourceFetch(
-                async (newToken?: string) => await getUserRecentlyListenedTracks(newToken ?? spotifyToken, source),
-                refreshSpotifyToken,
-              );
+              const currentDate = new Date().getTime();
+              if (typeof source.options !== 'object' || Array.isArray(source.options) || source.options === null) {
+                console.error('Error parsing source options', source.options);
+                return [];
+              }
+              const msToSubtract =
+                (Number(source.options.interval) ?? 1) * (Number(source.options.quantity) ?? 1) * MS_IN_DAY;
+              return await getUserRecentlyListenedTracks(supabaseClient, userId, new Date(currentDate - msToSubtract));
             } catch (error) {
               console.error(error);
             }
@@ -65,31 +66,7 @@ export const getSourcesFromSpotify = async (
   ).flat();
 };
 
-const attemptSourceFetch = async <T>(
-  fetchFunction: (newToken?: string) => Promise<T>,
-  refreshSpotifyToken: () => Promise<string>,
-) => {
-  try {
-    return await fetchFunction();
-  } catch (error) {
-    if (error === BAD_SPOTIFY_TOKEN_MESSAGE) {
-      const newToken = await refreshSpotifyToken();
-      try {
-        return await fetchFunction(newToken);
-      } catch (error) {
-        throw new Error(
-          JSON.stringify({
-            message: 'Invalid refreshed token',
-            error,
-          }),
-        );
-      }
-    }
-    throw new Error(error);
-  }
-};
-
-const getUserLikedTracks = async (spotifyToken: string): Promise<SimpleTrack[]> => {
+const getUserLikedTracks = async (spotifyToken: string): Promise<SimpleTrack[] | typeof BAD_SPOTIFY_TOKEN_MESSAGE> => {
   const userTracks: SavedTrackObject[] = [];
   let nextPageUrl: string | null = 'https://api.spotify.com/v1/me/tracks?limit=50';
   while (nextPageUrl) {
@@ -98,11 +75,11 @@ const getUserLikedTracks = async (spotifyToken: string): Promise<SimpleTrack[]> 
       headers: { Authorization: 'Bearer ' + spotifyToken },
     });
     const nextPage = (await nextPageQuery.json()) as FetchJSONResponse<UserTracksResponse>;
-    if (nextPage.error || nextPageQuery.status !== 200) {
+    if (nextPage.error || (nextPageQuery.status && nextPageQuery.status !== 200)) {
       nextPageUrl = null;
 
       if (nextPage.error?.status === 401) {
-        throw new Error(BAD_SPOTIFY_TOKEN_MESSAGE);
+        return BAD_SPOTIFY_TOKEN_MESSAGE;
       } else {
         throw new Error(
           JSON.stringify({
@@ -128,42 +105,61 @@ const getUserLikedTracks = async (spotifyToken: string): Promise<SimpleTrack[]> 
   );
 };
 
-const getUserPlaylistTracks = async (
-  spotifyToken: string,
-  source: Database['public']['Tables']['module_sources']['Row'],
-): Promise<SimpleTrack[]> => {
-  if (typeof source.options !== 'object' || Array.isArray(source.options) || source.options === null) {
-    throw new Error(
-      JSON.stringify({
-        message: 'Error parsing JSON of user playlist source options',
-        source,
-      }),
-    );
+type GetUserPlaylistTracksRequest =
+  | {
+      spotifyToken: string;
+      source: Database['public']['Tables']['module_sources']['Row'];
+      playlistId?: never;
+    }
+  | {
+      spotifyToken: string;
+      source?: never;
+      playlistId: string;
+    };
+
+export const getUserPlaylistTracks = async ({
+  spotifyToken,
+  source,
+  playlistId,
+}: GetUserPlaylistTracksRequest): Promise<SimpleTrack[] | typeof BAD_SPOTIFY_TOKEN_MESSAGE> => {
+  if (source) {
+    if (typeof source.options !== 'object' || Array.isArray(source.options) || source.options === null) {
+      throw new Error(
+        JSON.stringify({
+          message: 'Error parsing JSON of user playlist source options',
+          source,
+        }),
+      );
+    }
+    const parsedId = source.options.playlist_id;
+    if (typeof parsedId !== 'string') {
+      throw new Error(
+        JSON.stringify({
+          message: 'Error parsing playlist_id from source options',
+          error: source,
+        }),
+      );
+    }
+    playlistId = parsedId;
   }
 
-  const { playlist_id } = source.options;
-  if (typeof playlist_id !== 'string') {
-    throw new Error(
-      JSON.stringify({
-        message: 'Error parsing playlist_id from source options',
-        source,
-      }),
-    );
+  if (playlistId === undefined) {
+    throw new Error('invalid playlist id');
   }
 
   const playlistTracks = [];
-  let nextPageUrl: string | null = `https://api.spotify.com/v1/playlists/${playlist_id}/tracks?limit=50`;
+  let nextPageUrl: string | null = `https://api.spotify.com/v1/playlists/${playlistId}/tracks?limit=50`;
   while (nextPageUrl) {
     const nextPageQuery: Response = await fetch(nextPageUrl, {
       method: 'GET',
       headers: { Authorization: 'Bearer ' + spotifyToken },
     });
     const nextPage = (await nextPageQuery.json()) as FetchJSONResponse<PlaylistTracksResponse>;
-    if (nextPage.error || nextPageQuery.status !== 200) {
+    if (nextPage.error || (nextPageQuery.status && nextPageQuery.status !== 200)) {
       nextPageUrl = null;
 
       if (nextPage.error?.status === 401) {
-        throw new Error(BAD_SPOTIFY_TOKEN_MESSAGE);
+        return BAD_SPOTIFY_TOKEN_MESSAGE;
       } else {
         throw new Error(
           JSON.stringify({
@@ -190,78 +186,24 @@ const getUserPlaylistTracks = async (
 };
 
 const getUserRecentlyListenedTracks = async (
-  spotifyToken: string,
-  source: Database['public']['Tables']['module_sources']['Row'],
+  supabaseClient: SupabaseClient<Database>,
+  userId: string,
+  after: Date,
 ): Promise<SimpleTrack[]> => {
-  if (typeof source.options !== 'object' || Array.isArray(source.options) || source.options === null) {
+  const fetchedTracks = await supabaseClient
+    .from('users_spotify_recently_played_items')
+    .select()
+    .eq('user_id', userId)
+    .filter('played_at', 'gte', after.toISOString());
+
+  if (fetchedTracks.error) {
     throw new Error(
       JSON.stringify({
-        message: 'Error parsing JSON of recently listened source options',
-        source,
+        message: 'error fetching user recently played items',
+        error: fetchedTracks.error,
       }),
     );
   }
 
-  const { interval, quantity } = source.options;
-  if (typeof interval !== 'number') {
-    throw new Error(
-      JSON.stringify({
-        message: 'Error parsing interval from source options',
-        source,
-      }),
-    );
-  }
-  if (typeof quantity !== 'number') {
-    throw new Error(
-      JSON.stringify({
-        message: 'Error parsing quantity from source options',
-        source,
-      }),
-    );
-  }
-
-  const recentlyListenedTracks = [];
-  const afterTimestamp = Date.now() - interval * quantity * MS_IN_DAY;
-  let nextPageUrl:
-    | string
-    | null = `https://api.spotify.com/v1/me/player/recently-played?limit=50&after=${afterTimestamp.toString()}`;
-  while (nextPageUrl) {
-    const nextPageQuery: Response = await fetch(nextPageUrl, {
-      method: 'GET',
-      headers: { Authorization: 'Bearer ' + spotifyToken },
-    });
-    const nextPage = (await nextPageQuery.json()) as FetchJSONResponse<RecentlyListenedResponse>;
-    if (nextPage.error || nextPageQuery.status !== 200) {
-      nextPageUrl = null;
-
-      if (nextPage.error?.status === 401) {
-        throw new Error(BAD_SPOTIFY_TOKEN_MESSAGE);
-      } else {
-        throw new Error(
-          JSON.stringify({
-            message: 'Error fetching page from Spotify',
-            error: nextPage.error,
-            nextPageUrl,
-          }),
-        );
-      }
-    }
-    const lastItem = nextPage.items.at(-1);
-    if (!lastItem || new Date(lastItem.played_at).getTime() < afterTimestamp) {
-      nextPageUrl = null;
-    } else {
-      nextPageUrl = `https://api.spotify.com/v1/me/player/recently-played?limit=50&before=${nextPage.cursors.before}`;
-    }
-    recentlyListenedTracks.push(...nextPage.items);
-  }
-  return recentlyListenedTracks.flatMap((trackObj): SimpleTrack[] =>
-    !trackObj.track.id || new Date(trackObj.played_at).getTime() < afterTimestamp
-      ? []
-      : [
-          {
-            id: trackObj.track.id,
-            uri: trackObj.track.uri || `spotify:track:${trackObj.track.id}`,
-          },
-        ],
-  );
+  return fetchedTracks.data.map((item) => ({ id: item.track_id, uri: `spotify:track:${item.track_id}` }));
 };

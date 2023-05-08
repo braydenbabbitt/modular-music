@@ -149,21 +149,24 @@ export interface Database {
       };
       module_runs_log: {
         Row: {
+          error: boolean | null;
           id: string;
-          manual: boolean;
           module_id: string;
+          scheduled: boolean;
           timestamp: string;
         };
         Insert: {
+          error?: boolean | null;
           id?: string;
-          manual?: boolean;
           module_id: string;
+          scheduled?: boolean;
           timestamp?: string;
         };
         Update: {
+          error?: boolean | null;
           id?: string;
-          manual?: boolean;
           module_id?: string;
+          scheduled?: boolean;
           timestamp?: string;
         };
       };
