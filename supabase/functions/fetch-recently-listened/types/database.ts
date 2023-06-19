@@ -50,6 +50,7 @@ export interface Database {
           image_href?: string;
           label?: string;
         };
+        Relationships: [];
       };
       feature_flags: {
         Row: {
@@ -76,6 +77,14 @@ export interface Database {
           name?: string;
           user_id?: string | null;
         };
+        Relationships: [
+          {
+            foreignKeyName: 'feature_flags_user_id_fkey';
+            columns: ['user_id'];
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+        ];
       };
       module_actions: {
         Row: {
@@ -108,6 +117,20 @@ export interface Database {
           order?: number;
           type_id?: string;
         };
+        Relationships: [
+          {
+            foreignKeyName: 'module_actions_module_id_fkey';
+            columns: ['module_id'];
+            referencedRelation: 'modules';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'module_actions_type_id_fkey';
+            columns: ['type_id'];
+            referencedRelation: 'action_types';
+            referencedColumns: ['id'];
+          },
+        ];
       };
       module_outputs: {
         Row: {
@@ -146,6 +169,14 @@ export interface Database {
           playlist_href?: string | null;
           playlist_id?: string;
         };
+        Relationships: [
+          {
+            foreignKeyName: 'module_outputs_module_id_fkey';
+            columns: ['module_id'];
+            referencedRelation: 'modules';
+            referencedColumns: ['id'];
+          },
+        ];
       };
       module_runs_log: {
         Row: {
@@ -169,14 +200,23 @@ export interface Database {
           scheduled?: boolean;
           timestamp?: string;
         };
+        Relationships: [
+          {
+            foreignKeyName: 'module_runs_log_module_id_fkey';
+            columns: ['module_id'];
+            referencedRelation: 'modules';
+            referencedColumns: ['id'];
+          },
+        ];
       };
       module_schedules: {
         Row: {
           deleted_at: string | null;
           edited_at: string;
           end_date: string | null;
+          has_cron_job: boolean;
           id: string;
-          next_run: string;
+          next_run: string | null;
           repetition_config: Json | null;
           times_to_repeat: number | null;
         };
@@ -184,8 +224,9 @@ export interface Database {
           deleted_at?: string | null;
           edited_at?: string;
           end_date?: string | null;
+          has_cron_job?: boolean;
           id: string;
-          next_run: string;
+          next_run?: string | null;
           repetition_config?: Json | null;
           times_to_repeat?: number | null;
         };
@@ -193,11 +234,20 @@ export interface Database {
           deleted_at?: string | null;
           edited_at?: string;
           end_date?: string | null;
+          has_cron_job?: boolean;
           id?: string;
-          next_run?: string;
+          next_run?: string | null;
           repetition_config?: Json | null;
           times_to_repeat?: number | null;
         };
+        Relationships: [
+          {
+            foreignKeyName: 'module_schedules_id_fkey';
+            columns: ['id'];
+            referencedRelation: 'modules';
+            referencedColumns: ['id'];
+          },
+        ];
       };
       module_sources: {
         Row: {
@@ -233,6 +283,26 @@ export interface Database {
           options?: Json | null;
           type_id?: string;
         };
+        Relationships: [
+          {
+            foreignKeyName: 'module_sources_action_id_fkey';
+            columns: ['action_id'];
+            referencedRelation: 'module_actions';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'module_sources_module_id_fkey';
+            columns: ['module_id'];
+            referencedRelation: 'modules';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'module_sources_type_id_fkey';
+            columns: ['type_id'];
+            referencedRelation: 'source_types';
+            referencedColumns: ['id'];
+          },
+        ];
       };
       modules: {
         Row: {
@@ -262,6 +332,14 @@ export interface Database {
           name?: string;
           user_id?: string;
         };
+        Relationships: [
+          {
+            foreignKeyName: 'modules_user_id_fkey';
+            columns: ['user_id'];
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+        ];
       };
       newsletter_signups: {
         Row: {
@@ -282,6 +360,7 @@ export interface Database {
           id?: string;
           unsubscribed_at?: string | null;
         };
+        Relationships: [];
       };
       source_types: {
         Row: {
@@ -305,6 +384,7 @@ export interface Database {
           image_href?: string | null;
           label?: string;
         };
+        Relationships: [];
       };
       user_oauth_tokens: {
         Row: {
@@ -334,6 +414,14 @@ export interface Database {
           updated_at?: string | null;
           user_id?: string;
         };
+        Relationships: [
+          {
+            foreignKeyName: 'user_oauth_tokens_user_id_fkey';
+            columns: ['user_id'];
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+        ];
       };
       users_spotify_recently_played_cursors: {
         Row: {
@@ -354,6 +442,14 @@ export interface Database {
           last_fetched_at?: string | null;
           oldest_played_at?: string | null;
         };
+        Relationships: [
+          {
+            foreignKeyName: 'users_spotify_recently_played_cursors_id_fkey';
+            columns: ['id'];
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+        ];
       };
       users_spotify_recently_played_items: {
         Row: {
@@ -374,6 +470,14 @@ export interface Database {
           track_id?: string;
           user_id?: string;
         };
+        Relationships: [
+          {
+            foreignKeyName: 'users_spotify_recently_played_items_user_id_fkey';
+            columns: ['user_id'];
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+        ];
       };
     };
     Views: {
@@ -428,6 +532,14 @@ export interface Database {
           public?: boolean | null;
           updated_at?: string | null;
         };
+        Relationships: [
+          {
+            foreignKeyName: 'buckets_owner_fkey';
+            columns: ['owner'];
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+        ];
       };
       migrations: {
         Row: {
@@ -448,6 +560,7 @@ export interface Database {
           id?: number;
           name?: string;
         };
+        Relationships: [];
       };
       objects: {
         Row: {
@@ -486,6 +599,20 @@ export interface Database {
           updated_at?: string | null;
           version?: string | null;
         };
+        Relationships: [
+          {
+            foreignKeyName: 'objects_bucketId_fkey';
+            columns: ['bucket_id'];
+            referencedRelation: 'buckets';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'objects_owner_fkey';
+            columns: ['owner'];
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+        ];
       };
     };
     Views: {

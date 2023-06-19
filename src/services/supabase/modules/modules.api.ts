@@ -270,6 +270,8 @@ export const saveModuleSchedule = async ({
     },
     { onConflict: 'id' },
   );
+
+  supabaseClient.functions.invoke('update-module-schedule', { body: `"${moduleId}"` });
 };
 
 export type DeleteModuleScheduleRequest = {

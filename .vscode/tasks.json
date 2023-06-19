@@ -1,0 +1,12 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "npm",
+      "script": "supabase:gen-types",
+      "problemMatcher": [],
+      "label": "npm: supabase:gen-types",
+      "detail": "npm run supabase:gen-types:client && npm run supabase:gen-types:edge-functions"
+    }
+  ]
+}

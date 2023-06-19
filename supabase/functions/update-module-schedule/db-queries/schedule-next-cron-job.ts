@@ -1,7 +1,7 @@
-import { dayjsToCron } from './../utils/date-utils.ts';
-import { Database } from '../types/database.ts';
 import * as postgres from 'https://deno.land/x/postgres@v0.17.0/mod.ts';
+import { Database } from '../types/database.ts';
 import dayjs from 'https://deno.land/x/deno_dayjs@v0.2.2/mod.ts';
+import { dayjsToCron } from '../utils/dayjs-to-cron.ts';
 
 const SUPABASE_PROJECT_REF = Deno.env.get('SUPABASE_PROJECT_REF');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -19,13 +19,11 @@ type RepetitionConfig = {
 
 export const setUpCronJob = async (
   dbPool: postgres.Pool,
-  invokationTimestamp: string,
   schedule: Database['public']['Tables']['module_schedules']['Row'],
 ) => {
   if (schedule.next_run === null) {
     return;
   }
-  const currentTimestamp = new Date(invokationTimestamp);
   const initTimestamp = new Date(schedule.next_run);
   const repetitionConfig = schedule.repetition_config as RepetitionConfig;
   let nextDay = dayjs(initTimestamp);
@@ -94,26 +92,5 @@ export const setUpCronJob = async (
   } catch (error) {
     console.error(error);
     throw new Error(error);
-  }
-};
-
-export const unscheduleCronJob = async (dbPool: postgres.Pool, jobName: string) => {
-  try {
-    const connection = await dbPool.connect();
-
-    try {
-      const queryString = `
-        select cron.unschedule('${jobName}');
-      `;
-
-      await connection.queryObject(queryString);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      connection.release();
-    }
-  } catch (err) {
-    console.error(err);
-    throw new Error(err);
   }
 };

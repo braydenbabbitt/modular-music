@@ -1,3 +1,4 @@
+import dayjs, { Dayjs } from 'https://deno.land/x/deno_dayjs@v0.2.2/mod.ts';
 // import dayjs from 'https://deno.land/x/deno_dayjs@v0.2.2/mod.ts';
 
 // type DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6;
@@ -14,3 +15,8 @@
 //   date = date.add(weekOfMonth - 1, 'week');
 //   const dayOfWeekOffset = date.day();
 // };
+
+export const dateToCron = (date: Date) => dayjsToCron(dayjs(date));
+
+export const dayjsToCron = (day: Dayjs) =>
+  `${day.get('minutes')} ${day.get('hours')} ${day.get('date')} ${day.get('month') + 1} ${day.get('day')}`;

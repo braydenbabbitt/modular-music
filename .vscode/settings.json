@@ -14,5 +14,6 @@
   "deno.enable": true,
   "deno.enablePaths": ["./supabase/functions"],
   "deno.lint": true,
-  "deno.unstable": true
+  "deno.unstable": true,
+  "editor.tabSize": 2
 }

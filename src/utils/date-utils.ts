@@ -1,8 +1,8 @@
 import dayjs from 'dayjs';
 
-type DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6;
-type WeekOfMonth = 1 | 2 | 3 | 4 | 5;
-type MonthOfYear = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11;
+export type DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+export type WeekOfMonth = 1 | 2 | 3 | 4 | 5;
+export type MonthOfYear = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11;
 
 export const findDayOfWeekOfMonth = (
   dayOfWeek: DayOfWeek,

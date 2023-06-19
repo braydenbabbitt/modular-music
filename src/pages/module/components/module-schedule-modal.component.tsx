@@ -29,7 +29,7 @@ import {
 } from '../../../services/supabase/modules/modules.api';
 import { DAYS_OF_WEEK } from '../../../utils/constants';
 import { getOrdinal } from '../../../utils/ordinal-numbers';
-import { findDayOfWeekOfMonth } from '../../../utils/date-utils';
+import { DayOfWeek, MonthOfYear, WeekOfMonth, findDayOfWeekOfMonth } from '../../../utils/date-utils';
 
 type ModuleScheduleModalProps = {
   open: boolean;
@@ -241,9 +241,9 @@ export const ModuleScheduleModal = ({ open, moduleId, initSchedule, onClose }: M
                       onChange={(value: 'dayOfMonth' | 'dayOfWeekOfMonth') => {
                         if (values.nextRun)
                           findDayOfWeekOfMonth(
-                            values.nextRun.day(),
-                            Math.floor((values.nextRun.date() - 1) / 7),
-                            values.nextRun.month() + (1 % 12),
+                            values.nextRun.day() as DayOfWeek,
+                            Math.floor((values.nextRun.date() - 1) / 7) as WeekOfMonth,
+                            (values.nextRun.month() + (1 % 12)) as MonthOfYear,
                             values.nextRun.year() + (values.nextRun.month() === 11 ? 1 : 0),
                           );
                         setValues({ monthlyRepeat: value });

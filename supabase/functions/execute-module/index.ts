@@ -11,18 +11,14 @@ import { getModuleOutput } from './database-helpers/get-module-output.ts';
 import { ACTION_TYPE_IDS, SimpleTrack } from './types/generics.ts';
 import { getRandomNumber } from './utils/get-random-number.ts';
 import { filterSongList } from './module-actions/filter-song-list.ts';
-import * as postgres from 'https://deno.land/x/postgres@v0.17.0/mod.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
-const SUPABASE_DB_URL = Deno.env.get('SUPABASE_DB_URL');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-const dbPool = new postgres.Pool(SUPABASE_DB_URL, 3, true);
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -129,6 +125,8 @@ serve(async (req) => {
       await serviceRoleClient
         .from('module_runs_log')
         .insert({ module_id: moduleId, timestamp: invokationTimestamp, scheduled: !!scheduleId, error: false });
+
+      if (scheduleId) await serviceRoleClient.functions.invoke('update_module_schedule', { body: `${scheduleId}` });
 
       return new Response(JSON.stringify(result), {
         headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
