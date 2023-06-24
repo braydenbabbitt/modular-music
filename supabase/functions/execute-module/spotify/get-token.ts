@@ -94,7 +94,7 @@ export const refreshSpotifyToken = async ({ serviceRoleClient, oauthTokenRow, us
   }
 
   serviceRoleClient
-    .from('user_tokens')
+    .from('user_oauth_tokens')
     .update({
       provider_token: parsedRes.access_token,
       provider_refresh_token: parsedRes.refresh_token,
