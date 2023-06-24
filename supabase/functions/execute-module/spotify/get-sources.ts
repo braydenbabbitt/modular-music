@@ -66,16 +66,26 @@ export const getSourcesFromSpotify = async (
   ).flat();
 };
 
+const RETRY_LIMIT = 2;
+
 const getUserLikedTracks = async (spotifyToken: string): Promise<SimpleTrack[] | typeof BAD_SPOTIFY_TOKEN_MESSAGE> => {
   const userTracks: SavedTrackObject[] = [];
   let nextPageUrl: string | null = 'https://api.spotify.com/v1/me/tracks?limit=50';
+  let retryCount = 0;
   while (nextPageUrl) {
     const nextPageQuery: Response = await fetch(nextPageUrl, {
       method: 'GET',
       headers: { Authorization: 'Bearer ' + spotifyToken },
     });
     const nextPage = (await nextPageQuery.json()) as FetchJSONResponse<UserTracksResponse>;
-    if (nextPage.error || (nextPageQuery.status && nextPageQuery.status !== 200)) {
+    if (
+      nextPage.error ||
+      (nextPageQuery.status &&
+        nextPageQuery.status !== 200 &&
+        nextPageQuery.status !== 500 &&
+        retryCount >= RETRY_LIMIT)
+    ) {
+      const tempNextPageUrl = nextPageUrl;
       nextPageUrl = null;
 
       if (nextPage.error?.status === 401) {
@@ -85,13 +95,17 @@ const getUserLikedTracks = async (spotifyToken: string): Promise<SimpleTrack[] |
           JSON.stringify({
             message: 'Error fetching page from Spotify',
             error: nextPage.error,
-            nextPageUrl,
+            tempNextPageUrl,
           }),
         );
       }
+    } else if (nextPageQuery.status === 500) {
+      retryCount++;
+    } else {
+      retryCount = 0;
+      nextPageUrl = nextPage.next;
+      userTracks.push(...nextPage.items);
     }
-    nextPageUrl = nextPage.next;
-    userTracks.push(...nextPage.items);
   }
   return userTracks.flatMap((trackObj): SimpleTrack[] =>
     !trackObj.track.id
