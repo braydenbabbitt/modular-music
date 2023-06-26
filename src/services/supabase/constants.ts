@@ -14,4 +14,4 @@ export const INTERVAL_MAP = {
   7: 'weeks',
   30: 'months',
   365: 'years',
-} as const;
+} as Record<number, string>;
