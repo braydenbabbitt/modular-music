@@ -71,42 +71,62 @@ const RETRY_LIMIT = 2;
 const getUserLikedTracks = async (spotifyToken: string): Promise<SimpleTrack[] | typeof BAD_SPOTIFY_TOKEN_MESSAGE> => {
   const userTracks: SavedTrackObject[] = [];
   let nextPageUrl: string | null = 'https://api.spotify.com/v1/me/tracks?limit=50';
-  let retryCount = 0;
+  const pagesToRefetch: string[] = [];
   while (nextPageUrl) {
     const nextPageQuery: Response = await fetch(nextPageUrl, {
       method: 'GET',
       headers: { Authorization: 'Bearer ' + spotifyToken },
     });
     const nextPage = (await nextPageQuery.json()) as FetchJSONResponse<UserTracksResponse>;
-    if (
-      nextPage.error ||
-      (nextPageQuery.status &&
-        nextPageQuery.status !== 200 &&
-        nextPageQuery.status !== 500 &&
-        retryCount >= RETRY_LIMIT)
-    ) {
-      const tempNextPageUrl = nextPageUrl;
-      nextPageUrl = null;
-
+    if (nextPage.error || (nextPageQuery.status && nextPageQuery.status !== 200)) {
       if (nextPage.error?.status === 401) {
+        nextPageUrl = null;
         return BAD_SPOTIFY_TOKEN_MESSAGE;
       } else {
-        throw new Error(
+        pagesToRefetch.push(nextPageUrl);
+        console.error(
           JSON.stringify({
-            message: 'Error fetching page from Spotify',
+            requestUrl: nextPageUrl,
             error: nextPage.error,
-            tempNextPageUrl,
           }),
         );
+        const params: URLSearchParams = new URLSearchParams(nextPageUrl);
+        const offset = params.get('offset');
+        nextPageUrl = nextPageUrl.replace(`offset=${offset}`, `offset=${Number(offset) + 50}`);
       }
-    } else if (nextPageQuery.status === 500) {
-      retryCount++;
     } else {
-      retryCount = 0;
       nextPageUrl = nextPage.next;
       userTracks.push(...nextPage.items);
     }
   }
+
+  if (pagesToRefetch.length > 0) {
+    pagesToRefetch.forEach(async (url) => {
+      let retryCount = 0;
+      let success = false;
+      while (retryCount < RETRY_LIMIT && !success) {
+        const pageRetryQuery: Response = await fetch(url, {
+          method: 'GET',
+          headers: { Authorization: 'Bearer ' + spotifyToken },
+        });
+        retryCount++;
+        const pageRetry = (await pageRetryQuery.json()) as FetchJSONResponse<UserTracksResponse>;
+        if (!pageRetry.error && pageRetryQuery.status && pageRetryQuery.status === 200) {
+          success = true;
+          userTracks.push(...pageRetry.items);
+        } else {
+          console.error(
+            JSON.stringify({
+              requestUrl: url,
+              error: pageRetry.error,
+              retryCount,
+            }),
+          );
+        }
+      }
+    });
+  }
+
   return userTracks.flatMap((trackObj): SimpleTrack[] =>
     !trackObj.track.id
       ? []
