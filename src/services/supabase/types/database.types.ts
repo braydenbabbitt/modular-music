@@ -216,6 +216,7 @@ export interface Database {
           end_date: string | null;
           has_cron_job: boolean;
           id: string;
+          module_id: string;
           next_run: string | null;
           repetition_config: Json | null;
           times_to_repeat: number | null;
@@ -225,7 +226,8 @@ export interface Database {
           edited_at?: string;
           end_date?: string | null;
           has_cron_job?: boolean;
-          id: string;
+          id?: string;
+          module_id: string;
           next_run?: string | null;
           repetition_config?: Json | null;
           times_to_repeat?: number | null;
@@ -236,14 +238,15 @@ export interface Database {
           end_date?: string | null;
           has_cron_job?: boolean;
           id?: string;
+          module_id?: string;
           next_run?: string | null;
           repetition_config?: Json | null;
           times_to_repeat?: number | null;
         };
         Relationships: [
           {
-            foreignKeyName: 'module_schedules_id_fkey';
-            columns: ['id'];
+            foreignKeyName: 'module_schedules_module_id_fkey';
+            columns: ['module_id'];
             referencedRelation: 'modules';
             referencedColumns: ['id'];
           },
