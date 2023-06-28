@@ -260,7 +260,7 @@ export const saveModuleSchedule = async ({
 }: SaveModuleScheduleRequest) => {
   await supabaseClient.from('module_schedules').upsert(
     {
-      id: moduleId,
+      module_id: moduleId,
       edited_at: new Date().toISOString(),
       next_run: next_run.toISOString(),
       repetition_config: repetition,
