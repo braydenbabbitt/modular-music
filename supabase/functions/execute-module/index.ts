@@ -126,7 +126,7 @@ serve(async (req) => {
         .from('module_runs_log')
         .insert({ module_id: moduleId, timestamp: invokationTimestamp, scheduled: !!scheduleId, error: false });
 
-      if (scheduleId) await serviceRoleClient.functions.invoke('update_module_schedule', { body: `${scheduleId}` });
+      if (scheduleId) await serviceRoleClient.functions.invoke('update_module_schedule', { body: `"${scheduleId}"` });
 
       return new Response(JSON.stringify(result), {
         headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
