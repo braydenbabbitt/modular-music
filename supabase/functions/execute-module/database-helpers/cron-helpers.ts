@@ -1,7 +1,7 @@
 import { dayjsToCron } from './../utils/date-utils.ts';
 import { Database } from '../types/database.ts';
 import * as postgres from 'https://deno.land/x/postgres@v0.17.0/mod.ts';
-import dayjs from 'https://deno.land/x/deno_dayjs@v0.2.2/mod.ts';
+import dayjs, { ManipulateType } from 'https://esm.sh/v96/dayjs@1.11.9';
 
 const SUPABASE_PROJECT_REF = Deno.env.get('SUPABASE_PROJECT_REF');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -29,7 +29,10 @@ export const setUpCronJob = async (
   const initTimestamp = new Date(schedule.next_run);
   const repetitionConfig = schedule.repetition_config as RepetitionConfig;
   let nextDay = dayjs(initTimestamp);
-  const dayjsInterval = repetitionConfig.interval.slice(undefined, repetitionConfig.interval.length - 1);
+  const dayjsInterval = repetitionConfig.interval.slice(
+    undefined,
+    repetitionConfig.interval.length - 1,
+  ) as ManipulateType;
 
   if (repetitionConfig.interval === 'days') {
     nextDay = nextDay.add(repetitionConfig.quantity, dayjsInterval);

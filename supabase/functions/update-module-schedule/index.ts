@@ -23,7 +23,7 @@ serve(async (req) => {
     return new Response('ok', { headers: CORS_HEADERS });
   }
   try {
-    const { authHeader, scheduleId } = await validateRequest(req);
+    const { authHeader, scheduleId, isNew } = await validateRequest(req);
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
       return new Response(
         JSON.stringify({
@@ -63,7 +63,7 @@ serve(async (req) => {
     const shouldBeRescheduledBool = await shouldBeRescheduled(supabaseClient, schedule.data);
 
     if (shouldBeRescheduledBool) {
-      await setUpCronJob(dbPool, schedule.data);
+      await setUpCronJob(dbPool, schedule.data, isNew);
       if (schedule.data.has_cron_job === false)
         await supabaseClient.from('module_schedules').update({ has_cron_job: true }).eq('id', scheduleId).select();
     } else {

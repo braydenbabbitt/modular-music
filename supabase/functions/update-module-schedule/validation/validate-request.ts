@@ -1,10 +1,23 @@
-/**
- * Validates a request and returns the authorization header and schedule ID.
- * @param req - The request object to validate.
- * @returns A promise that resolves to an object containing the authorization header and schedule ID.
- * @throws If the request is invalid or an error occurs during validation.
- */
-export const validateRequest = async (req: Request): Promise<{ authHeader: string; scheduleId: string }> => {
+import { TsPrimitiveName } from '../types/generics.ts';
+
+type ValidationObject = {
+  key: string;
+  types: TsPrimitiveName[];
+};
+
+const requestBodyValidation: ValidationObject[] = [
+  { key: 'scheduleId', types: ['string'] },
+  { key: 'isNew', types: ['boolean'] },
+];
+
+type UpdateModuleScheduleRequestBodyType = {
+  scheduleId: string;
+  isNew: boolean;
+};
+
+type UpdateModuleScheduleRequestValidatedType = UpdateModuleScheduleRequestBodyType & { authHeader: string };
+
+export const validateRequest = async (req: Request): Promise<UpdateModuleScheduleRequestValidatedType> => {
   try {
     const parsedRequest = await req.json();
     const authHeader = req.headers.get('Authorization');
@@ -17,26 +30,36 @@ export const validateRequest = async (req: Request): Promise<{ authHeader: strin
       );
     }
 
-    if (typeof parsedRequest === 'object') {
-      const requestKeys = Object.keys(parsedRequest);
-      throw new Error(
-        JSON.stringify({
-          message: 'Invalid request',
-          error: `Unknown parameters: ${requestKeys.toString()}`,
-        }),
-      );
+    if (typeof parsedRequest !== 'object') {
+      const errorMessage = `Expected body to be an object, but found ${typeof parsedRequest}`;
+      console.error(errorMessage);
+      throw new Error(errorMessage);
     }
 
-    if (typeof parsedRequest !== 'string') {
-      throw new Error(
-        JSON.stringify({
-          message: 'Invalid request',
-          error: 'Expected request body to be a string',
-        }),
-      );
-    }
+    const requestKeys = Object.keys(parsedRequest);
+    requestKeys.forEach((key) => {
+      const validationObj = requestBodyValidation.find((item) => item.key === key);
+      if (!validationObj) {
+        const errorMessage = `Expected to find parameter ${key} in request body, but found none`;
+        console.error(errorMessage);
+        throw new Error(errorMessage);
+      }
+      if (!validationObj.types.includes(typeof parsedRequest[key])) {
+        const errorMessage = `Expected parameter ${key} to be of type ${validationObj.types.join(
+          ' | ',
+        )}, but found ${typeof parsedRequest[key]}`;
+        console.error(errorMessage);
+        throw new Error(errorMessage);
+      }
+      return false;
+    });
 
-    return { authHeader, scheduleId: parsedRequest };
+    const validatedRequestBody = {
+      scheduleId: parsedRequest.scheduleId,
+      isNew: parsedRequest.isNew,
+    } satisfies UpdateModuleScheduleRequestBodyType;
+
+    return { authHeader, ...validatedRequestBody };
   } catch (error) {
     throw new Error(
       JSON.stringify({
