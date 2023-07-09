@@ -10,16 +10,18 @@
     "preview": "vite preview",
     "prepare": "husky install",
     "prettier": "prettier --write \"{src,tests,example/src}/**/*.{js,ts,jsx,tsx}\"",
-    "supabase:gen-types:edge-functions:fetch-recently-listened": "npx supabase gen types typescript --linked > supabase/functions/fetch-recently-listened/types/database.ts && prettier --write \"supabase/functions/fetch-recently-listened/types/database.ts\"",
     "supabase:gen-types:edge-functions:execute-module": "npx supabase gen types typescript --linked > supabase/functions/execute-module/types/database.ts && prettier --write \"supabase/functions/execute-module/types/database.ts\"",
+    "supabase:gen-types:edge-functions:fetch-recently-listened": "npx supabase gen types typescript --linked > supabase/functions/fetch-recently-listened/types/database.ts && prettier --write \"supabase/functions/fetch-recently-listened/types/database.ts\"",
+    "supabase:gen-types:edge-functions:fetch-users-saved-tracks": "npx supabase gen types typescript --linked > supabase/functions/fetch-users-saved-tracks/types/database.ts && prettier --write \"supabase/functions/fetch-users-saved-tracks/types/database.ts\"",
     "supabase:gen-types:edge-functions:update-module-schedule": "npx supabase gen types typescript --linked > supabase/functions/update-module-schedule/types/database.ts && prettier --write \"supabase/functions/update-module-schedule/types/database.ts\"",
-    "supabase:gen-types:edge-functions": "npm run supabase:gen-types:edge-functions:fetch-recently-listened && npm run supabase:gen-types:edge-functions:execute-module && npm run supabase:gen-types:edge-functions:update-module-schedule",
+    "supabase:gen-types:edge-functions": "npm run supabase:gen-types:edge-functions:fetch-recently-listened && npm run supabase:gen-types:edge-functions:execute-module && npm run supabase:gen-types:edge-functions:update-module-schedule && npm run supabase:gen-types:edge-functions:fetch-users-saved-tracks",
     "supabase:gen-types:client": "npx supabase gen types typescript --linked > src/services/supabase/types/database.types.ts && prettier --write \"src/services/supabase/types/database.types.ts\"",
     "supabase:gen-types": "npm run supabase:gen-types:client && npm run supabase:gen-types:edge-functions",
     "deploy:functions:execute-module": "npx supabase functions deploy execute-module",
     "deploy:functions:fetch-recently-listened": "npx supabase functions deploy fetch-recently-listened",
+    "deploy:functions:fetch-users-saved-tracks": "npx supabase functions deploy fetch-users-saved-tracks",
     "deploy:functions:update-module-schedule": "npx supabase functions deploy update-module-schedule",
-    "deploy:functions": "npm run deploy:functions:execute-module && npm run deploy:functions:fetch-recently-listened"
+    "deploy:functions": "npm run deploy:functions:execute-module && npm run deploy:functions:fetch-recently-listened && npm run deploy:functions:update-module-schedule && npm run deploy:functions:fetch-users-saved-tracks"
   },
   "dependencies": {
     "@emotion/babel-plugin": "^11.10.0",

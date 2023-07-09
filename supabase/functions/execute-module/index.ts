@@ -1,3 +1,5 @@
+import { attemptSpotifyApiRequest } from './spotify/token-helpers.ts';
+import { removeTracksNoLongerSaved } from './spotify/get-tracks-no-longer-saved.ts';
 import { emptyPlaylist, writeTracksToPlaylist } from './spotify/playlist-writing.ts';
 import { getSpotifyToken, refreshSpotifyToken } from './spotify/get-token.ts';
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
@@ -92,18 +94,63 @@ serve(async (req) => {
           }
         }),
       );
-      const result: SimpleTrack[] = [];
+      let result: SimpleTrack[] = [];
 
       if (shouldShuffle) {
         const maxLength = sourcesAfterActions.length;
         while (result.length < outputLength && result.length < maxLength) {
-          const nextRandomIndex = getRandomNumber(sourcesAfterActions.length);
-          result.push(sourcesAfterActions.splice(nextRandomIndex, 1)[0]);
+          while (result.length < outputLength && result.length < maxLength) {
+            const nextRandomIndex = getRandomNumber(sourcesAfterActions.length);
+            const nextRandomTrack = sourcesAfterActions.at(nextRandomIndex);
+            if (nextRandomTrack) {
+              result.push(nextRandomTrack);
+            }
+          }
+          const tracksToCheck = result.filter((track) => !!track.fromSavedTracks);
+          const tracksStillSaved = await attemptSpotifyApiRequest(
+            (newToken) =>
+              removeTracksNoLongerSaved({
+                serviceRoleClient,
+                spotifyToken: newToken ?? spotifyToken,
+                tracks: tracksToCheck,
+                userId,
+              }),
+            () => refreshSpotifyToken({ serviceRoleClient, userId }),
+          );
+          if (tracksStillSaved.length !== result.length) {
+            result = tracksStillSaved;
+          }
         }
       } else if (sourcesAfterActions.length < outputLength) {
-        result.push(...sourcesAfterActions);
+        const tracksStillSaved = await attemptSpotifyApiRequest(
+          (newToken) =>
+            removeTracksNoLongerSaved({
+              serviceRoleClient,
+              spotifyToken: newToken ?? spotifyToken,
+              tracks: sourcesAfterActions,
+              userId,
+            }),
+          () => refreshSpotifyToken({ serviceRoleClient, userId }),
+        );
+        result.push(...tracksStillSaved);
       } else {
-        result.push(...sourcesAfterActions.slice(0, outputLength));
+        let offset = 0;
+        while (result.length < outputLength) {
+          const tracksToAddLength = Math.min(outputLength - result.length, sourcesAfterActions.length - offset);
+          const tracksToAdd = sourcesAfterActions.slice(offset, offset + tracksToAddLength);
+          const tracksStillSaved = await attemptSpotifyApiRequest(
+            (newToken) =>
+              removeTracksNoLongerSaved({
+                serviceRoleClient,
+                spotifyToken: newToken ?? spotifyToken,
+                tracks: tracksToAdd,
+                userId,
+              }),
+            () => refreshSpotifyToken({ serviceRoleClient, userId }),
+          );
+          offset += tracksToAdd.length;
+          result.push(...tracksStillSaved);
+        }
       }
 
       if (moduleOutput.append === null) {

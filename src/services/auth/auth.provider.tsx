@@ -59,7 +59,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       provider: 'spotify',
       options: {
         scopes: spotifyScopes.join(' '),
-        redirectTo: '/spotify-login',
+        redirectTo: `${location.origin}/spotify-login`,
       },
     });
 
@@ -89,7 +89,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             provider: 'spotify',
             options: {
               scopes: spotifyScopes.join(' '),
-              redirectTo: '/spotify-login',
+              redirectTo: `${location.origin}/spotify-login`,
             },
           });
         }

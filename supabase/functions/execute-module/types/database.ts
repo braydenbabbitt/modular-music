@@ -1,4 +1,4 @@
-export type Json = string | number | boolean | null | { [key: string]: Json } | Json[];
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export interface Database {
   graphql_public: {
@@ -216,6 +216,7 @@ export interface Database {
           end_date: string | null;
           has_cron_job: boolean;
           id: string;
+          module_id: string;
           next_run: string | null;
           repetition_config: Json | null;
           times_to_repeat: number | null;
@@ -225,7 +226,8 @@ export interface Database {
           edited_at?: string;
           end_date?: string | null;
           has_cron_job?: boolean;
-          id: string;
+          id?: string;
+          module_id: string;
           next_run?: string | null;
           repetition_config?: Json | null;
           times_to_repeat?: number | null;
@@ -236,14 +238,15 @@ export interface Database {
           end_date?: string | null;
           has_cron_job?: boolean;
           id?: string;
+          module_id?: string;
           next_run?: string | null;
           repetition_config?: Json | null;
           times_to_repeat?: number | null;
         };
         Relationships: [
           {
-            foreignKeyName: 'module_schedules_id_fkey';
-            columns: ['id'];
+            foreignKeyName: 'module_schedules_module_id_fkey';
+            columns: ['module_id'];
             referencedRelation: 'modules';
             referencedColumns: ['id'];
           },
@@ -417,6 +420,34 @@ export interface Database {
         Relationships: [
           {
             foreignKeyName: 'user_oauth_tokens_user_id_fkey';
+            columns: ['user_id'];
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      users_saved_tracks: {
+        Row: {
+          added_at: string | null;
+          id: string;
+          track_id: string;
+          user_id: string | null;
+        };
+        Insert: {
+          added_at?: string | null;
+          id?: string;
+          track_id: string;
+          user_id?: string | null;
+        };
+        Update: {
+          added_at?: string | null;
+          id?: string;
+          track_id?: string;
+          user_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'users_saved_tracks_user_id_fkey';
             columns: ['user_id'];
             referencedRelation: 'users';
             referencedColumns: ['id'];
