@@ -1,4 +1,4 @@
-import { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.13.1';
+import { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { Database } from '../types/database.ts';
 
 const SPOTIFY_CLIENT_ID = Deno.env.get('SPOTIFY_CLIENT_ID');

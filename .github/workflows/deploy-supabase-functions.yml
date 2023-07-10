@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-    workflow_dispatch:
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -21,4 +21,4 @@ jobs:
         with:
           version: latest
 
-      - run: supabase functions deploy github-action-deploy --project-ref $VITE_SUPABASE_REFERENCE_ID
+      - run: supabase functions deploy --project-ref $VITE_SUPABASE_REFERENCE_ID

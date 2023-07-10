@@ -82,7 +82,7 @@ export const setUpCronJob = async (
             $$
             select
               net.http_post(
-                url:='https://${SUPABASE_PROJECT_REF}.functions.supabase.co/execute-module',
+                url:='https://${SUPABASE_PROJECT_REF}.supabase.co/functions/v1/execute-module',
                 headers:='{"Content-Type": "application/json", "Authorization": "Bearer ${SUPABASE_SERVICE_ROLE_KEY}"}'::jsonb,
                 body:='{"moduleId": "${schedule.module_id}", "scheduleId": "${schedule.id}"}'::jsonb
               ) as request_id;
@@ -90,6 +90,7 @@ export const setUpCronJob = async (
           );
       `;
       await connection.queryObject(queryString);
+      return nextDay.toDate();
     } catch (error) {
       console.error(error);
     } finally {

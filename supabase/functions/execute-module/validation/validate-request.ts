@@ -58,8 +58,8 @@ export const validateRequest = async (req: Request): Promise<ExecuteModuleReques
 
     const validatedRequestBody = {
       moduleId: parsedRequest.moduleId,
-      scheduled: parsedRequest.scheduled ?? undefined,
-    } as ExecuteModuleRequestBodyType;
+      scheduleId: parsedRequest.scheduleId ?? undefined,
+    } satisfies ExecuteModuleRequestBodyType;
 
     return { ...validatedRequestBody, authHeader };
   } catch (error) {

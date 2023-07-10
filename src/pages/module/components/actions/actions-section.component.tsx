@@ -90,7 +90,6 @@ export const ActionsSection = ({
                             setSelectedActionId(action.id);
                             getActionType({ supabaseClient, typeId: action.type_id }).then((actionType) => {
                               getActionSources({ supabaseClient, actionId: action.id }).then((actionSources) => {
-                                console.log({ actionSources });
                                 if (actionType) {
                                   setActionSelectorModalInitValues({
                                     actionType: stringifyActionType(actionType),

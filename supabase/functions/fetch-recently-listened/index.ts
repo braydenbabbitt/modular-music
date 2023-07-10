@@ -1,5 +1,5 @@
 import { getSpotifyToken, refreshSpotifyToken } from './spotify/get-token.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.13.1';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { Database } from './types/database.ts';
 import { getRecentlyListened } from './spotify/get-recently-listened.ts';

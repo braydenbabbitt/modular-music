@@ -2,7 +2,7 @@ import { setUpCronJob } from './db-queries/schedule-next-cron-job.ts';
 import { unscheduleCronJob } from './db-queries/unschedule-cron-job.ts';
 import { shouldBeRescheduled } from './should-be-rescheduled.ts';
 import { Database } from './types/database.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.13.1';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { validateRequest } from './validation/validate-request.ts';
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import * as postgres from 'https://deno.land/x/postgres@v0.17.0/mod.ts';
@@ -62,12 +62,15 @@ serve(async (req) => {
 
     const shouldBeRescheduledBool = await shouldBeRescheduled(supabaseClient, schedule.data);
 
-    if (shouldBeRescheduledBool) {
-      await setUpCronJob(dbPool, schedule.data, isNew);
-      if (schedule.data.has_cron_job === false)
-        await supabaseClient.from('module_schedules').update({ has_cron_job: true }).eq('id', scheduleId).select();
+    if (shouldBeRescheduledBool || isNew) {
+      const nextRun = await setUpCronJob(dbPool, schedule.data, isNew);
+      if (nextRun)
+        await supabaseClient
+          .from('module_schedules')
+          .update({ next_run: nextRun.toISOString(), has_cron_job: true })
+          .eq('id', scheduleId);
     } else {
-      if (schedule.data.has_cron_job === true)
+      if (schedule.data.has_cron_job === true || schedule.data.next_run !== null)
         supabaseClient.from('module_schedules').update({ next_run: null, has_cron_job: false }).eq('id', scheduleId);
     }
   } catch (error) {

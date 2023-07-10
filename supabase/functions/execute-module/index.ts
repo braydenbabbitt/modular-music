@@ -3,7 +3,6 @@ import { removeTracksNoLongerSaved } from './spotify/get-tracks-no-longer-saved.
 import { emptyPlaylist, writeTracksToPlaylist } from './spotify/playlist-writing.ts';
 import { getSpotifyToken, refreshSpotifyToken } from './spotify/get-token.ts';
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.13.1';
 import { getModuleSources } from './database-helpers/get-module-sources.ts';
 import { validateRequest } from './validation/validate-request.ts';
 import { Database } from './types/database.ts';
@@ -13,6 +12,7 @@ import { getModuleOutput } from './database-helpers/get-module-output.ts';
 import { ACTION_TYPE_IDS, SimpleTrack } from './types/generics.ts';
 import { getRandomNumber } from './utils/get-random-number.ts';
 import { filterSongList } from './module-actions/filter-song-list.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -135,7 +135,7 @@ serve(async (req) => {
         result.push(...tracksStillSaved);
       } else {
         let offset = 0;
-        while (result.length < outputLength) {
+        while (result.length < outputLength && offset < sourcesAfterActions.length) {
           const tracksToAddLength = Math.min(outputLength - result.length, sourcesAfterActions.length - offset);
           const tracksToAdd = sourcesAfterActions.slice(offset, offset + tracksToAddLength);
           const tracksStillSaved = await attemptSpotifyApiRequest(
@@ -173,8 +173,11 @@ serve(async (req) => {
         .from('module_runs_log')
         .insert({ module_id: moduleId, timestamp: invokationTimestamp, scheduled: !!scheduleId, error: false });
 
-      if (scheduleId)
-        await serviceRoleClient.functions.invoke('update_module_schedule', { body: { scheduleId, isNew: false } });
+      if (scheduleId) {
+        const updateRes = await serviceRoleClient.functions.invoke('update-module-schedule', {
+          body: { scheduleId, isNew: false },
+        });
+      }
 
       return new Response(JSON.stringify(result), {
         headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },

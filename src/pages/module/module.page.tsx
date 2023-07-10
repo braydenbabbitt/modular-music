@@ -96,7 +96,6 @@ export const ModulePage = () => {
                 // console.time('fetch-recently-listened');
                 // const functionResponse = await supabaseClient.functions.invoke('fetch-recently-listened');
                 // console.timeEnd('fetch-recently-listened');
-                console.log({ functionResponse });
                 setIsRunning(false);
               }}
               disabled={data.sources.length === 0 || data.actions.length === 0 || data.output === undefined}
