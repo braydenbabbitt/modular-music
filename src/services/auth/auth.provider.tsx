@@ -46,7 +46,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const navigate = useNavigate();
 
   supabaseClient.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+    if (event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
       location.replace('/');
     }
 
