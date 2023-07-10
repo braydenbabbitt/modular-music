@@ -1,7 +1,7 @@
-import { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.13.1';
+import { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { Database } from '../types/database.ts';
 import { SimpleTrack } from '../types/generics.ts';
-import { FetchJSONResponse, PlaylistTracksResponse, SavedTrackObject, UserTracksResponse } from './types.ts';
+import { FetchJSONResponse, PlaylistTracksResponse } from './types.ts';
 import { BAD_SPOTIFY_TOKEN_MESSAGE, attemptSpotifyApiRequest } from './token-helpers.ts';
 
 enum SOURCE_TYPE_MAP {
@@ -25,15 +25,7 @@ export const getSourcesFromSpotify = async (
         const typeId = source.type_id as SOURCE_TYPE_MAP;
         switch (typeId) {
           case SOURCE_TYPE_MAP.LIKED_TRACKS:
-            try {
-              return await attemptSpotifyApiRequest(
-                async (newToken?: string) => await getUserLikedTracks(newToken ?? spotifyToken),
-                refreshSpotifyToken,
-              );
-            } catch (error) {
-              console.error(error);
-            }
-            break;
+            return await getUserLikedTracks(supabaseClient, userId);
           case SOURCE_TYPE_MAP.USER_PLAYLIST:
             try {
               return await attemptSpotifyApiRequest(
@@ -68,74 +60,31 @@ export const getSourcesFromSpotify = async (
 
 const RETRY_LIMIT = 2;
 
-const getUserLikedTracks = async (spotifyToken: string): Promise<SimpleTrack[] | typeof BAD_SPOTIFY_TOKEN_MESSAGE> => {
-  const userTracks: SavedTrackObject[] = [];
-  let nextPageUrl: string | null = 'https://api.spotify.com/v1/me/tracks?limit=50';
-  const pagesToRefetch: string[] = [];
-  while (nextPageUrl) {
-    const nextPageQuery: Response = await fetch(nextPageUrl, {
-      method: 'GET',
-      headers: { Authorization: 'Bearer ' + spotifyToken },
+const getUserLikedTracks = async (
+  serviceRoleClient: SupabaseClient<Database>,
+  userId: string,
+): Promise<SimpleTrack[]> => {
+  let userTracks = await serviceRoleClient.functions.invoke<string[]>('fetch-users-saved-tracks', {
+    body: { userId },
+  });
+
+  for (let i = 0; i < RETRY_LIMIT && (userTracks.error || userTracks.data === null); i++) {
+    const retryResult = await serviceRoleClient.functions.invoke<string[]>('fetch-users-saved-tracks', {
+      body: { userId },
     });
-    const nextPage = (await nextPageQuery.json()) as FetchJSONResponse<UserTracksResponse>;
-    if (nextPage.error || (nextPageQuery.status && nextPageQuery.status !== 200)) {
-      if (nextPage.error?.status === 401) {
-        nextPageUrl = null;
-        return BAD_SPOTIFY_TOKEN_MESSAGE;
-      } else {
-        pagesToRefetch.push(nextPageUrl);
-        console.error(
-          JSON.stringify({
-            requestUrl: nextPageUrl,
-            error: nextPage.error,
-          }),
-        );
-        const params: URLSearchParams = new URLSearchParams(nextPageUrl);
-        const offset = params.get('offset');
-        nextPageUrl = nextPageUrl.replace(`offset=${offset}`, `offset=${Number(offset) + 50}`);
-      }
-    } else {
-      nextPageUrl = nextPage.next;
-      userTracks.push(...nextPage.items);
+    if (retryResult.data && !retryResult.error) {
+      userTracks = retryResult;
     }
   }
 
-  if (pagesToRefetch.length > 0) {
-    pagesToRefetch.forEach(async (url) => {
-      let retryCount = 0;
-      let success = false;
-      while (retryCount < RETRY_LIMIT && !success) {
-        const pageRetryQuery: Response = await fetch(url, {
-          method: 'GET',
-          headers: { Authorization: 'Bearer ' + spotifyToken },
-        });
-        retryCount++;
-        const pageRetry = (await pageRetryQuery.json()) as FetchJSONResponse<UserTracksResponse>;
-        if (!pageRetry.error && pageRetryQuery.status && pageRetryQuery.status === 200) {
-          success = true;
-          userTracks.push(...pageRetry.items);
-        } else {
-          console.error(
-            JSON.stringify({
-              requestUrl: url,
-              error: pageRetry.error,
-              retryCount,
-            }),
-          );
-        }
-      }
-    });
-  }
-
-  return userTracks.flatMap((trackObj): SimpleTrack[] =>
-    !trackObj.track.id
-      ? []
-      : [
-          {
-            id: trackObj.track.id,
-            uri: trackObj.track.uri || `spotify:track:${trackObj.track.id}`,
-          },
-        ],
+  return (
+    userTracks.data?.map(
+      (id): SimpleTrack => ({
+        id,
+        uri: `spotify:track:${id}`,
+        fromSavedTracks: true,
+      }),
+    ) ?? []
   );
 };
 

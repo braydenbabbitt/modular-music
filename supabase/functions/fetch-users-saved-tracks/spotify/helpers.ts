@@ -7,14 +7,14 @@ export const BAD_SPOTIFY_TOKEN_MESSAGE = 'Invalid spotify token' as const;
  * @returns The result of the spotify api request function
  */
 export const attemptSpotifyApiRequest = async <T>(
-  spotifyApiRequestFunction: (newToken?: string) => Promise<T | typeof BAD_SPOTIFY_TOKEN_MESSAGE>,
+  spotifyApiRequestFunction: (newToken?: string, extraData?: string) => Promise<T | string>,
   refreshSpotifyToken: () => Promise<string>,
 ) => {
   const res = await spotifyApiRequestFunction();
-  if (res === BAD_SPOTIFY_TOKEN_MESSAGE) {
+  if (typeof res === 'string' && res.includes(BAD_SPOTIFY_TOKEN_MESSAGE)) {
     const newToken = await refreshSpotifyToken();
-    const refreshedRes = await spotifyApiRequestFunction(newToken);
-    if (refreshedRes === BAD_SPOTIFY_TOKEN_MESSAGE) {
+    const refreshedRes = await spotifyApiRequestFunction(newToken, res.includes(':') ? res.split(':')[1] : undefined);
+    if (typeof refreshedRes === 'string' && refreshedRes.includes(BAD_SPOTIFY_TOKEN_MESSAGE)) {
       throw new Error(
         JSON.stringify({
           message: 'Invalid refreshed token',

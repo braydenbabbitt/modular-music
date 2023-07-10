@@ -1,6 +1,6 @@
 import * as postgres from 'https://deno.land/x/postgres@v0.17.0/mod.ts';
 import { Database } from '../types/database.ts';
-import dayjs from 'https://deno.land/x/deno_dayjs@v0.2.2/mod.ts';
+import dayjs, { ManipulateType } from 'https://esm.sh/v96/dayjs@1.11.9';
 import { dayjsToCron } from '../utils/dayjs-to-cron.ts';
 
 const SUPABASE_PROJECT_REF = Deno.env.get('SUPABASE_PROJECT_REF');
@@ -20,6 +20,7 @@ type RepetitionConfig = {
 export const setUpCronJob = async (
   dbPool: postgres.Pool,
   schedule: Database['public']['Tables']['module_schedules']['Row'],
+  isNew: boolean,
 ) => {
   if (schedule.next_run === null) {
     return;
@@ -27,42 +28,47 @@ export const setUpCronJob = async (
   const initTimestamp = new Date(schedule.next_run);
   const repetitionConfig = schedule.repetition_config as RepetitionConfig;
   let nextDay = dayjs(initTimestamp);
-  const dayjsInterval = repetitionConfig.interval.slice(undefined, repetitionConfig.interval.length - 1);
+  const dayjsInterval = repetitionConfig.interval.slice(
+    undefined,
+    repetitionConfig.interval.length - 1,
+  ) as ManipulateType;
 
-  if (repetitionConfig.interval === 'days') {
-    nextDay = nextDay.add(repetitionConfig.quantity, dayjsInterval);
-  } else if (repetitionConfig.interval === 'weeks') {
-    if (repetitionConfig.daysOfWeek) {
-      const lastDayOfWeek = initTimestamp.getUTCDay();
-      const lastRunWeekConfigIndex = repetitionConfig.daysOfWeek.findIndex((value) => value === lastDayOfWeek);
-      if (lastRunWeekConfigIndex < repetitionConfig.daysOfWeek.length - 1) {
-        nextDay = nextDay.set('day', repetitionConfig.daysOfWeek[lastRunWeekConfigIndex + 1]);
-      } else {
-        nextDay = nextDay.add(repetitionConfig.quantity, dayjsInterval).day(repetitionConfig.daysOfWeek[0]);
-      }
-    }
-  } else if (repetitionConfig.interval === 'months') {
-    if (repetitionConfig.dayOfMonth) {
+  if (!isNew) {
+    if (repetitionConfig.interval === 'days') {
       nextDay = nextDay.add(repetitionConfig.quantity, dayjsInterval);
-      const daysInMonth = nextDay.daysInMonth();
-      if (daysInMonth < repetitionConfig.dayOfMonth) {
-        nextDay = nextDay.date(daysInMonth);
-      } else {
-        nextDay = nextDay.date(repetitionConfig.dayOfMonth);
+    } else if (repetitionConfig.interval === 'weeks') {
+      if (repetitionConfig.daysOfWeek) {
+        const lastDayOfWeek = initTimestamp.getUTCDay();
+        const lastRunWeekConfigIndex = repetitionConfig.daysOfWeek.findIndex((value) => value === lastDayOfWeek);
+        if (lastRunWeekConfigIndex < repetitionConfig.daysOfWeek.length - 1) {
+          nextDay = nextDay.set('day', repetitionConfig.daysOfWeek[lastRunWeekConfigIndex + 1]);
+        } else {
+          nextDay = nextDay.add(repetitionConfig.quantity, dayjsInterval).day(repetitionConfig.daysOfWeek[0]);
+        }
       }
-    } else if (repetitionConfig.dayOfWeekOfMonth) {
+    } else if (repetitionConfig.interval === 'months') {
+      if (repetitionConfig.dayOfMonth) {
+        nextDay = nextDay.add(repetitionConfig.quantity, dayjsInterval);
+        const daysInMonth = nextDay.daysInMonth();
+        if (daysInMonth < repetitionConfig.dayOfMonth) {
+          nextDay = nextDay.date(daysInMonth);
+        } else {
+          nextDay = nextDay.date(repetitionConfig.dayOfMonth);
+        }
+      } else if (repetitionConfig.dayOfWeekOfMonth) {
+        nextDay = nextDay.add(repetitionConfig.quantity, dayjsInterval);
+        nextDay = nextDay.set('date', 1);
+        nextDay = nextDay.set('day', repetitionConfig.dayOfWeekOfMonth.day);
+        const daysInNextMonth = nextDay.daysInMonth();
+        let daysToAdd = (repetitionConfig.dayOfWeekOfMonth.week - 1) * 7;
+        if (nextDay.date() + daysToAdd > daysInNextMonth) {
+          daysToAdd -= 7;
+        }
+        nextDay = nextDay.add(daysToAdd, 'day');
+      }
+    } else {
       nextDay = nextDay.add(repetitionConfig.quantity, dayjsInterval);
-      nextDay = nextDay.set('date', 1);
-      nextDay = nextDay.set('day', repetitionConfig.dayOfWeekOfMonth.day);
-      const daysInNextMonth = nextDay.daysInMonth();
-      let daysToAdd = (repetitionConfig.dayOfWeekOfMonth.week - 1) * 7;
-      if (nextDay.date() + daysToAdd > daysInNextMonth) {
-        daysToAdd -= 7;
-      }
-      nextDay = nextDay.add(daysToAdd, 'day');
     }
-  } else {
-    nextDay = nextDay.add(repetitionConfig.quantity, dayjsInterval);
   }
 
   try {
@@ -76,14 +82,15 @@ export const setUpCronJob = async (
             $$
             select
               net.http_post(
-                url:='https://${SUPABASE_PROJECT_REF}.functions.supabase.co/execute-module',
+                url:='https://${SUPABASE_PROJECT_REF}.supabase.co/functions/v1/execute-module',
                 headers:='{"Content-Type": "application/json", "Authorization": "Bearer ${SUPABASE_SERVICE_ROLE_KEY}"}'::jsonb,
-                body:='{"moduleId": "${schedule.id}", "scheduleId": "${schedule.id}"})'::jsonb
+                body:='{"moduleId": "${schedule.module_id}", "scheduleId": "${schedule.id}"}'::jsonb
               ) as request_id;
             $$
           );
       `;
       await connection.queryObject(queryString);
+      return nextDay.toDate();
     } catch (error) {
       console.error(error);
     } finally {

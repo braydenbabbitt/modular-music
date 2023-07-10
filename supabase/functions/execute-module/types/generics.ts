@@ -1,6 +1,7 @@
 export type SimpleTrack = {
   id: string;
   uri: string;
+  fromSavedTracks?: boolean;
 };
 
 export const ACTION_TYPE_IDS = {

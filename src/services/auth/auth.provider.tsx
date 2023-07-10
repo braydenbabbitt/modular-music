@@ -37,6 +37,7 @@ const spotifyScopes = [
 const SUPABASE_REFERENCE_ID = import.meta.env.VITE_SUPABASE_REFERENCE_ID;
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const LOGIN_REDIRECT_URI = import.meta.env.VITE_SPOTIFY_LOGIN_REDIRECT_URI;
 
 const AuthContext = createContext<AuthProviderContextValue | undefined>(undefined);
 
@@ -45,12 +46,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const navigate = useNavigate();
 
   supabaseClient.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+    if (event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
       location.replace('/');
     }
 
     if (event === 'SIGNED_IN' && location.pathname === '/') {
-      navigate('/spotify-login');
+      navigate(LOGIN_REDIRECT_URI);
     }
   });
 
@@ -59,7 +60,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       provider: 'spotify',
       options: {
         scopes: spotifyScopes.join(' '),
-        redirectTo: '/spotify-login',
+        redirectTo: `${location.origin}/spotify-login`,
       },
     });
 
@@ -89,7 +90,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             provider: 'spotify',
             options: {
               scopes: spotifyScopes.join(' '),
-              redirectTo: '/spotify-login',
+              redirectTo: `${location.origin}/spotify-login`,
             },
           });
         }

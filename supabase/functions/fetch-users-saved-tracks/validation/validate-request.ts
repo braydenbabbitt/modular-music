@@ -1,28 +1,25 @@
-import { TsPrimitive } from './../types/generics.ts';
+import { TsPrimitiveName } from '../types/generics.ts';
 
 type ValidationObject = {
   key: string;
-  types: TsPrimitive[];
+  types: TsPrimitiveName[];
 };
 
-const requestBodyValidation: ValidationObject[] = [
-  { key: 'moduleId', types: ['string'] },
-  { key: 'scheduleId', types: ['string', 'undefined'] },
-];
+const REQUEST_BODY_VALIDATION: ValidationObject[] = [{ key: 'userId', types: ['string'] }];
 
-type ExecuteModuleRequestBodyType = {
-  moduleId: string;
-  scheduleId?: string;
+type ValidatedRequestBody = {
+  userId: string;
 };
 
-type ExecuteModuleRequestValidatedType = ExecuteModuleRequestBodyType & {
+type ValidatedRequest = ValidatedRequestBody & {
   authHeader: string;
 };
 
-export const validateRequest = async (req: Request): Promise<ExecuteModuleRequestValidatedType> => {
+export const validateRequest = async (req: Request): Promise<ValidatedRequest> => {
   try {
     const parsedRequest = await req.json();
     const authHeader = req.headers.get('Authorization');
+
     if (!authHeader) {
       throw new Error(
         JSON.stringify({
@@ -40,7 +37,7 @@ export const validateRequest = async (req: Request): Promise<ExecuteModuleReques
 
     const requestKeys = Object.keys(parsedRequest);
     requestKeys.forEach((key) => {
-      const validationObj = requestBodyValidation.find((item) => item.key === key);
+      const validationObj = REQUEST_BODY_VALIDATION.find((item) => item.key === key);
       if (!validationObj) {
         const errorMessage = `Expected to find parameter ${key} in request body, but found none`;
         console.error(errorMessage);
@@ -56,18 +53,18 @@ export const validateRequest = async (req: Request): Promise<ExecuteModuleReques
       return false;
     });
 
-    const validatedRequestBody = {
-      moduleId: parsedRequest.moduleId,
-      scheduleId: parsedRequest.scheduleId ?? undefined,
-    } satisfies ExecuteModuleRequestBodyType;
+    const validatedRequestBody: ValidatedRequestBody = {
+      userId: parsedRequest.userId,
+    };
 
     return { ...validatedRequestBody, authHeader };
-  } catch (error) {
+  } catch (err) {
+    console.error(err);
     throw new Error(
       JSON.stringify({
-        message: 'Error parsing request body.',
+        message: 'Error parsing request body',
         requestBody: req.body,
-        error,
+        error: err,
       }),
     );
   }

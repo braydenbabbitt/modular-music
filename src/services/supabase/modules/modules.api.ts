@@ -232,7 +232,7 @@ export const getModuleSchedule = async ({ supabaseClient, moduleId }: GetModuleS
   const result = (await supabaseClient
     .from('module_schedules')
     .select()
-    .eq('id', moduleId)
+    .eq('module_id', moduleId)
     .is('deleted_at', null)
     .maybeSingle()
     .then((response) =>
@@ -258,9 +258,14 @@ export const saveModuleSchedule = async ({
   endDate,
   timesToRepeat,
 }: SaveModuleScheduleRequest) => {
+  const scheduleId = (
+    await supabaseClient.from('module_schedules').select('id').eq('module_id', moduleId).maybeSingle()
+  ).data?.id;
+
   await supabaseClient.from('module_schedules').upsert(
     {
-      id: moduleId,
+      id: scheduleId,
+      module_id: moduleId,
       edited_at: new Date().toISOString(),
       next_run: next_run.toISOString(),
       repetition_config: repetition,
@@ -271,7 +276,7 @@ export const saveModuleSchedule = async ({
     { onConflict: 'id' },
   );
 
-  supabaseClient.functions.invoke('update-module-schedule', { body: `"${moduleId}"` });
+  supabaseClient.functions.invoke('update-module-schedule', { body: { scheduleId, isNew: true } });
 };
 
 export type DeleteModuleScheduleRequest = {

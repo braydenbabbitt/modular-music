@@ -1,11 +1,11 @@
-import { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { Supabase } from '../dependencies.ts';
 import { Database } from '../types/database.ts';
 
 const SPOTIFY_CLIENT_ID = Deno.env.get('SPOTIFY_CLIENT_ID');
 const SPOTIFY_CLIENT_SECRET = Deno.env.get('SPOTIFY_CLIENT_SECRET');
 
 type TokenRequest = {
-  serviceRoleClient: SupabaseClient<Database>;
+  serviceRoleClient: Supabase.SupabaseClient<Database>;
 } & (
   | {
       oauthTokenRow: Database['public']['Tables']['user_oauth_tokens']['Row'];
