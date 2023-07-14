@@ -1,4 +1,4 @@
-import { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { SupabaseClient } from 'supabase-js';
 import { Database } from '../types/database.ts';
 
 export const getModuleOutput = async (supabaseClient: SupabaseClient<Database>, moduleId: string) => {

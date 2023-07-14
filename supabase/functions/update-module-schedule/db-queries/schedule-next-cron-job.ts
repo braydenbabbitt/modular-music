@@ -1,6 +1,6 @@
-import * as postgres from 'https://deno.land/x/postgres@v0.17.0/mod.ts';
+import { Pool } from 'postgres';
 import { Database } from '../types/database.ts';
-import dayjs, { ManipulateType } from 'https://esm.sh/v96/dayjs@1.11.9';
+import dayjs, { ManipulateType } from 'dayjs';
 import { dayjsToCron } from '../utils/dayjs-to-cron.ts';
 
 const SUPABASE_PROJECT_REF = Deno.env.get('SUPABASE_PROJECT_REF');
@@ -18,7 +18,7 @@ type RepetitionConfig = {
 };
 
 export const setUpCronJob = async (
-  dbPool: postgres.Pool,
+  dbPool: Pool,
   schedule: Database['public']['Tables']['module_schedules']['Row'],
   isNew: boolean,
 ) => {

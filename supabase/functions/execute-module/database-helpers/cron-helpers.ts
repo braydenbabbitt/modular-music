@@ -1,7 +1,7 @@
 import { dayjsToCron } from './../utils/date-utils.ts';
 import { Database } from '../types/database.ts';
-import * as postgres from 'https://deno.land/x/postgres@v0.17.0/mod.ts';
-import dayjs, { ManipulateType } from 'https://esm.sh/v96/dayjs@1.11.9';
+import { Pool } from 'postgres';
+import dayjs, { ManipulateType } from 'dayjs';
 
 const SUPABASE_PROJECT_REF = Deno.env.get('SUPABASE_PROJECT_REF');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -18,7 +18,7 @@ type RepetitionConfig = {
 };
 
 export const setUpCronJob = async (
-  dbPool: postgres.Pool,
+  dbPool: Pool,
   invokationTimestamp: string,
   schedule: Database['public']['Tables']['module_schedules']['Row'],
 ) => {
@@ -100,7 +100,7 @@ export const setUpCronJob = async (
   }
 };
 
-export const unscheduleCronJob = async (dbPool: postgres.Pool, jobName: string) => {
+export const unscheduleCronJob = async (dbPool: Pool, jobName: string) => {
   try {
     const connection = await dbPool.connect();
 

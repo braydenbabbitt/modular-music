@@ -1,4 +1,4 @@
-import { PostgrestSingleResponse } from 'https://esm.sh/@supabase/supabase-js@2';
+import { PostgrestSingleResponse } from 'supabase-js';
 import { Database } from '../types/database.ts';
 import { FetchJSONResponse, RecentlyListenedResponse } from './types.ts';
 

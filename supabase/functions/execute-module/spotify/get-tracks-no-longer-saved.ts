@@ -1,6 +1,6 @@
 import { sliceArray } from './../utils/slice-array.ts';
 import { BAD_SPOTIFY_TOKEN_MESSAGE } from './token-helpers.ts';
-import { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { SupabaseClient } from 'supabase-js';
 import { Database } from '../types/database.ts';
 import { SimpleTrack } from '../types/generics.ts';
 
