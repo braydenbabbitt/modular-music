@@ -1,9 +1,11 @@
-name: Deploy Supabase Functions
+name: Deploy Supabase Functions - fetch-users-saved-tracks
 
 on:
   push:
     branches:
       - main
+    paths:
+      - supabase/functions/fetch-users-saved-tracks/**
   workflow_dispatch:
 
 jobs:
@@ -21,4 +23,4 @@ jobs:
         with:
           version: latest
 
-      - run: supabase functions deploy --project-ref $VITE_SUPABASE_REFERENCE_ID --import-map supabase/functions/import_maps.json
+      - run: supabase functions deploy fetch-users-saved-tracks --project-ref $VITE_SUPABASE_REFERENCE_ID --import-map supabase/functions/import_maps.json
