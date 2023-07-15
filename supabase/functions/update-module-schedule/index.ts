@@ -23,7 +23,7 @@ serve(async (req) => {
     return new Response('ok', { headers: CORS_HEADERS });
   }
   try {
-    const { authHeader, scheduleId, isNew } = await validateRequest(req);
+    const { scheduleId, isNew } = await validateRequest(req);
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
       return new Response(
         JSON.stringify({

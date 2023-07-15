@@ -46,6 +46,7 @@ serve(async (req) => {
   try {
     const invokationTimestamp = new Date().toISOString();
     const { moduleId, scheduleId } = await validateRequest(req);
+
     const serviceRoleClient = createClient<Database>(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
       auth: {
         persistSession: false,
@@ -174,7 +175,7 @@ serve(async (req) => {
         .insert({ module_id: moduleId, timestamp: invokationTimestamp, scheduled: !!scheduleId, error: false });
 
       if (scheduleId) {
-        const updateRes = await serviceRoleClient.functions.invoke('update-module-schedule', {
+        await serviceRoleClient.functions.invoke('update-module-schedule', {
           body: { scheduleId, isNew: false },
         });
       }
