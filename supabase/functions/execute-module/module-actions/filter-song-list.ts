@@ -1,6 +1,6 @@
 import { refreshSpotifyToken } from '../spotify/get-token.ts';
 import { getSourcesFromSpotify } from './../spotify/get-sources.ts';
-import { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { SupabaseClient } from 'supabase-js';
 import { getActionSources } from '../database-helpers/get-action-sources.ts';
 import { Database } from '../types/database.ts';
 import { getSpotifyToken } from '../spotify/get-token.ts';

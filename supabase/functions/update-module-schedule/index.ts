@@ -2,10 +2,10 @@ import { setUpCronJob } from './db-queries/schedule-next-cron-job.ts';
 import { unscheduleCronJob } from './db-queries/unschedule-cron-job.ts';
 import { shouldBeRescheduled } from './should-be-rescheduled.ts';
 import { Database } from './types/database.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from 'supabase-js';
 import { validateRequest } from './validation/validate-request.ts';
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import * as postgres from 'https://deno.land/x/postgres@v0.17.0/mod.ts';
+import { serve } from 'http-server';
+import { Pool } from 'postgres';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -16,7 +16,7 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const dbPool = new postgres.Pool(SUPABASE_DB_URL, 3, true);
+const dbPool = new Pool(SUPABASE_DB_URL, 3, true);
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {

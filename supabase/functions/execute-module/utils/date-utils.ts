@@ -1,5 +1,4 @@
-import dayjs, { Dayjs } from 'https://deno.land/x/deno_dayjs@v0.2.2/mod.ts';
-// import dayjs from 'https://deno.land/x/deno_dayjs@v0.2.2/mod.ts';
+import dayjs, { Dayjs } from 'dayjs';
 
 // type DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 // type WeekOfMonth = 1 | 2 | 3 | 4 | 5;

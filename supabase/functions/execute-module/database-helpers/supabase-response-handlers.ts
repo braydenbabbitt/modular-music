@@ -1,8 +1,4 @@
-import {
-  PostgrestMaybeSingleResponse,
-  PostgrestResponse,
-  PostgrestSingleResponse,
-} from 'https://esm.sh/v113/@supabase/postgrest-js@1.4.1';
+import { PostgrestMaybeSingleResponse, PostgrestResponse, PostgrestSingleResponse } from 'postgrest-js';
 
 export const supabaseMaybeResponseHandler = <T>(response: PostgrestResponse<T>, errorMessage?: string): T[] | null => {
   if (response.error) {

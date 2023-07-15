@@ -1,4 +1,4 @@
-import * as postgres from 'https://deno.land/x/postgres@v0.17.0/mod.ts';
+import * as postgres from 'postgres';
 
 export const unscheduleCronJob = async (dbPool: postgres.Pool, jobName: string) => {
   try {

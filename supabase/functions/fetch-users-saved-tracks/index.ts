@@ -1,10 +1,11 @@
 import { attemptSpotifyApiRequest } from './spotify/helpers.ts';
 import { getLastUserSavedTrack } from './database-helpers/get-last-user-saved-tracks.ts';
-import { DenoServer, Supabase } from './dependencies.ts';
 import { getSpotifyToken, refreshSpotifyToken } from './spotify/get-token.ts';
 import { Database } from './types/database.ts';
 import { validateRequest } from './validation/validate-request.ts';
 import { getUserSavedTracks } from './spotify/get-user-saved-tracks.ts';
+import { serve } from 'http-server';
+import { createClient } from 'supabase-js';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -14,7 +15,7 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-DenoServer.serve(async (req) => {
+serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: CORS_HEADERS });
   }
@@ -37,7 +38,7 @@ DenoServer.serve(async (req) => {
 
   try {
     const { userId } = await validateRequest(req);
-    const serviceRoleClient = Supabase.createClient<Database>(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    const serviceRoleClient = createClient<Database>(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
       auth: {
         persistSession: false,
       },

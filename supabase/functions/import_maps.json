@@ -1,0 +1,9 @@
+{
+  "imports": {
+    "dayjs": "https://esm.sh/v96/dayjs@1.11.9",
+    "postgres": "https://deno.land/x/postgres@v0.17.0/mod.ts",
+    "supabase-js": "https://esm.sh/@supabase/supabase-js@2.26.0",
+    "postgrest-js": "https://esm.sh/v113/@supabase/postgrest-js@1.4.1",
+    "http-server": "https://deno.land/std@0.168.0/http/server.ts"
+  }
+}
