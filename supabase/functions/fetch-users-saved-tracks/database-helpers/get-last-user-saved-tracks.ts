@@ -1,8 +1,8 @@
-import { Supabase } from '../dependencies.ts';
+import { SupabaseClient } from 'supabase-js';
 import { Database } from '../types/database.ts';
 
 type GetLastUserSavedTrackRequest = {
-  serviceRoleClient: Supabase.SupabaseClient<Database>;
+  serviceRoleClient: SupabaseClient<Database>;
   userId: string;
 };
 
