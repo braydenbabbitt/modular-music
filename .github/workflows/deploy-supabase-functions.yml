@@ -21,4 +21,4 @@ jobs:
         with:
           version: latest
 
-      - run: supabase functions deploy --project-ref $VITE_SUPABASE_REFERENCE_ID
+      - run: supabase functions deploy --project-ref $VITE_SUPABASE_REFERENCE_ID --import-map supabase/functions/import_maps.json
