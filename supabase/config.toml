@@ -71,4 +71,4 @@ redirect_uri = ""
 url = ""
 
 [functions]
-import_map = "/supabase/functions/import_maps.json"
+import_map = "supabase/functions/import_maps.json"
