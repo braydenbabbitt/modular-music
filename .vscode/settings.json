@@ -1,16 +1,5 @@
 {
-  "conventionalCommits.scopes": [
-    "theme",
-    ".vscode",
-    "app",
-    "auth",
-    "navbar",
-    "package",
-    "settings",
-    "programs",
-    "edge-functions",
-    "functions:fetch-recently-listened"
-  ],
+  "conventionalCommits.scopes": ["app", "functions"],
   "deno.enable": true,
   "deno.enablePaths": ["./supabase/functions"],
   "deno.lint": true,
