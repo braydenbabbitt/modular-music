@@ -18,12 +18,12 @@
     "supabase:gen-types:edge-functions": "npm run supabase:gen-types:edge-functions:fetch-recently-listened && npm run supabase:gen-types:edge-functions:execute-module && npm run supabase:gen-types:edge-functions:update-module-schedule && npm run supabase:gen-types:edge-functions:fetch-users-saved-tracks && npm run supabase:gen-types:edge-functions:fetch-playlist",
     "supabase:gen-types:client": "npx supabase gen types typescript --schema public,spotify --linked > src/services/supabase/types/database.types.ts && prettier --write \"src/services/supabase/types/database.types.ts\"",
     "supabase:gen-types": "npm run supabase:gen-types:client && npm run supabase:gen-types:edge-functions",
-    "deploy:functions:execute-module": "npx supabase functions deploy execute-module",
-    "deploy:functions:fetch-playlist": "npx supabase functions deploy fetch-playlist",
-    "deploy:functions:fetch-recently-listened": "npx supabase functions deploy fetch-recently-listened",
-    "deploy:functions:fetch-users-saved-tracks": "npx supabase functions deploy fetch-users-saved-tracks",
-    "deploy:functions:update-module-schedule": "npx supabase functions deploy update-module-schedule",
-    "deploy:functions": "npx supabase functions deploy"
+    "deploy:functions:execute-module": "npx supabase functions deploy execute-module --import-map supabase/functions/import_maps.json",
+    "deploy:functions:fetch-playlist": "npx supabase functions deploy fetch-playlist --import-map supabase/functions/import_maps.json",
+    "deploy:functions:fetch-recently-listened": "npx supabase functions deploy fetch-recently-listened --import-map supabase/functions/import_maps.json",
+    "deploy:functions:fetch-users-saved-tracks": "npx supabase functions deploy fetch-users-saved-tracks --import-map supabase/functions/import_maps.json",
+    "deploy:functions:update-module-schedule": "npx supabase functions deploy update-module-schedule --import-map supabase/functions/import_maps.json",
+    "deploy:functions": "npx supabase functions deploy --import-map supabase/functions/import_maps.json"
   },
   "dependencies": {
     "@emotion/babel-plugin": "^11.10.0",
