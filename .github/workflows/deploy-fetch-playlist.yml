@@ -1,13 +1,13 @@
-name: Deploy Supabase Functions - fetch-users-saved-tracks
+name: Deploy Supabase Functions - fetch-playlist
 
 on:
   push:
     branches:
       - main
     paths:
-      - supabase/functions/fetch-users-saved-tracks/**
+      - supabase/functions/fetch-playlist/**
     paths-ignore:
-      - supabase/functions/fetch-users-saved-tracks/types/**
+      - supabase/functions/fetch-playlist/types/**
   workflow_dispatch:
 
 jobs:
@@ -25,4 +25,4 @@ jobs:
         with:
           version: latest
 
-      - run: supabase functions deploy fetch-users-saved-tracks --project-ref $VITE_SUPABASE_REFERENCE_ID --import-map supabase/functions/import_maps.json
+      - run: supabase functions deploy fetch-playlist --project-ref $VITE_SUPABASE_REFERENCE_ID --import-map supabase/functions/import_maps.json

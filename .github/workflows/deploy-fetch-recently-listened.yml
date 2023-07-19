@@ -6,6 +6,8 @@ on:
       - main
     paths:
       - supabase/functions/fetch-recently-listened/**
+    paths-ignore:
+      - supabase/functions/fetch-recently-listened/types/**
   workflow_dispatch:
 
 jobs:

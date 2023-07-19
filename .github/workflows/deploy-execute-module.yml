@@ -6,6 +6,8 @@ on:
       - main
     paths:
       - supabase/functions/execute-module/**
+    paths-ignore:
+      - supabase/functions/execute-module/types/**
   workflow_dispatch:
 
 jobs:
