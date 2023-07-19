@@ -68,7 +68,7 @@ serve(async (req) => {
 
       const moduleSources = await getModuleSources(serviceRoleClient, moduleId);
 
-      const fetchedSources = await getSourcesFromSpotify(userId, serviceRoleClient, moduleSources);
+      const fetchedSources = await getSourcesFromSpotify({ userId, serviceRoleClient, sources: moduleSources });
 
       const moduleActions = await getModuleActions(serviceRoleClient, moduleId);
 

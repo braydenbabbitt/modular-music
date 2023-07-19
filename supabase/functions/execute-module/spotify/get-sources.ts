@@ -1,7 +1,6 @@
 import { SupabaseClient } from 'supabase-js';
 import { Database } from '../types/database.ts';
 import { SimpleTrack } from '../types/generics.ts';
-import { BAD_SPOTIFY_TOKEN_MESSAGE } from './token-helpers.ts';
 
 enum SOURCE_TYPE_MAP {
   USER_PLAYLIST = 'e6273f47-8dfc-485c-b594-0bb4dc80a1d3',
@@ -11,21 +10,23 @@ enum SOURCE_TYPE_MAP {
 
 const MS_IN_DAY = 86400000;
 
-export const getSourcesFromSpotify = async (
-  userId: string,
-  supabaseClient: SupabaseClient<Database>,
-  sources: Database['public']['Tables']['module_sources']['Row'][],
-) => {
+type GetSourcesFromSpotifyProps = {
+  userId: string;
+  serviceRoleClient: SupabaseClient<Database>;
+  sources: Database['public']['Tables']['module_sources']['Row'][];
+};
+
+export const getSourcesFromSpotify = async ({ userId, serviceRoleClient, sources }: GetSourcesFromSpotifyProps) => {
   return (
     await Promise.all(
       sources.map(async (source) => {
         const typeId = source.type_id as SOURCE_TYPE_MAP;
         switch (typeId) {
           case SOURCE_TYPE_MAP.LIKED_TRACKS:
-            return await getUserLikedTracks(supabaseClient, userId);
+            return await getUserLikedTracks(serviceRoleClient, userId);
           case SOURCE_TYPE_MAP.USER_PLAYLIST:
             try {
-              return await getUserPlaylistTracks({ serviceRoleClient: supabaseClient, userId, source });
+              return await getUserPlaylistTracks({ serviceRoleClient, userId, source });
             } catch (error) {
               console.error(error);
             }
@@ -39,7 +40,11 @@ export const getSourcesFromSpotify = async (
               }
               const msToSubtract =
                 (Number(source.options.interval) ?? 1) * (Number(source.options.quantity) ?? 1) * MS_IN_DAY;
-              return await getUserRecentlyListenedTracks(supabaseClient, userId, new Date(currentDate - msToSubtract));
+              return await getUserRecentlyListenedTracks(
+                serviceRoleClient,
+                userId,
+                new Date(currentDate - msToSubtract),
+              );
             } catch (error) {
               console.error(error);
             }
