@@ -1,8 +1,7 @@
 import { SupabaseClient } from 'supabase-js';
 import { Database } from '../types/database.ts';
 import { SimpleTrack } from '../types/generics.ts';
-import { FetchJSONResponse, PlaylistTracksResponse } from './types.ts';
-import { BAD_SPOTIFY_TOKEN_MESSAGE, attemptSpotifyApiRequest } from './token-helpers.ts';
+import { BAD_SPOTIFY_TOKEN_MESSAGE } from './token-helpers.ts';
 
 enum SOURCE_TYPE_MAP {
   USER_PLAYLIST = 'e6273f47-8dfc-485c-b594-0bb4dc80a1d3',
@@ -14,9 +13,7 @@ const MS_IN_DAY = 86400000;
 
 export const getSourcesFromSpotify = async (
   userId: string,
-  spotifyToken: string,
   supabaseClient: SupabaseClient<Database>,
-  refreshSpotifyToken: () => Promise<string>,
   sources: Database['public']['Tables']['module_sources']['Row'][],
 ) => {
   return (
@@ -28,11 +25,7 @@ export const getSourcesFromSpotify = async (
             return await getUserLikedTracks(supabaseClient, userId);
           case SOURCE_TYPE_MAP.USER_PLAYLIST:
             try {
-              return await attemptSpotifyApiRequest(
-                async (newToken?: string) =>
-                  await getUserPlaylistTracks({ spotifyToken: newToken ?? spotifyToken, source }),
-                refreshSpotifyToken,
-              );
+              return await getUserPlaylistTracks({ serviceRoleClient: supabaseClient, userId, source });
             } catch (error) {
               console.error(error);
             }
@@ -90,18 +83,21 @@ const getUserLikedTracks = async (
 
 type GetUserPlaylistTracksRequest =
   | {
-      spotifyToken: string;
+      serviceRoleClient: SupabaseClient<Database>;
+      userId: string;
       source: Database['public']['Tables']['module_sources']['Row'];
       playlistId?: never;
     }
   | {
-      spotifyToken: string;
+      serviceRoleClient: SupabaseClient<Database>;
+      userId: string;
       source?: never;
       playlistId: string;
     };
 
 export const getUserPlaylistTracks = async ({
-  spotifyToken,
+  serviceRoleClient,
+  userId,
   source,
   playlistId,
 }: GetUserPlaylistTracksRequest): Promise<SimpleTrack[] | typeof BAD_SPOTIFY_TOKEN_MESSAGE> => {
@@ -130,41 +126,21 @@ export const getUserPlaylistTracks = async ({
     throw new Error('invalid playlist id');
   }
 
-  const playlistTracks = [];
-  let nextPageUrl: string | null = `https://api.spotify.com/v1/playlists/${playlistId}/tracks?limit=50`;
-  while (nextPageUrl) {
-    const nextPageQuery: Response = await fetch(nextPageUrl, {
-      method: 'GET',
-      headers: { Authorization: 'Bearer ' + spotifyToken },
-    });
-    const nextPage = (await nextPageQuery.json()) as FetchJSONResponse<PlaylistTracksResponse>;
-    if (nextPage.error || (nextPageQuery.status && nextPageQuery.status !== 200)) {
-      nextPageUrl = null;
+  const playlistTracks = await serviceRoleClient.functions.invoke<string[]>('fetch-playlist', {
+    body: { playlistId, userId },
+  });
 
-      if (nextPage.error?.status === 401) {
-        return BAD_SPOTIFY_TOKEN_MESSAGE;
-      } else {
-        throw new Error(
-          JSON.stringify({
-            message: 'Error fetching page from Spotify',
-            error: nextPage.error,
-            nextPageUrl,
-          }),
-        );
-      }
-    }
-    nextPageUrl = nextPage.next;
-    playlistTracks.push(...nextPage.items);
+  if (playlistTracks.error) {
+    throw new Error(
+      JSON.stringify({
+        message: 'error fetching playlist tracks',
+        error: playlistTracks.error,
+      }),
+    );
   }
-  return playlistTracks.flatMap((trackObj): SimpleTrack[] =>
-    !trackObj.track.id || trackObj.is_local
-      ? []
-      : [
-          {
-            id: trackObj.track.id,
-            uri: trackObj.track.uri || `spotify:track:${trackObj.track.id}`,
-          },
-        ],
+
+  return (
+    playlistTracks.data?.map((id): SimpleTrack => ({ id, uri: `spotify:track:${id}`, fromSavedTracks: false })) ?? []
   );
 };
 
