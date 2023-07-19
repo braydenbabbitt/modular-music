@@ -149,11 +149,13 @@ serve(async (req) => {
       }
 
       if (moduleOutput.append === null) {
-        await emptyPlaylist(
+        await emptyPlaylist({
+          serviceRoleClient,
+          userId,
+          playlistId: moduleOutput.playlist_id,
           spotifyToken,
-          moduleOutput.playlist_id,
-          async () => await refreshSpotifyToken({ serviceRoleClient, userId }),
-        );
+          refreshSpotifyToken: async () => await refreshSpotifyToken({ serviceRoleClient, userId }),
+        });
       }
 
       await writeTracksToPlaylist(
