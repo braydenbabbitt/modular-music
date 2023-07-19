@@ -100,7 +100,7 @@ export const getUserPlaylistTracks = async ({
   userId,
   source,
   playlistId,
-}: GetUserPlaylistTracksRequest): Promise<SimpleTrack[] | typeof BAD_SPOTIFY_TOKEN_MESSAGE> => {
+}: GetUserPlaylistTracksRequest): Promise<SimpleTrack[]> => {
   if (source) {
     if (typeof source.options !== 'object' || Array.isArray(source.options) || source.options === null) {
       throw new Error(
