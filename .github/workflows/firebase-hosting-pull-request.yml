@@ -5,10 +5,9 @@ name: Deploy to Firebase Hosting on PR
 'on':
   pull_request:
     paths:
-      - src/**
-      - public/**
-    paths-ignore:
-      - src/services/supabase/types/**
+      - 'src/**'
+      - '!src/services/supabase/types/**'
+      - 'public/**'
 env:
   VITE_SPOTIFY_CLIENT_ID: ${{ secrets.VITE_SPOTIFY_CLIENT_ID }}
   VITE_SPOTIFY_CLIENT_SECRET: ${{ secrets.VITE_SPOTIFY_CLIENT_SECRET }}

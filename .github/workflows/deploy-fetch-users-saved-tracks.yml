@@ -5,9 +5,8 @@ on:
     branches:
       - main
     paths:
-      - supabase/functions/fetch-users-saved-tracks/**
-    paths-ignore:
-      - supabase/functions/fetch-users-saved-tracks/types/**
+      - 'supabase/functions/fetch-users-saved-tracks/**'
+      - '!supabase/functions/fetch-users-saved-tracks/types/**'
   workflow_dispatch:
 
 jobs:

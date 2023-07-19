@@ -5,9 +5,8 @@ on:
     branches:
       - main
     paths:
-      - supabase/functions/fetch-playlist/**
-    paths-ignore:
-      - supabase/functions/fetch-playlist/types/**
+      - 'supabase/functions/fetch-playlist/**'
+      - '!supabase/functions/fetch-playlist/types/**'
   workflow_dispatch:
 
 jobs:

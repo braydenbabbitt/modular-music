@@ -5,9 +5,8 @@ on:
     branches:
       - main
     paths:
-      - supabase/functions/update-module-schedule/**
-    paths-ignore:
-      - supabase/functions/update-module-schedule/types/**
+      - 'supabase/functions/update-module-schedule/**'
+      - '!supabase/functions/update-module-schedule/types/**'
   workflow_dispatch:
 
 jobs:
