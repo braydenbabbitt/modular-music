@@ -5,9 +5,8 @@ on:
     branches:
       - main
     paths:
-      - supabase/functions/execute-module/**
-    paths-ignore:
-      - supabase/functions/execute-module/types/**
+      - 'supabase/functions/execute-module/**'
+      - '!supabase/functions/execute-module/types/**'
   workflow_dispatch:
 
 jobs:
