@@ -1,18 +1,27 @@
+import { SupabaseClient } from 'supabase-js';
 import { SimpleTrack } from '../types/generics.ts';
 import { sliceArray } from '../utils/slice-array.ts';
 import { getUserPlaylistTracks } from './get-sources.ts';
 import { BAD_SPOTIFY_TOKEN_MESSAGE, attemptSpotifyApiRequest } from './token-helpers.ts';
+import { Database } from '../types/database.ts';
 
-export const emptyPlaylist = async (
-  spotifyToken: string,
-  playlistId: string,
-  refreshSpotifyToken: () => Promise<string>,
-) => {
+type EmptyPlaylistProps = {
+  serviceRoleClient: SupabaseClient<Database>;
+  playlistId: string;
+  userId: string;
+  spotifyToken: string;
+  refreshSpotifyToken: () => Promise<string>;
+};
+
+export const emptyPlaylist = async ({
+  serviceRoleClient,
+  playlistId,
+  userId,
+  spotifyToken,
+  refreshSpotifyToken,
+}: EmptyPlaylistProps) => {
   await attemptSpotifyApiRequest(async (newToken?: string) => {
-    const playlistTracks = await getUserPlaylistTracks({ spotifyToken: newToken ?? spotifyToken, playlistId });
-    if (playlistTracks === BAD_SPOTIFY_TOKEN_MESSAGE) {
-      return BAD_SPOTIFY_TOKEN_MESSAGE;
-    }
+    const playlistTracks = await getUserPlaylistTracks({ serviceRoleClient, playlistId, userId });
     await removePlaylistItems(playlistId, playlistTracks, newToken ?? spotifyToken, refreshSpotifyToken);
   }, refreshSpotifyToken);
 };
