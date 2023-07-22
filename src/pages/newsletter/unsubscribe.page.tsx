@@ -1,14 +1,14 @@
 import { Center, Loader, Text } from '@mantine/core';
 import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useSupabase } from '../../services/supabase/client/client';
 import { getEmailSubscriptionStatus, unsubscribeEmail } from '../../services/supabase/newsletter/newsletter.api';
+import { useAuth } from '../../services/auth/auth.provider';
 
 type ResultStatus = 'error' | 'success' | 'already-unsubscribed';
 
 export const UnsubscribePage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const supabaseClient = useSupabase();
+  const { supabaseClient } = useAuth();
 
   const updateSearchParamsWithResult = (result: ResultStatus) => {
     searchParams.delete('id');

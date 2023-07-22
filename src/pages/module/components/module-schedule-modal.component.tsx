@@ -18,7 +18,6 @@ import dayjs from 'dayjs';
 import { useEffect } from 'react';
 import { DayOfWeekSelector } from '../../../components/buttons/day-of-week-selector.component';
 import { InfoHoverButton } from '../../../components/buttons/info-hover-button.component';
-import { useSupabase } from '../../../services/supabase/client/client';
 import {
   deleteModuleSchedule,
   FetchedModuleSchedule,
@@ -30,6 +29,7 @@ import {
 import { DAYS_OF_WEEK } from '../../../utils/constants';
 import { getOrdinal } from '../../../utils/ordinal-numbers';
 import { DayOfWeek, MonthOfYear, WeekOfMonth, findDayOfWeekOfMonth } from '../../../utils/date-utils';
+import { useAuth } from '../../../services/auth/auth.provider';
 
 type ModuleScheduleModalProps = {
   open: boolean;
@@ -48,7 +48,7 @@ type ScheduleFormType = {
 } & Omit<ModuleScheduleRepetition, 'dayOfMonth' | 'dayOfWeekOfMonth'>;
 
 export const ModuleScheduleModal = ({ open, moduleId, initSchedule, onClose }: ModuleScheduleModalProps) => {
-  const supabaseClient = useSupabase();
+  const { supabaseClient } = useAuth();
   const { values, setValues, reset, getInputProps } = useForm<ScheduleFormType>({
     initialValues: {
       nextRun: initSchedule ? dayjs(initSchedule.next_run) : undefined,

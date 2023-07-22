@@ -1,9 +1,8 @@
-import { Button, Divider, Text, Stack, Title, useMantineTheme } from '@mantine/core';
-import { IconChevronDown, IconPlus } from '@tabler/icons';
-import { DeepPartial, useTypedJSONEncoding } from 'den-ui';
+import { Button, Stack, Title, useMantineTheme } from '@mantine/core';
+import { IconPlus } from '@tabler/icons';
+import { useTypedJSONEncoding } from 'den-ui';
 import React, { useEffect, useState } from 'react';
 import { DragDropContext, Draggable, Droppable, DropResult } from 'react-beautiful-dnd';
-import { useSupabase } from '../../../../services/supabase/client/client';
 import {
   ActionType,
   addActionToModule,
@@ -15,6 +14,7 @@ import {
 import { FetchedModuleAction } from '../../../../services/supabase/modules/modules.api';
 import { ActionItem } from './action-item.component';
 import { ActionFormValues, ActionSelectionOnSubmitArgs, ActionSelectorModal } from './action-selector-modal.component';
+import { useAuth } from '../../../../services/auth/auth.provider';
 
 type ActionsSectionsProps = {
   actions: FetchedModuleAction[];
@@ -31,7 +31,7 @@ export const ActionsSection = ({
   hideTitle,
   disableEditing,
 }: ActionsSectionsProps) => {
-  const supabaseClient = useSupabase();
+  const { supabaseClient } = useAuth();
   const mantineTheme = useMantineTheme();
   const { parseTypedJSON: parseActionType, stringifyTypedJSON: stringifyActionType } =
     useTypedJSONEncoding<ActionType>();

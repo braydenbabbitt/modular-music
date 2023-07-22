@@ -19,22 +19,15 @@ import {
 import { IconChevronRight, IconPlus, IconTrash } from '@tabler/icons';
 import { theme } from '../../../theme';
 import { useForm } from '@mantine/form';
-import {
-  createUserModule,
-  deleteModule,
-  getUserModules,
-  getModuleOutput,
-} from '../../../services/supabase/modules/modules.api';
+import { createUserModule, deleteModule, getUserModules } from '../../../services/supabase/modules/modules.api';
 import { useNavigate } from 'react-router-dom';
 import { DatabaseModule } from '../../module/types';
-import { useSession } from '@supabase/auth-helpers-react';
-import { useSupabase } from '../../../services/supabase/client/client';
+import { useAuth } from '../../../services/auth/auth.provider';
 
 export const ModulesBlock = () => {
   // Theme
   const { colorScheme } = useMantineColorScheme();
-  const supabaseClient = useSupabase();
-  const session = useSession();
+  const { session, supabaseClient } = useAuth();
   const mantineTheme = useMantineTheme();
   const [modules, setModules] = useState<DatabaseModule[]>();
   const navigate = useNavigate();

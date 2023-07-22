@@ -5,7 +5,6 @@ import { ModularMusicLogo } from '../images/modular-music-logo';
 import { IconChevronDown, IconLogout, IconSettings } from '@tabler/icons';
 import { Link } from 'react-router-dom';
 import { useLayoutSize } from '../../hooks/use-layout-size';
-import { useSession } from '@supabase/auth-helpers-react';
 import { useAuth } from '../../services/auth/auth.provider';
 import { useFeatureFlag } from '../../services/supabase/modules/feature-flags.api';
 
@@ -24,7 +23,7 @@ type HeaderNavbarProps = {
 
 export const HeaderNavbar = ({ links }: HeaderNavbarProps) => {
   const { colorScheme } = useMantineColorScheme();
-  const session = useSession();
+  const { session } = useAuth();
   const { login, logout } = useAuth();
   const loginFF = useFeatureFlag('login');
   const styles = {

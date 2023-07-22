@@ -1,10 +1,10 @@
-import { useSupabase } from './../client/client';
 import { supabaseSingleResponseHandler } from './../utils';
 import { useQuery } from 'react-query';
 import { isDevEnvironment } from '../../../utils/is-dev-environment';
+import { useAuth } from '../../auth/auth.provider';
 
 export const useFeatureFlag = (ffName: string, userId?: string) => {
-  const supabaseClient = useSupabase();
+  const { supabaseClient } = useAuth();
 
   const ffQuery = useQuery(['feature-flag', ffName, userId], async () => {
     return isDevEnvironment()
