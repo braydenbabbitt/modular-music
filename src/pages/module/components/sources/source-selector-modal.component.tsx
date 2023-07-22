@@ -9,7 +9,7 @@ import {
 import { CustomCreateDatabaseModuleSource } from '../../types';
 import { editSource, SourceType } from '../../../../services/supabase/modules/sources.api';
 import { useTypedJSONEncoding, DeepPartial } from 'den-ui';
-import { useSupabase } from '../../../../services/supabase/client/client';
+import { useAuth } from '../../../../services/auth/auth.provider';
 
 type SourceSelectorModalProps = {
   open: boolean;
@@ -29,7 +29,7 @@ export const SourceSelectorModal = ({
   onConfirm,
 }: SourceSelectorModalProps) => {
   const layoutSize = useLayoutSize();
-  const supabaseClient = useSupabase();
+  const { supabaseClient } = useAuth();
   const { parseTypedJSON } = useTypedJSONEncoding<SourceType>();
 
   const handleClose = () => {

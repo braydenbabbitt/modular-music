@@ -18,14 +18,8 @@ import { useTypedJSONEncoding } from 'den-ui';
 import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from 'react-query';
 import { useLayoutSize } from '../../../../hooks/use-layout-size';
-import { useSupabase } from '../../../../services/supabase/client/client';
 import { ACTION_TYPE_IDS, SOURCE_TYPE_IDS } from '../../../../services/supabase/constants';
-import {
-  ActionType,
-  addActionToModule,
-  editAction,
-  getActionTypes,
-} from '../../../../services/supabase/modules/actions.api';
+import { ActionType, editAction, getActionTypes } from '../../../../services/supabase/modules/actions.api';
 import {
   addLikedTracksSource,
   addRecentlyListenedSource,
@@ -38,6 +32,7 @@ import {
 import { convertRecentlyPlayedToDescription } from '../../../../utils/description-converters';
 import { CustomCreateDatabaseModuleSource } from '../../types';
 import { SourceSelectionForm, SourceSelectionOnSubmitArgs } from '../sources/source-selection-form.component';
+import { useAuth } from '../../../../services/auth/auth.provider';
 
 export type ActionSelectionOnSubmitArgs = {
   values: ActionFormValues;
@@ -68,7 +63,7 @@ export const ActionSelectorModal = ({
   onClose,
   onConfirm,
 }: ActionSelectorModalProps) => {
-  const supabaseClient = useSupabase();
+  const { supabaseClient } = useAuth();
   const queryClient = useQueryClient();
   const layoutSize = useLayoutSize();
   const { parseTypedJSON: parseActionType, stringifyTypedJSON: stringifyActionType } =

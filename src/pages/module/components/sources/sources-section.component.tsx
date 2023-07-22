@@ -1,7 +1,6 @@
 import { SimpleGrid, Title, useMantineTheme } from '@mantine/core';
 import { DeepPartial } from 'den-ui';
 import { useState } from 'react';
-import { useSupabase } from '../../../../services/supabase/client/client';
 import { INTERVAL_MAP, SOURCE_TYPE_IDS } from '../../../../services/supabase/constants';
 import { FetchedModuleSource } from '../../../../services/supabase/modules/modules.api';
 import {
@@ -16,6 +15,7 @@ import { CustomCreateDatabaseModuleSource } from '../../types';
 import { SourceItem } from './source-item.component';
 import { SourceSelectionFormValues } from './source-selection-form.component';
 import { SourceSelectorModal } from './source-selector-modal.component';
+import { useAuth } from '../../../../services/auth/auth.provider';
 
 type SourceSectionProps = {
   sources: FetchedModuleSource[];
@@ -26,7 +26,7 @@ type SourceSectionProps = {
 };
 
 export const SourceSection = ({ sources, refetchSources, moduleId, hideTitle, disableEditing }: SourceSectionProps) => {
-  const supabaseClient = useSupabase();
+  const { supabaseClient } = useAuth();
   const mantineTheme = useMantineTheme();
   const [sourceSelectorModalValues, setSourceSelectorModalValues] = useState<DeepPartial<SourceSelectionFormValues>>();
   const [selectedSourceId, setSelectedSourceId] = useState<string>();

@@ -1,13 +1,11 @@
 import { Button, Center, Divider, Group, Loader, Stack, Text } from '@mantine/core';
-import { useUser } from '@supabase/auth-helpers-react';
 import { IconCalendarTime, IconPlayerPlay } from '@tabler/icons';
 import { useState } from 'react';
 import { useQuery } from 'react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import { BackButton } from '../../components/buttons/back-button.component';
-import { useSpotifyToken } from '../../services/auth/auth.provider';
+import { useAuth, useSpotifyToken } from '../../services/auth/auth.provider';
 import { getUserPlaylists } from '../../services/spotify/spotify.api';
-import { useSupabase } from '../../services/supabase/client/client';
 import { editModule, getModuleData, setModuleComplete } from '../../services/supabase/modules/modules.api';
 import { formatScheduleText } from '../../utils/schedule-helpers';
 import { ModuleNameField } from './components/module-name-field.component';
@@ -16,9 +14,8 @@ import { CreateModuleModal } from './views/create.component';
 import { EditModule } from './views/edit-module.component';
 
 export const ModulePage = () => {
-  const supabaseClient = useSupabase();
   const { moduleId } = useParams();
-  const user = useUser();
+  const { user, supabaseClient } = useAuth();
   const navigate = useNavigate();
   const spotifyToken = useSpotifyToken();
   const { data, isLoading, refetch } = useQuery(
