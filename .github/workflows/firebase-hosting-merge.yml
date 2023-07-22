@@ -10,6 +10,7 @@ name: Deploy to Firebase Hosting on merge
       - 'src/**'
       - '!src/services/supabase/types/**'
       - 'public/**'
+  workflow_dispatch:
 env:
   VITE_SPOTIFY_CLIENT_ID: ${{ secrets.VITE_SPOTIFY_CLIENT_ID }}
   VITE_SPOTIFY_CLIENT_SECRET: ${{ secrets.VITE_SPOTIFY_CLIENT_SECRET }}
