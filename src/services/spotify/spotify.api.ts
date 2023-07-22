@@ -1,10 +1,10 @@
-import { useSupabase } from './../supabase/client/client';
 import axios from 'axios';
 import { SpotifyUser } from './types';
+import { useAuth } from '../auth/auth.provider';
 
 axios.interceptors.response.use(undefined, (error) => {
   if (error.status === 401) {
-    const supabaseClient = useSupabase();
+    const { supabaseClient } = useAuth();
     return supabaseClient.auth.refreshSession();
   }
 });

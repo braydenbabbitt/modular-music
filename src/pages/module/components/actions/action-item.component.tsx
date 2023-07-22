@@ -3,10 +3,10 @@ import { Avatar, Flex, Group, useMantineTheme, Text, ActionIcon, Stack } from '@
 import { IconGripVertical, IconPencil, IconX } from '@tabler/icons';
 import { DraggableProvided } from 'react-beautiful-dnd';
 import { useQuery } from 'react-query';
-import { useSupabase } from '../../../../services/supabase/client/client';
 import { ACTION_TYPE_IDS, SOURCE_TYPE_IDS } from '../../../../services/supabase/constants';
 import { getActionSources } from '../../../../services/supabase/modules/actions.api';
 import { convertRecentlyPlayedToDescription } from '../../../../utils/description-converters';
+import { useAuth } from '../../../../services/auth/auth.provider';
 
 type ActionItemProps = {
   imageHref: string;
@@ -29,7 +29,7 @@ export const ActionItem = ({
   handleDelete,
   disabled,
 }: ActionItemProps) => {
-  const supabaseClient = useSupabase();
+  const { supabaseClient } = useAuth();
   const mantineTheme = useMantineTheme();
   const isFilter = typeId === ACTION_TYPE_IDS.FILTER;
   const { data, isLoading } = useQuery(

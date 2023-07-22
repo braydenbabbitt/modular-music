@@ -16,13 +16,11 @@ import { useForm } from '@mantine/form';
 import { showNotification } from '@mantine/notifications';
 import { forwardRef, ReactNode, useEffect } from 'react';
 import { useQuery } from 'react-query';
-import { useSpotifyToken } from '../../../../services/auth/auth.provider';
+import { useAuth, useSpotifyToken } from '../../../../services/auth/auth.provider';
 import { getUserPlaylists } from '../../../../services/spotify/spotify.api';
-import { useSupabase } from '../../../../services/supabase/client/client';
 import { SOURCE_TYPE_IDS } from '../../../../services/supabase/constants';
 import { getSourceTypes, ModuleSourceOptions, SourceType } from '../../../../services/supabase/modules/sources.api';
 import { DeepPartial, useTypedJSONEncoding } from 'den-ui';
-import { useSession } from '@supabase/auth-helpers-react';
 
 type RecentlyListenedValues = {
   quantity?: number;
@@ -63,7 +61,7 @@ export const SourceSelectionForm = ({
   onCancel,
   hideLabels,
 }: SourceSelectionFormProps) => {
-  const supabaseClient = useSupabase();
+  const { supabaseClient } = useAuth();
   const mantineTheme = useMantineTheme();
   const spotifyToken = useSpotifyToken();
   const { parseTypedJSON: parseSourceType, stringifyTypedJSON: stringifySourceType } =

@@ -4,17 +4,14 @@ import { useAuth } from '../../services/auth/auth.provider';
 import { useFeatureFlag } from '../../services/supabase/modules/feature-flags.api';
 import { useForm } from '@mantine/form';
 import { addEmailToNewsletter } from '../../services/supabase/newsletter/newsletter.api';
-import { useSupabase } from '../../services/supabase/client/client';
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
-import { useSession } from '@supabase/auth-helpers-react';
 
 export const HomePage = () => {
   const mantineTheme = useMantineTheme();
-  const supabaseClient = useSupabase();
   const loginFF = useFeatureFlag('login');
   const navigate = useNavigate();
-  const session = useSession();
+  const { session, supabaseClient } = useAuth();
   const newsLetterForm = useForm({
     initialValues: {
       email: '',
@@ -29,9 +26,9 @@ export const HomePage = () => {
   const { login } = useAuth();
 
   useEffect(() => {
-    // if (session?.user) {
-    //   navigate('/dashboard');
-    // }
+    if (session?.user) {
+      navigate('/dashboard');
+    }
   }, []);
 
   return (

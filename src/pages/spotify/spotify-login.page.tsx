@@ -1,10 +1,10 @@
 import { Loader } from '@mantine/core';
 import { useEffect } from 'react';
-import { useSupabase } from '../../services/supabase/client/client';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../services/auth/auth.provider';
 
 export const SpotifyLoginPage = () => {
-  const supabaseClient = useSupabase();
+  const { supabaseClient } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -14,7 +14,8 @@ export const SpotifyLoginPage = () => {
       const validSession = session.data.session;
 
       if (!validSession) {
-        navigate('/');
+        localStorage.setItem('login-6', JSON.stringify(session));
+        navigate('/', { replace: false });
         return;
       }
 
@@ -31,7 +32,8 @@ export const SpotifyLoginPage = () => {
             { onConflict: 'user_id' },
           )
           .then(() => {
-            navigate('/dashboard');
+            localStorage.setItem('login-7', 'true');
+            navigate('/dashboard', { replace: false });
           });
       }
     });

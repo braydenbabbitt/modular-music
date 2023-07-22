@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import { Button, SegmentedControl, Stack, Text, Title, useMantineColorScheme } from '@mantine/core';
 import { COLOR_SCHEME_KEY } from '../../utils/constants';
 import { useNavigate } from 'react-router-dom';
-import { useUser } from '@supabase/auth-helpers-react';
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '../../services/supabase/types/database.types';
+import { useAuth } from '../../services/auth/auth.provider';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -15,7 +15,7 @@ export const SettingsPage = () => {
   const [colorSchemeState, setColorSchemeState] = useState<string>(colorSchemeIsDefault ? 'default' : colorScheme);
   const supabaseClient = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY);
   const navigate = useNavigate();
-  const user = useUser();
+  const { user } = useAuth();
 
   useEffect(() => {
     const newColorScheme = colorSchemeState === 'default' ? undefined : colorSchemeState === 'dark' ? 'dark' : 'light';

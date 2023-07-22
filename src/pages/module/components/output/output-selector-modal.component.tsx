@@ -1,9 +1,7 @@
 import {
-  ActionIcon,
   Avatar,
   Button,
   Center,
-  Checkbox,
   Divider,
   Group,
   Loader,
@@ -12,22 +10,18 @@ import {
   SegmentedControl,
   Select,
   Stack,
-  Switch,
   Text,
-  TextInput,
   useMantineTheme,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import { IconInfoCircle, IconPlaylist, IconPlus } from '@tabler/icons';
+import { IconPlaylist, IconPlus } from '@tabler/icons';
 import { useTypedJSONEncoding } from 'den-ui';
-import { ComponentPropsWithoutRef, forwardRef, ReactElement, useEffect, useState } from 'react';
-import { QueryObserverResult, useQuery } from 'react-query';
+import { ComponentPropsWithoutRef, forwardRef, ReactElement, useState } from 'react';
+import { QueryObserverResult } from 'react-query';
 import { InfoHoverButton } from '../../../../components/buttons/info-hover-button.component';
-import { useSpotifyToken } from '../../../../services/auth/auth.provider';
-import { getUserPlaylists } from '../../../../services/spotify/spotify.api';
-import { useSupabase } from '../../../../services/supabase/client/client';
 import { FetchedModuleOutput, saveModuleOutput } from '../../../../services/supabase/modules/modules.api';
 import { SelectCreatePlaylist } from '../select-create-playlist.component';
+import { useAuth } from '../../../../services/auth/auth.provider';
 
 type OutputSelectorModalProps = {
   open: boolean;
@@ -61,7 +55,7 @@ export const OutputSelectorModal = ({
   refetchUserPlaylists,
 }: OutputSelectorModalProps) => {
   const mantineTheme = useMantineTheme();
-  const supabaseClient = useSupabase();
+  const { supabaseClient } = useAuth();
   const [showLoader, setShowLoader] = useState(false);
   const { stringifyTypedJSON: stringifyObject, parseTypedJSON: parseObject } =
     useTypedJSONEncoding<Record<string, any>>();
