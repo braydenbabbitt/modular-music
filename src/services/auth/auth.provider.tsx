@@ -54,7 +54,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       provider: 'spotify',
       options: {
         scopes: spotifyScopes.join(' '),
-        redirectTo: `${location.origin}/`,
+        redirectTo: '/',
       },
     });
 
