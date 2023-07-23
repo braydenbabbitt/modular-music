@@ -2,7 +2,7 @@ import { INTERVAL_MAP } from './../constants';
 import { showNotification } from '@mantine/notifications';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { DatabaseModule } from '../../../pages/module/types';
-import { Database } from '../types/database.types';
+import { Database } from '../types/database';
 import { supabaseResponseHandler, supabaseSingleResponseHandler } from '../utils';
 import { ModuleSourceOptions } from './sources.api';
 import dayjs from 'dayjs';

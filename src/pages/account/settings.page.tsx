@@ -3,7 +3,7 @@ import { Button, SegmentedControl, Stack, Text, Title, useMantineColorScheme } f
 import { COLOR_SCHEME_KEY } from '../../utils/constants';
 import { useNavigate } from 'react-router-dom';
 import { createClient } from '@supabase/supabase-js';
-import { Database } from '../../services/supabase/types/database.types';
+import { Database } from '../../services/supabase/types/database';
 import { useAuth } from '../../services/auth/auth.provider';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;

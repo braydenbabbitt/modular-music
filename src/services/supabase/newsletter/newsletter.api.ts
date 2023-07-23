@@ -1,6 +1,6 @@
 import { showNotification } from '@mantine/notifications';
 import { SupabaseClient } from '@supabase/supabase-js';
-import { Database } from '../types/database.types';
+import { Database } from '../types/database';
 
 export const addEmailToNewsletter = async (supabaseClient: SupabaseClient<Database>, email: string) => {
   await supabaseClient

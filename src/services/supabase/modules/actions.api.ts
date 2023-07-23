@@ -3,7 +3,7 @@ import { CreateDatabaseModuleAction } from './../../../pages/module/types';
 import { ACTION_TYPE_IDS, SOURCE_TYPE_IDS } from './../constants';
 import { supabaseResponseHandler, supabaseSingleResponseHandler } from './../utils';
 import { SupabaseClient } from '@supabase/supabase-js';
-import { Database } from '../types/database.types';
+import { Database } from '../types/database';
 import {
   addLikedTracksSource,
   addRecentlyListenedSource,

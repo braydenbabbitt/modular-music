@@ -1,5 +1,5 @@
 import { ModuleSourceOptions } from './../../services/supabase/modules/sources.api';
-import { Database } from '../../services/supabase/types/database.types';
+import { Database } from '../../services/supabase/types/database';
 
 export type DatabaseModule = Database['public']['Tables']['modules']['Row'];
 export type DatabaseModuleSources = Database['public']['Tables']['module_sources']['Row'][];

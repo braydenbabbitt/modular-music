@@ -2,7 +2,7 @@ import { createContext, ReactNode, useContext, useEffect, useState } from 'react
 import { showNotification } from '@mantine/notifications';
 import { useNavigate } from 'react-router-dom';
 import { createClient, Session, SupabaseClient, User } from '@supabase/supabase-js';
-import { Database } from '../supabase/types/database.types';
+import { Database } from '../supabase/types/database';
 import { Center, Loader } from '@mantine/core';
 import { PageContainer } from '../../components/containers/page-container.component';
 
