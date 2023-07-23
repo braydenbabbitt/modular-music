@@ -2,7 +2,7 @@ import { createContext, ReactNode, useContext, useEffect, useState } from 'react
 import { showNotification } from '@mantine/notifications';
 import { useNavigate } from 'react-router-dom';
 import { createClient, Session, SupabaseClient, User } from '@supabase/supabase-js';
-import { Database } from '../supabase/types/database.types';
+import { Database } from '../supabase/types/database';
 import { Center, Loader } from '@mantine/core';
 import { PageContainer } from '../../components/containers/page-container.component';
 
@@ -84,7 +84,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setSession(session);
       if (session) {
         supabaseClient.auth.getUser().then(({ data: { user } }) => setUser(user));
-        navigate('/dashboard');
       }
     });
 
@@ -92,26 +91,23 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       data: { subscription },
     } = supabaseClient.auth.onAuthStateChange((_event, newSession) => {
       supabaseClient.auth.getUser().then(({ data: { user } }) => setUser(user));
-      if (!session && newSession) {
-        navigate('/dashboard');
-        setSession(newSession);
-      }
+      setSession(newSession);
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
+  const context = {
+    login,
+    logout,
+    session,
+    user,
+    supabaseClient,
+  };
+
   return (
-    <AuthContext.Provider
-      value={{
-        login,
-        logout,
-        session,
-        user,
-        supabaseClient,
-      }}
-    >
-      {(supabaseClient && children) || (
+    <AuthContext.Provider value={context}>
+      {(supabaseClient && context && children) || (
         <PageContainer>
           <Center>
             <Loader />

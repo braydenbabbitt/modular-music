@@ -1,7 +1,7 @@
 import { SOURCE_TYPE_IDS } from './../constants';
 import { supabaseResponseHandler } from '../utils';
 import { SupabaseClient } from '@supabase/supabase-js';
-import { Database } from '../types/database.types';
+import { Database } from '../types/database';
 import { CreateDatabaseModuleSource } from '../../../pages/module/types';
 
 type GetSourceTypesRequest = {
