@@ -11,7 +11,7 @@ export const HomePage = () => {
   const mantineTheme = useMantineTheme();
   const loginFF = useFeatureFlag('login');
   const navigate = useNavigate();
-  const { session, supabaseClient } = useAuth();
+  const { session, user, supabaseClient } = useAuth();
   const newsLetterForm = useForm({
     initialValues: {
       email: '',
@@ -26,10 +26,10 @@ export const HomePage = () => {
   const { login } = useAuth();
 
   useEffect(() => {
-    if (session?.user) {
+    if (session && user) {
       navigate('/dashboard');
     }
-  }, []);
+  }, [session, user]);
 
   return (
     <div
