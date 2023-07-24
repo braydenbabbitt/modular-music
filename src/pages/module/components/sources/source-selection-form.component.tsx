@@ -83,7 +83,7 @@ export const SourceSelectionForm = ({
     },
     { refetchOnWindowFocus: false },
   );
-  const isNewUser = dayjs(user?.created_at).diff(new Date(), 'd') < 31;
+  const isNewUser = user ? dayjs(new Date()).diff(user?.created_at, 'd') < 31 : false;
   const [showNewUserModal, setShowNewUserModal] = useState(false);
 
   const form = useForm<SourceSelectionFormValues>({
