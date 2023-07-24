@@ -11,16 +11,19 @@ import {
   NumberInput,
   ButtonProps,
   Divider,
+  Modal,
+  Title,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { showNotification } from '@mantine/notifications';
-import { forwardRef, ReactNode, useEffect } from 'react';
+import { forwardRef, ReactNode, useEffect, useState } from 'react';
 import { useQuery } from 'react-query';
 import { useAuth, useSpotifyToken } from '../../../../services/auth/auth.provider';
 import { getUserPlaylists } from '../../../../services/spotify/spotify.api';
 import { SOURCE_TYPE_IDS } from '../../../../services/supabase/constants';
 import { getSourceTypes, ModuleSourceOptions, SourceType } from '../../../../services/supabase/modules/sources.api';
 import { DeepPartial, useTypedJSONEncoding } from 'den-ui';
+import dayjs from 'dayjs';
 
 type RecentlyListenedValues = {
   quantity?: number;
@@ -61,7 +64,7 @@ export const SourceSelectionForm = ({
   onCancel,
   hideLabels,
 }: SourceSelectionFormProps) => {
-  const { supabaseClient } = useAuth();
+  const { supabaseClient, user } = useAuth();
   const mantineTheme = useMantineTheme();
   const spotifyToken = useSpotifyToken();
   const { parseTypedJSON: parseSourceType, stringifyTypedJSON: stringifySourceType } =
@@ -80,6 +83,8 @@ export const SourceSelectionForm = ({
     },
     { refetchOnWindowFocus: false },
   );
+  const isNewUser = dayjs(user?.created_at).diff(new Date(), 'd') < 31;
+  const [showNewUserModal, setShowNewUserModal] = useState(false);
 
   const form = useForm<SourceSelectionFormValues>({
     initialValues: {
@@ -104,10 +109,10 @@ export const SourceSelectionForm = ({
           const typedValues = values as SourceSelectionFormValues;
           const isRequired = parseSourceType(typedValues.sourceType)?.id === SOURCE_TYPE_IDS.USER_RECENTLY_LISTENED;
           const daysCalc = value * parseInt(typedValues.recentlyListened.interval);
-          const isOutOfRange = daysCalc > 365 || daysCalc < 1;
+          const isOutOfRange = daysCalc > 31 || daysCalc < 1;
           if (isRequired) {
             if (isOutOfRange) {
-              return 'Enter a time less than 1 year';
+              return 'Enter a time between 1 day and 1 month';
             } else if (value === undefined) {
               return 'Enter a time';
             }
@@ -195,13 +200,12 @@ export const SourceSelectionForm = ({
                   { value: '1', label: 'days' },
                   { value: '7', label: 'weeks' },
                   { value: '30', label: 'months' },
-                  { value: '365', label: 'years' },
                 ]}
               />
             </Group>
             {(showTimeLimitError || showTimeRequiredError) && (
               <Text size='xs' color='red' css={{ marginTop: `-${mantineTheme.spacing.sm}px` }}>
-                {showTimeLimitError ? 'Enter a time between 1 day and 1 year' : 'Enter a quantity'}
+                {showTimeLimitError ? 'Enter a time between 1 day and 1 month' : 'Enter a quantity'}
               </Text>
             )}
           </>
@@ -226,6 +230,27 @@ export const SourceSelectionForm = ({
       default:
         return {};
     }
+  };
+
+  const handleSubmit = () => {
+    if (form.values.sourceType) {
+      onSubmit({
+        values: form.values,
+        label: parseObject(form.values.userPlaylist)?.name || parseSourceType(form.values.sourceType)?.label,
+        image_href:
+          parseObject(form.values.userPlaylist)?.images[0]?.url || parseSourceType(form.values.sourceType)?.image_href,
+        options: getSourceOptions(),
+      });
+      if (isNewUser) {
+        setShowNewUserModal(true);
+      }
+      return;
+    }
+    showNotification({
+      color: 'danger',
+      title: 'Error',
+      message: 'Could not find selected source type from fetched source types',
+    });
   };
 
   useEffect(() => {
@@ -309,23 +334,11 @@ export const SourceSelectionForm = ({
             <Button
               variant={buttonVariant}
               onClick={() => {
-                if (form.values.sourceType) {
-                  onSubmit({
-                    values: form.values,
-                    label:
-                      parseObject(form.values.userPlaylist)?.name || parseSourceType(form.values.sourceType)?.label,
-                    image_href:
-                      parseObject(form.values.userPlaylist)?.images[0]?.url ||
-                      parseSourceType(form.values.sourceType)?.image_href,
-                    options: getSourceOptions(),
-                  });
+                if (isNewUser) {
+                  setShowNewUserModal(true);
                   return;
                 }
-                showNotification({
-                  color: 'danger',
-                  title: 'Error',
-                  message: 'Could not find selected source type from fetched source types',
-                });
+                handleSubmit();
               }}
               fullWidth
               disabled={initValues ? !form.isDirty() : !form.isValid()}
@@ -333,6 +346,30 @@ export const SourceSelectionForm = ({
               {buttonLabel}
             </Button>
           </Group>
+          {user && (
+            <Modal
+              title={<Title order={3}>{"Looks like you're a new user!"}</Title>}
+              centered
+              opened={showNewUserModal}
+              onClose={() => setShowNewUserModal(false)}
+            >
+              <div css={{ display: 'flex', flexDirection: 'column', gap: mantineTheme.spacing.md }}>
+                <Text>
+                  Only songs that you have listend to after creating your Modular Music account (
+                  {new Date(user.created_at).toLocaleDateString(undefined, { dateStyle: 'long' })}) will be used.
+                </Text>
+                <Button
+                  color='primary'
+                  onClick={() => {
+                    setShowNewUserModal(false);
+                    handleSubmit();
+                  }}
+                >
+                  Continue
+                </Button>
+              </div>
+            </Modal>
+          )}
         </>
       )}
     </>
