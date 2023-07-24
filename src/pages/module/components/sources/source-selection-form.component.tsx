@@ -334,7 +334,10 @@ export const SourceSelectionForm = ({
             <Button
               variant={buttonVariant}
               onClick={() => {
-                if (isNewUser) {
+                if (
+                  isNewUser &&
+                  parseSourceType(form.values.sourceType)?.id === SOURCE_TYPE_IDS.USER_RECENTLY_LISTENED
+                ) {
                   setShowNewUserModal(true);
                   return;
                 }
