@@ -53,11 +53,14 @@ serve(async (req) => {
       },
     });
 
-    const spotifyToken = await getSpotifyToken({ serviceRoleClient: publicSchemaClient, userId });
+    let spotifyTokenData = await getSpotifyToken({ serviceRoleClient: publicSchemaClient, userId });
 
     const currentSnapshotId = await attemptSpotifyApiRequest(
-      (newToken?: string) => fetchPlaylistSnapshotId({ spotifyToken: newToken ?? spotifyToken, playlistId }),
-      () => refreshSpotifyToken({ serviceRoleClient: publicSchemaClient, userId }),
+      (newToken?: string) => fetchPlaylistSnapshotId({ spotifyToken: newToken ?? spotifyTokenData.token, playlistId }),
+      async () => {
+        spotifyTokenData = await refreshSpotifyToken({ serviceRoleClient: publicSchemaClient, userId });
+        return spotifyTokenData.token;
+      },
     );
 
     const savedPlaylist = await spotifySchemaClient.from('playlists').select().eq('id', playlistId).maybeSingle();
@@ -73,9 +76,17 @@ serve(async (req) => {
       });
     }
 
+    spotifyTokenData = await getSpotifyToken({
+      serviceRoleClient: publicSchemaClient,
+      userId,
+      currentTokenData: spotifyTokenData,
+    });
     const newPlaylistTracks = await attemptSpotifyApiRequest(
-      (newToken?: string) => fetchPlaylistTracks({ spotifyToken: newToken ?? spotifyToken, playlistId }),
-      () => refreshSpotifyToken({ serviceRoleClient: publicSchemaClient, userId }),
+      (newToken?: string) => fetchPlaylistTracks({ spotifyToken: newToken ?? spotifyTokenData.token, playlistId }),
+      async () => {
+        spotifyTokenData = await refreshSpotifyToken({ serviceRoleClient: publicSchemaClient, userId });
+        return spotifyTokenData.token;
+      },
     );
     const newPlaylistTrackIds = newPlaylistTracks.map((track) => track.id);
 

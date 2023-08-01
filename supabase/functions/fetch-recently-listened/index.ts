@@ -57,7 +57,7 @@ serve(async (_req) => {
 
     await Promise.all(
       allUsersSpotifyData.data.map(async (userData) => {
-        const spotifyToken = await getSpotifyToken(supabaseClient, userData);
+        let spotifyTokenData = await getSpotifyToken({ serviceRoleClient: supabaseClient, userId: userData.user_id });
         const currentCursorQuery = await supabaseClient
           .from('users_spotify_recently_played_cursors')
           .select()
@@ -65,8 +65,14 @@ serve(async (_req) => {
           .maybeSingle();
 
         const recentlyListened = await getRecentlyListened(
-          spotifyToken,
-          async () => await refreshSpotifyToken(supabaseClient, userData),
+          spotifyTokenData.token,
+          async () => {
+            spotifyTokenData = await refreshSpotifyToken({
+              serviceRoleClient: supabaseClient,
+              userId: userData.user_id,
+            });
+            return spotifyTokenData.token;
+          },
           currentCursorQuery,
         );
 
