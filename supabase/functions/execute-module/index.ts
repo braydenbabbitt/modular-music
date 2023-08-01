@@ -64,7 +64,7 @@ serve(async (req) => {
       }
       const userId = moduleQuery.data.user_id;
 
-      const spotifyToken = await getSpotifyToken({ serviceRoleClient, userId });
+      let spotifyTokenData = await getSpotifyToken({ serviceRoleClient, userId });
 
       const moduleSources = await getModuleSources(serviceRoleClient, moduleId);
 
@@ -102,30 +102,38 @@ serve(async (req) => {
             }
           }
           const tracksToCheck = result.filter((track) => !!track.fromSavedTracks);
+          spotifyTokenData = await getSpotifyToken({ serviceRoleClient, userId, currentTokenData: spotifyTokenData });
           const tracksStillSaved = await attemptSpotifyApiRequest(
             (newToken) =>
               removeTracksNoLongerSaved({
                 serviceRoleClient,
-                spotifyToken: newToken ?? spotifyToken,
+                spotifyToken: newToken ?? spotifyTokenData.token,
                 tracks: tracksToCheck,
                 userId,
               }),
-            () => refreshSpotifyToken({ serviceRoleClient, userId }),
+            async () => {
+              spotifyTokenData = await refreshSpotifyToken({ serviceRoleClient, userId });
+              return spotifyTokenData.token;
+            },
           );
           if (tracksStillSaved.length !== result.length) {
             result = tracksStillSaved;
           }
         }
       } else if (sourcesAfterActions.length < outputLength) {
+        spotifyTokenData = await getSpotifyToken({ serviceRoleClient, userId, currentTokenData: spotifyTokenData });
         const tracksStillSaved = await attemptSpotifyApiRequest(
           (newToken) =>
             removeTracksNoLongerSaved({
               serviceRoleClient,
-              spotifyToken: newToken ?? spotifyToken,
+              spotifyToken: newToken ?? spotifyTokenData.token,
               tracks: sourcesAfterActions,
               userId,
             }),
-          () => refreshSpotifyToken({ serviceRoleClient, userId }),
+          async () => {
+            spotifyTokenData = await refreshSpotifyToken({ serviceRoleClient, userId });
+            return spotifyTokenData.token;
+          },
         );
         result.push(...tracksStillSaved);
       } else {
@@ -133,15 +141,19 @@ serve(async (req) => {
         while (result.length < outputLength && offset < sourcesAfterActions.length) {
           const tracksToAddLength = Math.min(outputLength - result.length, sourcesAfterActions.length - offset);
           const tracksToAdd = sourcesAfterActions.slice(offset, offset + tracksToAddLength);
+          spotifyTokenData = await getSpotifyToken({ serviceRoleClient, userId, currentTokenData: spotifyTokenData });
           const tracksStillSaved = await attemptSpotifyApiRequest(
             (newToken) =>
               removeTracksNoLongerSaved({
                 serviceRoleClient,
-                spotifyToken: newToken ?? spotifyToken,
+                spotifyToken: newToken ?? spotifyTokenData.token,
                 tracks: tracksToAdd,
                 userId,
               }),
-            () => refreshSpotifyToken({ serviceRoleClient, userId }),
+            async () => {
+              spotifyTokenData = await refreshSpotifyToken({ serviceRoleClient, userId });
+              return spotifyTokenData.token;
+            },
           );
           offset += tracksToAdd.length;
           result.push(...tracksStillSaved);
@@ -149,21 +161,29 @@ serve(async (req) => {
       }
 
       if (moduleOutput.append === null) {
+        spotifyTokenData = await getSpotifyToken({ serviceRoleClient, userId, currentTokenData: spotifyTokenData });
         await emptyPlaylist({
           serviceRoleClient,
           userId,
           playlistId: moduleOutput.playlist_id,
-          spotifyToken,
-          refreshSpotifyToken: async () => await refreshSpotifyToken({ serviceRoleClient, userId }),
+          spotifyToken: spotifyTokenData.token,
+          refreshSpotifyToken: async () => {
+            spotifyTokenData = await refreshSpotifyToken({ serviceRoleClient, userId });
+            return spotifyTokenData.token;
+          },
         });
       }
 
+      spotifyTokenData = await getSpotifyToken({ serviceRoleClient, userId, currentTokenData: spotifyTokenData });
       await writeTracksToPlaylist(
         moduleOutput.playlist_id,
         result,
         moduleOutput.append === false,
-        spotifyToken,
-        async () => await refreshSpotifyToken({ serviceRoleClient, userId }),
+        spotifyTokenData.token,
+        async () => {
+          spotifyTokenData = await refreshSpotifyToken({ serviceRoleClient, userId });
+          return spotifyTokenData.token;
+        },
       );
 
       await serviceRoleClient
