@@ -98,7 +98,7 @@ export const refreshSpotifyToken = async ({ serviceRoleClient, oauthTokenRow, us
     .update({
       provider_token: parsedRes.access_token,
       provider_refresh_token: parsedRes.refresh_token,
-      provider_token_expires_at: fetchTimestamp + Number(parsedRes.expires_in),
+      provider_token_expires_at: fetchTimestamp + Number(parsedRes.expires_in) * 1000,
       updated_at: new Date(fetchTimestamp).toISOString(),
     })
     .eq('user_id', oauthTokenRow.user_id);

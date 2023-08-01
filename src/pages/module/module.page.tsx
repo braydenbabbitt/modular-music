@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useQuery } from 'react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import { BackButton } from '../../components/buttons/back-button.component';
-import { useAuth, useSpotifyToken } from '../../services/auth/auth.provider';
+import { useAuth } from '../../services/auth/auth.provider';
 import { getUserPlaylists } from '../../services/spotify/spotify.api';
 import { editModule, getModuleData, setModuleComplete } from '../../services/supabase/modules/modules.api';
 import { formatScheduleText } from '../../utils/schedule-helpers';
@@ -15,9 +15,8 @@ import { EditModule } from './views/edit-module.component';
 
 export const ModulePage = () => {
   const { moduleId } = useParams();
-  const { user, supabaseClient } = useAuth();
+  const { user, supabaseClient, getSpotifyToken } = useAuth();
   const navigate = useNavigate();
-  const spotifyToken = useSpotifyToken();
   const { data, isLoading, refetch } = useQuery(
     ['module', moduleId],
     () => getModuleData({ supabaseClient, moduleId: moduleId! }),
@@ -31,9 +30,14 @@ export const ModulePage = () => {
   );
   const { data: userPlaylists, refetch: refetchUserPlaylists } = useQuery(
     ['spotify-playlists', user?.id],
-    () => getUserPlaylists(spotifyToken!),
+    async () => {
+      const spotifyToken = await getSpotifyToken();
+      if (spotifyToken) {
+        return getUserPlaylists(spotifyToken);
+      }
+      return [];
+    },
     {
-      enabled: !!spotifyToken,
       refetchOnWindowFocus: false,
     },
   );

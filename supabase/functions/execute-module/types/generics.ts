@@ -10,3 +10,8 @@ export const ACTION_TYPE_IDS = {
 };
 
 export type TsPrimitive = 'string' | 'number' | 'bigint' | 'boolean' | 'symbol' | 'undefined' | 'object' | 'function';
+
+export type SpotifyTokenData = {
+  token: string;
+  expiresAt: number;
+};

@@ -16,7 +16,7 @@ import { useForm } from '@mantine/form';
 import { showNotification } from '@mantine/notifications';
 import { forwardRef, ReactNode, useEffect } from 'react';
 import { useQuery } from 'react-query';
-import { useAuth, useSpotifyToken } from '../../../../services/auth/auth.provider';
+import { useAuth } from '../../../../services/auth/auth.provider';
 import { getUserPlaylists } from '../../../../services/spotify/spotify.api';
 import { SOURCE_TYPE_IDS } from '../../../../services/supabase/constants';
 import { getSourceTypes, ModuleSourceOptions, SourceType } from '../../../../services/supabase/modules/sources.api';
@@ -61,9 +61,8 @@ export const SourceSelectionForm = ({
   onCancel,
   hideLabels,
 }: SourceSelectionFormProps) => {
-  const { supabaseClient } = useAuth();
+  const { supabaseClient, getSpotifyToken } = useAuth();
   const mantineTheme = useMantineTheme();
-  const spotifyToken = useSpotifyToken();
   const { parseTypedJSON: parseSourceType, stringifyTypedJSON: stringifySourceType } =
     useTypedJSONEncoding<SourceType>();
   const { parseTypedJSON: parseObject, stringifyTypedJSON: stringifyObject } =
@@ -73,7 +72,8 @@ export const SourceSelectionForm = ({
   });
   const userPlaylistsQuery = useQuery(
     'user-playlists',
-    () => {
+    async () => {
+      const spotifyToken = await getSpotifyToken();
       if (parseSourceType(form.values.sourceType)?.id === SOURCE_TYPE_IDS.USER_PLAYLIST && spotifyToken) {
         return getUserPlaylists(spotifyToken);
       }

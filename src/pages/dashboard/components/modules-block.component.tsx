@@ -27,21 +27,21 @@ import { useAuth } from '../../../services/auth/auth.provider';
 export const ModulesBlock = () => {
   // Theme
   const { colorScheme } = useMantineColorScheme();
-  const { session, supabaseClient } = useAuth();
+  const { supabaseClient, user } = useAuth();
   const mantineTheme = useMantineTheme();
   const [modules, setModules] = useState<DatabaseModule[]>();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (session?.user?.id) {
-      getUserModules({ supabaseClient, userId: session.user.id }).then((res) => {
+    if (user?.id) {
+      getUserModules({ supabaseClient, userId: user.id }).then((res) => {
         if (res) {
           setModules(res ?? undefined);
         }
         setIsLoading(false);
       });
     }
-  }, [supabaseClient, session?.user]);
+  }, [supabaseClient, user]);
 
   // State
   const [moduleModalOpen, setModuleModalOpen] = useState(false);
@@ -88,8 +88,8 @@ export const ModulesBlock = () => {
   };
   const removeModule = () => {
     setFormSubmitted(true);
-    if (selectedModule && session?.user) {
-      deleteModule({ supabaseClient, userId: session?.user?.id, moduleId: selectedModule.id, refetch: true }).then(
+    if (selectedModule && user) {
+      deleteModule({ supabaseClient, userId: user.id, moduleId: selectedModule.id, refetch: true }).then(
         (newModules) => {
           if (newModules) {
             setModules(newModules);
@@ -160,11 +160,11 @@ export const ModulesBlock = () => {
       <Modal opened={moduleModalOpen} onClose={closeModuleModal} title='Create a new module' centered>
         <form
           onSubmit={moduleForm.onSubmit((values) => {
-            if (session?.user) {
+            if (user) {
               setIsLoading(true);
               createUserModule({
                 supabaseClient,
-                userId: session.user.id,
+                userId: user.id,
                 name: values.moduleName,
               }).then((newModule) => {
                 if (newModule) {

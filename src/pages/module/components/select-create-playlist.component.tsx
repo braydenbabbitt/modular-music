@@ -2,7 +2,7 @@ import { Avatar, Button, FileButton, Group, Loader, Stack, Text, Textarea, TextI
 import { useForm } from '@mantine/form';
 import { IconPlus } from '@tabler/icons';
 import { useEffect, useRef, useState } from 'react';
-import { useSpotifyToken } from '../../../services/auth/auth.provider';
+import { useAuth } from '../../../services/auth/auth.provider';
 import { createPlaylist } from '../../../services/spotify/spotify.api';
 import imageCompression from 'browser-image-compression';
 
@@ -13,8 +13,8 @@ type SelectCreatePlaylistProps = {
 };
 
 export const SelectCreatePlaylist = ({ onCreate, onCancel, isLoading }: SelectCreatePlaylistProps) => {
+  const { getSpotifyToken } = useAuth();
   const resetRef = useRef<() => void>(null);
-  const spotifyToken = useSpotifyToken();
   const [showLoader, setShowLoader] = useState(isLoading ?? false);
   const form = useForm<{
     name: string;
@@ -96,8 +96,9 @@ export const SelectCreatePlaylist = ({ onCreate, onCancel, isLoading }: SelectCr
         </Button>
         <Button
           disabled={!form.values.name}
-          onClick={() => {
+          onClick={async () => {
             setShowLoader(true);
+            const spotifyToken = await getSpotifyToken();
             if (spotifyToken)
               createPlaylist(spotifyToken, {
                 playlistName: form.values.name,
