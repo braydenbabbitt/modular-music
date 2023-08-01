@@ -4,7 +4,6 @@ import { ColorSchemeProvider, ColorScheme, MantineProvider } from '@mantine/core
 import { NotificationsProvider } from '@mantine/notifications';
 import { Route, Routes } from 'react-router-dom';
 import { HeaderNavbar } from './components/navbars/header-navbar.component';
-import { SpotifyLoginPage } from './pages/spotify/spotify-login.page';
 import { AuthProvider } from './services/auth/auth.provider';
 import { mantineTheme } from './theme';
 import { COLOR_SCHEME_KEY } from './utils/constants';
@@ -16,7 +15,6 @@ import { HotKeys } from 'react-hotkeys';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { BasicFooter } from './components/footers/basic-footer.component';
 import { UnsubscribePage } from './pages/newsletter/unsubscribe.page';
-import { CreateModuleModal } from './pages/module/views/create.component';
 import { ModulePage } from './pages/module/module.page';
 
 const queryClient = new QueryClient();
@@ -72,7 +70,6 @@ function App() {
                     <Route path='/module'>
                       <Route path='/module/:moduleId' element={<ModulePage />} />
                     </Route>
-                    <Route path='/spotify-login' element={<SpotifyLoginPage />} />
                     <Route path='/settings' element={<SettingsPage />} />
                     <Route path='/unsubscribe' element={<UnsubscribePage />} />
                   </Routes>

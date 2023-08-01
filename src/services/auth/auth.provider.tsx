@@ -5,9 +5,15 @@ import { createClient, Session, SupabaseClient, User } from '@supabase/supabase-
 import { Database } from '../supabase/types/database';
 import { Center, Loader } from '@mantine/core';
 import { PageContainer } from '../../components/containers/page-container.component';
+import { useQuery } from 'react-query';
 
 type AuthProviderProps = {
   children: ReactNode;
+};
+
+export type SpotifyTokenData = {
+  token: string;
+  expiresAt: number;
 };
 
 type AuthProviderContextValue = {
@@ -16,11 +22,12 @@ type AuthProviderContextValue = {
   session: Session | null;
   user: User | null;
   supabaseClient: SupabaseClient<Database>;
+  getSpotifyToken: () => Promise<string | undefined>;
 };
 
-export type SpotifyTokenData = {
-  getSpotifyToken: () => string;
-  expires_at: number;
+type AddProviderMetadataRequest = {
+  session: Session;
+  user?: User;
 };
 
 const spotifyScopes = [
@@ -48,6 +55,28 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const navigate = useNavigate();
+
+  const oauthQuery = useQuery({
+    queryKey: ['userOAuth', user?.id],
+    queryFn: async () =>
+      (
+        await supabaseClient.functions.invoke<SpotifyTokenData>('get-spotify-token', {
+          body: { userId: user?.id },
+        })
+      ).data,
+    enabled: !!user?.id,
+    retry: (failureCount) => failureCount < 2,
+    retryDelay: 500,
+    refetchOnWindowFocus: false,
+  });
+
+  const getSpotifyToken = async () => {
+    if (!oauthQuery.data?.expiresAt || oauthQuery.data.expiresAt < new Date().getTime()) {
+      const newTokenData = await oauthQuery.refetch();
+      return newTokenData.data?.token;
+    }
+    return oauthQuery.data.token;
+  };
 
   const login = async () => {
     const { data, error } = await supabaseClient.auth.signInWithOAuth({
@@ -79,19 +108,58 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     navigate('/');
   };
 
+  const addProviderMetadata = async ({ user, session }: AddProviderMetadataRequest) => {
+    if (user && session.provider_token && session.provider_refresh_token) {
+      supabaseClient
+        .from('user_oauth_tokens')
+        .upsert(
+          {
+            user_id: user?.id,
+            provider: 'spotify',
+            provider_token: session.provider_token,
+            provider_refresh_token: session.provider_refresh_token,
+            provider_token_expires_at: new Date().getTime(),
+          },
+          {
+            onConflict: 'user_id',
+          },
+        )
+        .then((res) => {
+          console.log('brayden-test', res);
+        });
+    }
+  };
+
   useEffect(() => {
     supabaseClient.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session) {
-        supabaseClient.auth.getUser().then(({ data: { user } }) => setUser(user));
+        supabaseClient.auth.getUser().then(async ({ data: { user } }) => {
+          setUser(user);
+          await addProviderMetadata({
+            user: user ?? undefined,
+            session: session,
+          });
+        });
       }
     });
 
     const {
       data: { subscription },
     } = supabaseClient.auth.onAuthStateChange((_event, newSession) => {
-      supabaseClient.auth.getUser().then(({ data: { user } }) => setUser(user));
+      const shouldUpdateUserAndMetadata = !session && !!newSession;
       setSession(newSession);
+      if (shouldUpdateUserAndMetadata) {
+        supabaseClient.auth.getUser().then(({ data: { user } }) => {
+          setUser(user);
+          addProviderMetadata({
+            user: user ?? undefined,
+            session: newSession,
+          });
+        });
+      } else if (!newSession) {
+        setUser(null);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -103,6 +171,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     session,
     user,
     supabaseClient,
+    getSpotifyToken,
   };
 
   return (
@@ -126,14 +195,4 @@ export const useAuth = () => {
   }
 
   return { ...auth };
-};
-
-export const useSpotifyToken = () => {
-  const context = useContext(AuthContext);
-
-  if (context === undefined) {
-    throw Error('useSpotifyToken must be used within SessionContextProvider');
-  }
-
-  return context.session?.provider_token;
 };
