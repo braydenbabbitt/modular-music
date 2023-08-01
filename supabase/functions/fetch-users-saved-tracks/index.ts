@@ -44,17 +44,20 @@ serve(async (req) => {
       },
     });
 
-    const spotifyToken = await getSpotifyToken({ serviceRoleClient, userId });
+    let spotifyTokenData = await getSpotifyToken({ serviceRoleClient, userId });
     const userLastSavedTrack = await getLastUserSavedTrack({ serviceRoleClient, userId });
     const lastSavedTrackTimestamp = userLastSavedTrack?.added_at;
     const newUserSavedTracks = await attemptSpotifyApiRequest(
       async (newToken?: string, initOffset?: string) =>
         await getUserSavedTracks({
-          spotifyToken: newToken ?? spotifyToken,
+          spotifyToken: newToken ?? spotifyTokenData.token,
           initOffset: initOffset ? parseInt(initOffset, 10) : undefined,
           addedAtLimit: lastSavedTrackTimestamp ?? undefined,
         }),
-      async () => await refreshSpotifyToken({ serviceRoleClient, userId }),
+      async () => {
+        spotifyTokenData = await refreshSpotifyToken({ serviceRoleClient, userId });
+        return spotifyTokenData.token;
+      },
     );
     if (typeof newUserSavedTracks === 'string') {
       throw new Error(

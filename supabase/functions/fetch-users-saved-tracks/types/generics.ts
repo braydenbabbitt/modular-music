@@ -7,3 +7,8 @@ export type TsPrimitiveName =
   | 'undefined'
   | 'object'
   | 'function';
+
+export type SpotifyTokenData = {
+  token: string;
+  expiresAt: number;
+};
