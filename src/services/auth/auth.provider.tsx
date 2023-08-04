@@ -91,6 +91,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         },
         {
           onConflict: 'user_id',
+          ignoreDuplicates: true,
         },
       );
     }

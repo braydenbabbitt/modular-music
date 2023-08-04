@@ -35,7 +35,7 @@ serve(async (req) => {
     );
   }
   try {
-    const { authHeader, userId, forceRefetch } = await validateRequest(req);
+    const { userId, forceRefetch } = await validateRequest(req);
     const supabaseClient = createClient<Database>(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
       auth: {
         persistSession: false,
