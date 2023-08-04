@@ -2,9 +2,9 @@ import { Avatar, Button, FileButton, Group, Loader, Stack, Text, Textarea, TextI
 import { useForm } from '@mantine/form';
 import { IconPlus } from '@tabler/icons';
 import { useEffect, useRef, useState } from 'react';
-import { useAuth } from '../../../services/auth/auth.provider';
 import { createPlaylist } from '../../../services/spotify/spotify.api';
 import imageCompression from 'browser-image-compression';
+import { useSpotifyToken } from '../../../services/spotify/spotify-token.provider';
 
 type SelectCreatePlaylistProps = {
   onCreate: (playlistId: string) => void;
@@ -13,7 +13,7 @@ type SelectCreatePlaylistProps = {
 };
 
 export const SelectCreatePlaylist = ({ onCreate, onCancel, isLoading }: SelectCreatePlaylistProps) => {
-  const { getSpotifyToken } = useAuth();
+  const spotifyToken = useSpotifyToken();
   const resetRef = useRef<() => void>(null);
   const [showLoader, setShowLoader] = useState(isLoading ?? false);
   const form = useForm<{
@@ -98,17 +98,15 @@ export const SelectCreatePlaylist = ({ onCreate, onCancel, isLoading }: SelectCr
           disabled={!form.values.name}
           onClick={async () => {
             setShowLoader(true);
-            const spotifyToken = await getSpotifyToken();
-            if (spotifyToken)
-              createPlaylist(spotifyToken, {
-                playlistName: form.values.name,
-                playlistDescription: form.values.description,
-                playlistImage: imagePayload,
-              }).then((response) => {
-                if (response?.data) {
-                  onCreate(response.data.id);
-                }
-              });
+            createPlaylist(spotifyToken, {
+              playlistName: form.values.name,
+              playlistDescription: form.values.description,
+              playlistImage: imagePayload,
+            }).then((response) => {
+              if (response?.data) {
+                onCreate(response.data.id);
+              }
+            });
           }}
         >
           Create Playlist

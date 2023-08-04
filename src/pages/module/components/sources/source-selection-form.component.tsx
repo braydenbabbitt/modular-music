@@ -24,6 +24,7 @@ import { SOURCE_TYPE_IDS } from '../../../../services/supabase/constants';
 import { getSourceTypes, ModuleSourceOptions, SourceType } from '../../../../services/supabase/modules/sources.api';
 import { DeepPartial, useTypedJSONEncoding } from 'den-ui';
 import dayjs from 'dayjs';
+import { useSpotifyToken } from '../../../../services/spotify/spotify-token.provider';
 
 type RecentlyListenedValues = {
   quantity?: number;
@@ -64,7 +65,8 @@ export const SourceSelectionForm = ({
   onCancel,
   hideLabels,
 }: SourceSelectionFormProps) => {
-  const { supabaseClient, user, getSpotifyToken } = useAuth();
+  const { supabaseClient, user } = useAuth();
+  const spotifyToken = useSpotifyToken();
   const mantineTheme = useMantineTheme();
   const { parseTypedJSON: parseSourceType, stringifyTypedJSON: stringifySourceType } =
     useTypedJSONEncoding<SourceType>();
@@ -76,12 +78,13 @@ export const SourceSelectionForm = ({
   const userPlaylistsQuery = useQuery(
     'user-playlists',
     async () => {
-      const spotifyToken = await getSpotifyToken();
-      if (parseSourceType(form.values.sourceType)?.id === SOURCE_TYPE_IDS.USER_PLAYLIST && spotifyToken) {
+      if (parseSourceType(form.values.sourceType)?.id === SOURCE_TYPE_IDS.USER_PLAYLIST) {
         return getUserPlaylists(spotifyToken);
       }
     },
-    { refetchOnWindowFocus: false },
+    {
+      refetchOnWindowFocus: false,
+    },
   );
   const isNewUser = user ? dayjs(new Date()).diff(user?.created_at, 'd') < 31 : false;
   const [showNewUserModal, setShowNewUserModal] = useState(false);

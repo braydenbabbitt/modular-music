@@ -20,7 +20,7 @@ export const refreshSpotifyToken = async (
   const formData = [];
   formData.push(encodeURIComponent('grant_type') + '=' + encodeURIComponent('refresh_token'));
   formData.push(encodeURIComponent('refresh_token') + '=' + encodeURIComponent(provider_refresh_token));
-  const fetchTimestamp = Date.now();
+  const fetchTimestamp = new Date().getTime();
   const newTokenRes = await fetch('https://accounts.spotify.com/api/token', {
     method: 'POST',
     headers: {
@@ -51,7 +51,7 @@ export const refreshSpotifyToken = async (
   }
   const newExpirationTimestamp = fetchTimestamp + Number(parsedRes.expires_in) * 1000;
 
-  oauthTokensClient
+  await oauthTokensClient
     .from('user_oauth_tokens')
     .update({
       provider_token: parsedRes.access_token,
