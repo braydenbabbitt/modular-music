@@ -16,6 +16,7 @@ import { QueryClient, QueryClientProvider } from 'react-query';
 import { BasicFooter } from './components/footers/basic-footer.component';
 import { UnsubscribePage } from './pages/newsletter/unsubscribe.page';
 import { ModulePage } from './pages/module/module.page';
+import { SpotifyTokenProvider } from './services/spotify/spotify-token.provider';
 
 const queryClient = new QueryClient();
 
@@ -62,19 +63,21 @@ function App() {
           <HotKeys {...hotkeys}>
             <NotificationsProvider>
               <AuthProvider>
-                <HeaderNavbar />
-                <PageContainer>
-                  <Routes>
-                    <Route path='/' element={<HomePage />} />
-                    <Route path='/dashboard' element={<DashboardPage />} />
-                    <Route path='/module'>
-                      <Route path='/module/:moduleId' element={<ModulePage />} />
-                    </Route>
-                    <Route path='/settings' element={<SettingsPage />} />
-                    <Route path='/unsubscribe' element={<UnsubscribePage />} />
-                  </Routes>
-                </PageContainer>
-                <BasicFooter />
+                <SpotifyTokenProvider>
+                  <HeaderNavbar />
+                  <PageContainer>
+                    <Routes>
+                      <Route path='/' element={<HomePage />} />
+                      <Route path='/dashboard' element={<DashboardPage />} />
+                      <Route path='/module'>
+                        <Route path='/module/:moduleId' element={<ModulePage />} />
+                      </Route>
+                      <Route path='/settings' element={<SettingsPage />} />
+                      <Route path='/unsubscribe' element={<UnsubscribePage />} />
+                    </Routes>
+                  </PageContainer>
+                  <BasicFooter />
+                </SpotifyTokenProvider>
               </AuthProvider>
             </NotificationsProvider>
           </HotKeys>

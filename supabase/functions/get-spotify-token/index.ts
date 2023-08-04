@@ -50,13 +50,19 @@ serve(async (req) => {
     if (oauthTokenRowQuery.error || oauthTokenRowQuery.data === null)
       throw new Error('Error fetching user credentials');
 
-    const tokenIsActive = Date.now() < oauthTokenRowQuery.data.provider_token_expires_at;
-    console.log('tokenIsActive', { tokenIsActive, forceRefetch });
+    const currentTimestamp = new Date().getTime();
+    const tokenIsActive = currentTimestamp < oauthTokenRowQuery.data.provider_token_expires_at;
     if (tokenIsActive && !forceRefetch) {
-      return new Response(oauthTokenRowQuery.data.provider_token, {
-        status: 200,
-        headers: { ...CORS_HEADERS, 'Content-Type': 'text/plain' },
-      });
+      return new Response(
+        JSON.stringify({
+          token: oauthTokenRowQuery.data.provider_token,
+          expiresAt: oauthTokenRowQuery.data.provider_token_expires_at,
+        }),
+        {
+          status: 200,
+          headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+        },
+      );
     }
 
     const newTokenData = await refreshSpotifyToken(supabaseClient, oauthTokenRowQuery.data);

@@ -12,10 +12,12 @@ import { ModuleNameField } from './components/module-name-field.component';
 import { ModuleScheduleModal } from './components/module-schedule-modal.component';
 import { CreateModuleModal } from './views/create.component';
 import { EditModule } from './views/edit-module.component';
+import { useSpotifyToken } from '../../services/spotify/spotify-token.provider';
 
 export const ModulePage = () => {
   const { moduleId } = useParams();
-  const { user, supabaseClient, getSpotifyToken } = useAuth();
+  const { user, supabaseClient } = useAuth();
+  const spotifyToken = useSpotifyToken();
   const navigate = useNavigate();
   const { data, isLoading, refetch } = useQuery(
     ['module', moduleId],
@@ -30,14 +32,9 @@ export const ModulePage = () => {
   );
   const { data: userPlaylists, refetch: refetchUserPlaylists } = useQuery(
     ['spotify-playlists', user?.id],
-    async () => {
-      const spotifyToken = await getSpotifyToken();
-      if (spotifyToken) {
-        return getUserPlaylists(spotifyToken);
-      }
-      return [];
-    },
+    () => getUserPlaylists(spotifyToken!),
     {
+      enabled: !!spotifyToken,
       refetchOnWindowFocus: false,
     },
   );

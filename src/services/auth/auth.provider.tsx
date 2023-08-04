@@ -5,15 +5,9 @@ import { createClient, Session, SupabaseClient, User } from '@supabase/supabase-
 import { Database } from '../supabase/types/database';
 import { Center, Loader } from '@mantine/core';
 import { PageContainer } from '../../components/containers/page-container.component';
-import { useQuery } from 'react-query';
 
 type AuthProviderProps = {
   children: ReactNode;
-};
-
-export type SpotifyTokenData = {
-  token: string;
-  expiresAt: number;
 };
 
 type AuthProviderContextValue = {
@@ -22,7 +16,6 @@ type AuthProviderContextValue = {
   session: Session | null;
   user: User | null;
   supabaseClient: SupabaseClient<Database>;
-  getSpotifyToken: () => Promise<string | undefined>;
 };
 
 type AddProviderMetadataRequest = {
@@ -56,28 +49,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const navigate = useNavigate();
 
-  const oauthQuery = useQuery({
-    queryKey: ['userOAuth', user?.id],
-    queryFn: async () =>
-      (
-        await supabaseClient.functions.invoke<SpotifyTokenData>('get-spotify-token', {
-          body: { userId: user?.id },
-        })
-      ).data,
-    enabled: !!user?.id,
-    retry: (failureCount) => failureCount < 2,
-    retryDelay: 500,
-    refetchOnWindowFocus: false,
-  });
-
-  const getSpotifyToken = async () => {
-    if (!oauthQuery.data?.expiresAt || oauthQuery.data.expiresAt < new Date().getTime()) {
-      const newTokenData = await oauthQuery.refetch();
-      return newTokenData.data?.token;
-    }
-    return oauthQuery.data.token;
-  };
-
   const login = async () => {
     const { data, error } = await supabaseClient.auth.signInWithOAuth({
       provider: 'spotify',
@@ -110,23 +81,18 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const addProviderMetadata = async ({ user, session }: AddProviderMetadataRequest) => {
     if (user && session.provider_token && session.provider_refresh_token) {
-      supabaseClient
-        .from('user_oauth_tokens')
-        .upsert(
-          {
-            user_id: user?.id,
-            provider: 'spotify',
-            provider_token: session.provider_token,
-            provider_refresh_token: session.provider_refresh_token,
-            provider_token_expires_at: new Date().getTime(),
-          },
-          {
-            onConflict: 'user_id',
-          },
-        )
-        .then((res) => {
-          console.log('brayden-test', res);
-        });
+      await supabaseClient.from('user_oauth_tokens').upsert(
+        {
+          user_id: user?.id,
+          provider: 'spotify',
+          provider_token: session.provider_token,
+          provider_refresh_token: session.provider_refresh_token,
+          provider_token_expires_at: new Date().getTime(),
+        },
+        {
+          onConflict: 'user_id',
+        },
+      );
     }
   };
 
@@ -171,7 +137,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     session,
     user,
     supabaseClient,
-    getSpotifyToken,
   };
 
   return (
