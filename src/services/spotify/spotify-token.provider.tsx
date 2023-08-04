@@ -1,5 +1,7 @@
 import { ReactNode, createContext, useContext } from 'react';
 import { useSpotifyTokenQuery } from '../../hooks/use-spotify-token';
+import { PageContainer } from '../../components/containers/page-container.component';
+import { Center, Loader } from '@mantine/core';
 
 type SpotifyTokenProviderProps = {
   children: ReactNode;
@@ -12,7 +14,15 @@ export const SpotifyTokenProvider = ({ children }: SpotifyTokenProviderProps) =>
 
   return (
     <SpotifyTokenContext.Provider value={{ spotifyToken: spotifyTokenQuery.data?.token }}>
-      {children}
+      {spotifyTokenQuery.isLoading || !spotifyTokenQuery.isFetched ? (
+        <PageContainer dontAdjustForHeader>
+          <Center css={{ height: '100%' }}>
+            <Loader />
+          </Center>
+        </PageContainer>
+      ) : (
+        children
+      )}
     </SpotifyTokenContext.Provider>
   );
 };
@@ -22,5 +32,10 @@ export const useSpotifyToken = () => {
   if (context === undefined) {
     throw new Error('useSpotifyToken must be used within a SpotifyTokenProvider');
   }
+
+  if (!context.spotifyToken) {
+    throw new Error('Spotify token is not available');
+  }
+
   return context.spotifyToken;
 };

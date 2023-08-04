@@ -142,8 +142,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   return (
     <AuthContext.Provider value={context}>
       {(supabaseClient && context && children) || (
-        <PageContainer>
-          <Center>
+        <PageContainer dontAdjustForHeader>
+          <Center css={{ height: '100%' }}>
             <Loader />
           </Center>
         </PageContainer>

@@ -95,10 +95,10 @@ export const SelectCreatePlaylist = ({ onCreate, onCancel, isLoading }: SelectCr
           Cancel
         </Button>
         <Button
-          disabled={!form.values.name || !spotifyToken}
+          disabled={!form.values.name}
           onClick={async () => {
             setShowLoader(true);
-            createPlaylist(spotifyToken!, {
+            createPlaylist(spotifyToken, {
               playlistName: form.values.name,
               playlistDescription: form.values.description,
               playlistImage: imagePayload,

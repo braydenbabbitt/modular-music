@@ -32,9 +32,8 @@ export const ModulePage = () => {
   );
   const { data: userPlaylists, refetch: refetchUserPlaylists } = useQuery(
     ['spotify-playlists', user?.id],
-    () => getUserPlaylists(spotifyToken!),
+    () => getUserPlaylists(spotifyToken),
     {
-      enabled: !!spotifyToken,
       refetchOnWindowFocus: false,
     },
   );
@@ -51,7 +50,7 @@ export const ModulePage = () => {
 
   if (isLoading || !data) {
     return (
-      <Center>
+      <Center css={{ height: '100%' }}>
         <Loader />
       </Center>
     );

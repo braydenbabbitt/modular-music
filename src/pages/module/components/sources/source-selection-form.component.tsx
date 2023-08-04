@@ -78,12 +78,11 @@ export const SourceSelectionForm = ({
   const userPlaylistsQuery = useQuery(
     'user-playlists',
     async () => {
-      if (parseSourceType(form.values.sourceType)?.id === SOURCE_TYPE_IDS.USER_PLAYLIST && spotifyToken) {
+      if (parseSourceType(form.values.sourceType)?.id === SOURCE_TYPE_IDS.USER_PLAYLIST) {
         return getUserPlaylists(spotifyToken);
       }
     },
     {
-      enabled: !!spotifyToken,
       refetchOnWindowFocus: false,
     },
   );
