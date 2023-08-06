@@ -1,9 +1,10 @@
 import { ActionIcon, Avatar, Flex, Group, Paper, Stack, Text, useMantineTheme } from '@mantine/core';
-import { IconPencil, IconPlus, IconX } from '@tabler/icons';
+import { IconPencil, IconPlus, IconX, TablerIcon } from '@tabler/icons';
 import { theme } from '../../../../theme';
 
 type SourceItemProps = {
   imageHref?: string;
+  defaultIcon?: TablerIcon;
   label: string;
   description?: string;
   handleDelete?: () => void;
@@ -14,6 +15,7 @@ type SourceItemProps = {
 
 export const SourceItem = ({
   imageHref,
+  defaultIcon: DefaultIcon,
   label,
   description,
   handleDelete,
@@ -22,6 +24,14 @@ export const SourceItem = ({
   disabled,
 }: SourceItemProps) => {
   const mantineTheme = useMantineTheme();
+
+  const ImageComponent = imageHref ? (
+    <Avatar src={imageHref} radius='md' />
+  ) : DefaultIcon ? (
+    <DefaultIcon size={30} color='white' />
+  ) : (
+    <IconPlus size={30} />
+  );
 
   return (
     <Paper
@@ -47,7 +57,7 @@ export const SourceItem = ({
     >
       <Flex gap={mantineTheme.spacing.sm} align='center' justify='space-between' css={{ height: '100%' }}>
         <Group noWrap spacing={imageHref ? undefined : mantineTheme.spacing.sm}>
-          {(imageHref && <Avatar src={imageHref} radius='md' />) || <IconPlus size={30} />}
+          {ImageComponent}
           <Stack spacing={0}>
             <Text>{label}</Text>
             {description && (

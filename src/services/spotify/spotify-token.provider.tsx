@@ -1,5 +1,5 @@
 import { ReactNode, createContext, useContext } from 'react';
-import { useSpotifyTokenQuery } from '../../hooks/use-spotify-token';
+import { useSpotifyTokenQuery } from '../../hooks/use-spotify-token-query';
 import { PageContainer } from '../../components/containers/page-container.component';
 import { Center, Loader } from '@mantine/core';
 import { useAuth } from '../auth/auth.provider';
@@ -37,9 +37,5 @@ export const useSpotifyToken = () => {
     throw new Error('useSpotifyToken must be used within a SpotifyTokenProvider');
   }
 
-  if (!context.spotifyToken) {
-    throw new Error('Spotify token is not available');
-  }
-
-  return context.spotifyToken;
+  return context.spotifyToken ?? '';
 };

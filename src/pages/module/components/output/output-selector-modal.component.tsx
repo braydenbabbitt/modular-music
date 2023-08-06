@@ -177,7 +177,7 @@ export const OutputSelectorModal = ({
                     supabaseClient,
                     moduleId,
                     label: selectedPlaylist!.name,
-                    image_href: selectedPlaylist!.images[0].url || '',
+                    image_href: selectedPlaylist!.images.at(0)?.url || '',
                     playlistId: selectedPlaylist!.id,
                     playlist_href: selectedPlaylist!.href,
                     limit: form.values.limit ?? 100,

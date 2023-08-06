@@ -4,6 +4,7 @@ import { QueryObserverResult } from 'react-query';
 import { FetchedModuleOutput } from '../../../../services/supabase/modules/modules.api';
 import { SourceItem } from '../sources/source-item.component';
 import { OutputSelectorModal } from './output-selector-modal.component';
+import { IconPlaylist } from '@tabler/icons';
 
 type OutputSectionProps = {
   output: FetchedModuleOutput | undefined;
@@ -39,6 +40,7 @@ export const OutputSection = ({
           <SourceItem
             label={output.label}
             imageHref={output.image_href}
+            defaultIcon={IconPlaylist}
             disabled={disableEditing}
             handleEdit={
               disableEditing
