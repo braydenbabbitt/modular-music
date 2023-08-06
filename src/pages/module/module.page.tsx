@@ -34,6 +34,7 @@ export const ModulePage = () => {
     ['spotify-playlists', user?.id],
     () => getUserPlaylists(spotifyToken),
     {
+      enabled: !!spotifyToken,
       refetchOnWindowFocus: false,
     },
   );

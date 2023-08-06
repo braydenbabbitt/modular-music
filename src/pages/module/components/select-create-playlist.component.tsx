@@ -98,15 +98,14 @@ export const SelectCreatePlaylist = ({ onCreate, onCancel, isLoading }: SelectCr
           disabled={!form.values.name}
           onClick={async () => {
             setShowLoader(true);
-            createPlaylist(spotifyToken, {
+            const createRes = await createPlaylist(spotifyToken, {
               playlistName: form.values.name,
               playlistDescription: form.values.description,
               playlistImage: imagePayload,
-            }).then((response) => {
-              if (response?.data) {
-                onCreate(response.data.id);
-              }
             });
+            if (createRes?.data) {
+              onCreate(createRes.data.id);
+            }
           }}
         >
           Create Playlist

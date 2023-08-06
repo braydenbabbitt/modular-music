@@ -83,6 +83,7 @@ export const SourceSelectionForm = ({
       }
     },
     {
+      enabled: !!spotifyToken,
       refetchOnWindowFocus: false,
     },
   );
