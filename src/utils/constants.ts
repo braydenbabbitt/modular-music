@@ -12,3 +12,9 @@ export const DAYS_OF_WEEK = {
   5: 'Friday',
   6: 'Saturday',
 } as Record<number, string>;
+
+export const SPOTIFY_UNVERIFIED_DATA = {
+  error: 'unauthorized_client',
+  error_code: '401',
+  error_description: 'Unverified email with spotify. A confirmation email has been sent to your spotify email.',
+};

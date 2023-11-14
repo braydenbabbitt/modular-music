@@ -4,7 +4,7 @@ import { useAuth } from '../../services/auth/auth.provider';
 import { useFeatureFlag } from '../../services/supabase/modules/feature-flags.api';
 import { useForm } from '@mantine/form';
 import { addEmailToNewsletter } from '../../services/supabase/newsletter/newsletter.api';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 
 export const HomePage = () => {
@@ -24,12 +24,20 @@ export const HomePage = () => {
     validateInputOnBlur: true,
   });
   const { login } = useAuth();
+  const { hash } = useLocation();
+  const searchParams = new URLSearchParams(hash.replace('#', ''));
 
   useEffect(() => {
     if (session && user) {
       navigate('/dashboard');
     }
   }, [session, user]);
+
+  useEffect(() => {
+    if (Object.fromEntries(searchParams).error) {
+      navigate(`/error?${searchParams.toString()}`);
+    }
+  }, [JSON.stringify(searchParams)]);
 
   return (
     <div

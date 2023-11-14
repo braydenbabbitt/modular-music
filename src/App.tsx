@@ -17,6 +17,7 @@ import { BasicFooter } from './components/footers/basic-footer.component';
 import { UnsubscribePage } from './pages/newsletter/unsubscribe.page';
 import { ModulePage } from './pages/module/module.page';
 import { SpotifyTokenProvider } from './services/spotify/spotify-token.provider';
+import { ErrorPage } from './pages/error/error.page';
 
 const queryClient = new QueryClient();
 
@@ -68,6 +69,7 @@ function App() {
                   <PageContainer>
                     <Routes>
                       <Route path='/' element={<HomePage />} />
+                      <Route path='/error' element={<ErrorPage />} />
                       <Route path='/dashboard' element={<DashboardPage />} />
                       <Route path='/module'>
                         <Route path='/module/:moduleId' element={<ModulePage />} />
