@@ -56,6 +56,7 @@ export interface Database {
           {
             foreignKeyName: 'feature_flags_user_id_fkey';
             columns: ['user_id'];
+            isOneToOne: false;
             referencedRelation: 'users';
             referencedColumns: ['id'];
           },
@@ -96,12 +97,14 @@ export interface Database {
           {
             foreignKeyName: 'module_actions_module_id_fkey';
             columns: ['module_id'];
+            isOneToOne: false;
             referencedRelation: 'modules';
             referencedColumns: ['id'];
           },
           {
             foreignKeyName: 'module_actions_type_id_fkey';
             columns: ['type_id'];
+            isOneToOne: false;
             referencedRelation: 'action_types';
             referencedColumns: ['id'];
           },
@@ -148,6 +151,7 @@ export interface Database {
           {
             foreignKeyName: 'module_outputs_module_id_fkey';
             columns: ['module_id'];
+            isOneToOne: true;
             referencedRelation: 'modules';
             referencedColumns: ['id'];
           },
@@ -179,6 +183,7 @@ export interface Database {
           {
             foreignKeyName: 'module_runs_log_module_id_fkey';
             columns: ['module_id'];
+            isOneToOne: false;
             referencedRelation: 'modules';
             referencedColumns: ['id'];
           },
@@ -222,6 +227,7 @@ export interface Database {
           {
             foreignKeyName: 'module_schedules_module_id_fkey';
             columns: ['module_id'];
+            isOneToOne: false;
             referencedRelation: 'modules';
             referencedColumns: ['id'];
           },
@@ -265,18 +271,21 @@ export interface Database {
           {
             foreignKeyName: 'module_sources_action_id_fkey';
             columns: ['action_id'];
+            isOneToOne: false;
             referencedRelation: 'module_actions';
             referencedColumns: ['id'];
           },
           {
             foreignKeyName: 'module_sources_module_id_fkey';
             columns: ['module_id'];
+            isOneToOne: false;
             referencedRelation: 'modules';
             referencedColumns: ['id'];
           },
           {
             foreignKeyName: 'module_sources_type_id_fkey';
             columns: ['type_id'];
+            isOneToOne: false;
             referencedRelation: 'source_types';
             referencedColumns: ['id'];
           },
@@ -314,6 +323,7 @@ export interface Database {
           {
             foreignKeyName: 'modules_user_id_fkey';
             columns: ['user_id'];
+            isOneToOne: false;
             referencedRelation: 'users';
             referencedColumns: ['id'];
           },
@@ -396,6 +406,7 @@ export interface Database {
           {
             foreignKeyName: 'user_oauth_tokens_user_id_fkey';
             columns: ['user_id'];
+            isOneToOne: true;
             referencedRelation: 'users';
             referencedColumns: ['id'];
           },
@@ -424,6 +435,7 @@ export interface Database {
           {
             foreignKeyName: 'users_saved_tracks_user_id_fkey';
             columns: ['user_id'];
+            isOneToOne: false;
             referencedRelation: 'users';
             referencedColumns: ['id'];
           },
@@ -452,6 +464,7 @@ export interface Database {
           {
             foreignKeyName: 'users_spotify_recently_played_cursors_id_fkey';
             columns: ['id'];
+            isOneToOne: true;
             referencedRelation: 'users';
             referencedColumns: ['id'];
           },
@@ -480,6 +493,7 @@ export interface Database {
           {
             foreignKeyName: 'users_spotify_recently_played_items_user_id_fkey';
             columns: ['user_id'];
+            isOneToOne: false;
             referencedRelation: 'users';
             referencedColumns: ['id'];
           },
