@@ -1,14 +1,16 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import generouted from '@generouted/react-router/plugin';
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     react({
       jsxImportSource: '@emotion/react',
-      babel: {
-        plugins: ['@emotion/babel-plugin'],
-      },
+    }),
+    generouted({
+      source: { routes: './app/src/pages/**/[\\w[-]*.{jsx,tsx}', modals: './app/src/pages/**/[+]*.{jsx,tsx}' },
+      output: './app/src/router.ts',
     }),
   ],
   server: {
@@ -20,4 +22,5 @@ export default defineConfig({
       'this-is-undefined-in-esm': 'silent',
     },
   },
+  resolve: { alias: { '@root': '/app/src' } },
 });

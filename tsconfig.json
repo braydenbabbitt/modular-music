@@ -16,12 +16,12 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "jsxImportSource": "@emotion/react",
-    "typeRoots": ["src/types"],
+    "noUncheckedIndexedAccess": true,
     "paths": {
-      "*": ["./src/types/*"]
+      "@root/*": ["app/src/*"]
     }
   },
-  "include": ["src"],
+  "include": ["app/src", "vite-env.d.ts"],
   "references": [
     {
       "path": "./tsconfig.node.json"
