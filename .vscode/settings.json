@@ -1,5 +1,5 @@
 {
-  "conventionalCommits.scopes": ["app", "functions"],
+  "conventionalCommits.scopes": ["app", "supabase", "libs", "cicd"],
   "deno.enable": true,
   "deno.enablePaths": ["./supabase/functions"],
   "deno.lint": true,
