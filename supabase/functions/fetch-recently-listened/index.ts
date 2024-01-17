@@ -143,7 +143,7 @@ serve(async (_req) => {
 
     return new Response('ok');
   } catch (err) {
-    console.error('brayden-test', { err });
+    console.error({ err });
     return new Response(err, {
       status: 400,
       headers: {
