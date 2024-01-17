@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-pnpm supabase:gen-types
-pnpm exec lint-staged
+npm run supabase:gen-types
+npx lint-staged

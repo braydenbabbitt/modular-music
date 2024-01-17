@@ -22,5 +22,12 @@ export default defineConfig({
       'this-is-undefined-in-esm': 'silent',
     },
   },
-  resolve: { alias: { '@root': '/app/src' } },
+  resolve: {
+    alias: {
+      '@root': '/app/src',
+      '@libs': '/libs',
+      '@components': '/app/src/components',
+      '@layouts': '/app/src/layouts',
+    },
+  },
 });

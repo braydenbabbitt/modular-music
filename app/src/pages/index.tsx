@@ -1,5 +1,10 @@
+import { usePageTitle } from '@libs/routing';
+import { Title } from '@mantine/core';
+
 const HomePage = () => {
-  return <h1>Home here</h1>;
+  usePageTitle('Home');
+
+  return <Title>Home here</Title>;
 };
 
 export default HomePage;

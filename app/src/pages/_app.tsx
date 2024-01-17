@@ -1,14 +1,12 @@
-import { Outlet } from 'react-router-dom';
 import '../global-styles.css';
+import '@mantine/core/styles.css';
+import { AppProviders } from '@root/providers';
+import { DefaultAppLayout } from '@layouts/app';
 
 export default function App() {
   return (
-    <div
-      css={{
-        fontFamily: 'inter',
-      }}
-    >
-      <Outlet />
-    </div>
+    <AppProviders>
+      <DefaultAppLayout />
+    </AppProviders>
   );
 }

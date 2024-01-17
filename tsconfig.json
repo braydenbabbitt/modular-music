@@ -1,4 +1,5 @@
 {
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "target": "ESNext",
     "useDefineForClassFields": true,
@@ -17,11 +18,15 @@
     "jsx": "react-jsx",
     "jsxImportSource": "@emotion/react",
     "noUncheckedIndexedAccess": true,
+    "preserveSymlinks": true,
     "paths": {
-      "@root/*": ["app/src/*"]
+      "@root/*": ["./app/src/*"],
+      "@libs/*": ["./libs/*"],
+      "@layouts/*": ["./app/src/layouts/*"],
+      "@components/*": ["./app/src/components/*"]
     }
   },
-  "include": ["app/src", "vite-env.d.ts"],
+  "include": ["app/src", "libs", "vite-env.d.ts"],
   "references": [
     {
       "path": "./tsconfig.node.json"

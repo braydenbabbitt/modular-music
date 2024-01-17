@@ -5,5 +5,5 @@
   "deno.lint": true,
   "deno.unstable": true,
   "deno.importMap": "./supabase/functions/import_maps.json",
-  "editor.tabSize": 2
+  "editor.tabSize": 2,
 }
