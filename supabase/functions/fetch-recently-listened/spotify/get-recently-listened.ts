@@ -82,7 +82,12 @@ const getUserRecentlyListenedTracks = async (
       headers: { Authorization: 'Bearer ' + spotifyToken },
     },
   );
-  const nextPage = (await nextPageQuery.json()) as FetchJSONResponse<RecentlyListenedResponse>;
+
+  const responseText = await nextPageQuery.text();
+  const nextPage = responseText.includes('{')
+    ? (JSON.parse(responseText) as FetchJSONResponse<RecentlyListenedResponse>)
+    : undefined;
+  if (!nextPage) return { items: [] };
   if (nextPage.items.length < 1) {
     return { items: [] };
   }
