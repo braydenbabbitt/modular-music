@@ -87,7 +87,10 @@ const getUserRecentlyListenedTracks = async (
   const nextPage = responseText.includes('{')
     ? (JSON.parse(responseText) as FetchJSONResponse<RecentlyListenedResponse>)
     : undefined;
-  if (!nextPage) return { items: [] };
+  if (!nextPage) {
+    console.log('Issue fetching recently listened', { errorMessageFromSpotify: responseText });
+    return { items: [] };
+  }
   if (nextPage.items.length < 1) {
     return { items: [] };
   }
