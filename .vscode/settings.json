@@ -6,4 +6,5 @@
   "deno.unstable": true,
   "deno.importMap": "./supabase/functions/import_maps.json",
   "editor.tabSize": 2,
+  "typescript.tsdk": "node_modules\\typescript\\lib"
 }

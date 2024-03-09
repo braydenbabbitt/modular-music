@@ -1,5 +1,5 @@
 import { useCurrentColorScheme } from '@libs/mantine';
-import { DefaultHeader } from '@root/components';
+import { DefaultHeader, Page } from '@root/components';
 import { Outlet } from 'react-router-dom';
 
 export const DefaultAppLayout = () => {
@@ -8,14 +8,19 @@ export const DefaultAppLayout = () => {
   return (
     <div
       css={(theme) => ({
+        display: 'flex',
+        flexDirection: 'column',
         fontFamily: 'inter',
-        minHeight: '100vh',
+        height: '100vh',
         width: '100%',
         backgroundColor: colorScheme === 'dark' ? theme.black : theme.white,
+        overflow: 'hidden',
       })}
     >
       <DefaultHeader />
-      <Outlet />
+      <Page>
+        <Outlet />
+      </Page>
     </div>
   );
 };

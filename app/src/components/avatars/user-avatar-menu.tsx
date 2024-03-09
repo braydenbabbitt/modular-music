@@ -9,7 +9,7 @@ export const UserAvatarMenu = () => {
   const initials = `${names?.at(0)?.charAt(0) ?? ''}${names?.at(-1)?.charAt(0) ?? ''}`;
 
   return (
-    <Menu position='bottom-end'>
+    <Menu position='bottom-end' trigger='hover'>
       <Menu.Target>
         <UnstyledButton>
           <Avatar
